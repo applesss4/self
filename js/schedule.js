@@ -392,10 +392,20 @@ function createTaskElement(task) {
     taskElement.className = `task-item ${task.status}`;
     taskElement.dataset.id = task.id;
     
-    // 格式化时间显示
+    // 格式化时间显示，只显示小时和分钟
     let timeDisplay = '';
     if (task.category === 'work' && task.workStartTime && task.workEndTime) {
-        timeDisplay = `<span class="work-time">${task.workStartTime} - ${task.workEndTime}</span>`;
+        // 确保时间格式为 HH:MM，去除秒数
+        const formatTime = (timeStr) => {
+            if (!timeStr) return '';
+            // 如果时间格式是 HH:MM:SS，则只取前5个字符 HH:MM
+            if (timeStr.length > 5) {
+                return timeStr.substring(0, 5);
+            }
+            return timeStr;
+        };
+        
+        timeDisplay = `<span class="work-time">${formatTime(task.workStartTime)} - ${formatTime(task.workEndTime)}</span>`;
     }
     
     taskElement.innerHTML = `
@@ -541,9 +551,19 @@ function updateScheduleDisplay() {
                     scheduleItem.className = 'schedule-item';
                     scheduleItem.dataset.id = task.id;
                     
+                    // 确保时间格式为 HH:MM，去除秒数
+                    const formatTime = (timeStr) => {
+                        if (!timeStr) return '';
+                        // 如果时间格式是 HH:MM:SS，则只取前5个字符 HH:MM
+                        if (timeStr.length > 5) {
+                            return timeStr.substring(0, 5);
+                        }
+                        return timeStr;
+                    };
+                    
                     scheduleItem.innerHTML = `
                         <div class="schedule-item-title">${task.title}</div>
-                        <div class="schedule-item-time">${task.workStartTime} - ${task.workEndTime}</div>
+                        <div class="schedule-item-time">${formatTime(task.workStartTime)} - ${formatTime(task.workEndTime)}</div>
                     `;
                     
                     // 添加点击事件以编辑排班
