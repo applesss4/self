@@ -28,6 +28,10 @@
       "dest": "/pages/tasks.html"
     },
     {
+      "src": "/pages/(.*)",
+      "dest": "/pages/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/$1"
     },
