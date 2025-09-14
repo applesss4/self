@@ -253,9 +253,9 @@ function renderCalendar() {
         
         const dayElement = document.createElement('div');
         dayElement.className = `calendar-day ${isCurrentMonth ? 'current-month' : 'other-month'} ${isToday ? 'today' : ''} ${dateStr === state.selectedDate ? 'selected' : ''}`;
+        dayElement.dataset.date = dateStr; // 添加日期数据属性
         dayElement.innerHTML = `
             <div class="day-number">${currentDate.getDate()}</div>
-            <div class="day-tasks" id="tasks-${dateStr}"></div>
         `;
         
         // 添加点击事件
@@ -271,6 +271,8 @@ function renderCalendar() {
     
     // 更新任务显示
     updateTasksForSelectedDate();
+    // 更新日历中的任务数量
+    updateCalendarTaskCounts();
 }
 
 // 选择日期
@@ -542,12 +544,30 @@ function updateCalendarTaskCounts() {
     });
     
     // 更新日历显示
-    Object.keys(taskCounts).forEach(date => {
-        const taskCountElement = document.getElementById(`tasks-${date}`);
-        if (taskCountElement) {
-            taskCountElement.innerHTML = `<span class="task-count">${taskCounts[date]}</span>`;
-        }
-    });
+    const calendarGrid = document.getElementById('calendarGrid');
+    if (calendarGrid) {
+        // 遍历所有日期元素
+        const dayElements = calendarGrid.querySelectorAll('.calendar-day');
+        dayElements.forEach(element => {
+            const dateStr = element.dataset.date;
+            if (dateStr && taskCounts[dateStr]) {
+                // 查找或创建任务数量显示元素
+                let taskCountElement = element.querySelector('.task-count');
+                if (!taskCountElement) {
+                    taskCountElement = document.createElement('div');
+                    taskCountElement.className = 'task-count';
+                    element.appendChild(taskCountElement);
+                }
+                taskCountElement.textContent = taskCounts[dateStr];
+            } else {
+                // 如果没有任务，移除任务数量显示元素
+                const taskCountElement = element.querySelector('.task-count');
+                if (taskCountElement) {
+                    taskCountElement.remove();
+                }
+            }
+        });
+    }
 }
 
 // 显示提示消息

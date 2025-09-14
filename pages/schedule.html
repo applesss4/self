@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>任务计划 - 个人生活管家</title>
+    <title>工作排班表 - 个人生活管家</title>
     <link rel="stylesheet" href="/css/main.css?v=1.0.15">
     <link rel="stylesheet" href="/css/components.css?v=1.0.15">
     <link rel="stylesheet" href="/css/calendar.css?v=1.0.15">
@@ -15,8 +15,8 @@
             <div class="header-right">
                 <nav class="nav">
                     <a href="/" class="nav-link">首页</a>
-                    <a href="/pages/tasks.html" class="nav-link active">任务计划</a>
-                    <a href="/pages/schedule.html" class="nav-link">工作排班表</a>
+                    <a href="/pages/tasks.html" class="nav-link">任务计划</a>
+                    <a href="/pages/schedule.html" class="nav-link active">工作排班表</a>
                 </nav>
                 <button class="login-btn" id="loginBtn">登录</button>
             </div>
@@ -26,77 +26,53 @@
     <main class="main">
         <div class="container">
             <div class="page-header">
-                <h2 class="page-title">📅 生活起居任务计划</h2>
-                <button class="add-task-btn" id="addTaskBtn">+ 添加任务</button>
+                <h2 class="page-title">📅 工作排班表</h2>
+                <button class="add-task-btn" id="addTaskBtn">+ 添加排班</button>
             </div>
 
-            <div class="tasks-layout">
-                <div class="calendar-section">
+            <div class="schedule-layout">
+                <div class="schedule-section">
                     <div class="calendar-header">
-                        <button class="month-nav-btn" id="prevMonth">‹</button>
+                        <button class="month-nav-btn" id="prevWeek">‹</button>
                         <div style="display: flex; align-items: center; gap: 1rem;">
-                            <h3 class="current-month" id="currentMonth">2025年9月</h3>
-                            <button class="btn-today" id="todayBtn">今日</button>
+                            <h3 class="current-month" id="currentWeek">2025年第37周</h3>
+                            <button class="btn-today" id="todayBtn">本周</button>
                         </div>
-                        <button class="month-nav-btn" id="nextMonth">›</button>
+                        <button class="month-nav-btn" id="nextWeek">›</button>
                     </div>
-                    <div class="calendar-container" id="calendarContainer">
-                        <!-- 日历将在这里动态生成 -->
-                    </div>
-                </div>
-
-                <div class="tasks-section">
-                    <div class="tasks-header">
-                        <h3 class="tasks-title">今日任务</h3>
-                        <span class="tasks-date" id="selectedDate">2025年9月13日</span>
-                    </div>
-                    <div class="tasks-list" id="tasksList">
-                        <!-- 任务列表将在这里动态生成 -->
+                    <div class="schedule-container" id="scheduleContainer">
+                        <!-- 排班表将在这里动态生成 -->
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- 添加/编辑任务模态框 -->
-    <div class="modal" id="taskModal">
+    <!-- 添加/编辑排班模态框 -->
+    <div class="modal" id="scheduleModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title" id="modalTitle">添加任务</h3>
+                <h3 class="modal-title" id="modalTitle">添加排班</h3>
                 <button class="modal-close" id="closeModal">&times;</button>
             </div>
-            <form class="task-form" id="taskForm">
-                <input type="hidden" id="taskId">  <!-- 添加隐藏的 taskId 字段 -->
+            <form class="task-form" id="scheduleForm">
+                <input type="hidden" id="scheduleId">  <!-- 添加隐藏的 scheduleId 字段 -->
                 <div class="form-group">
-                    <label for="taskCategory">分类</label>
-                    <select id="taskCategory">
-                        <option value="life">生活</option>
-                        <option value="work">工作</option>
-                    </select>
+                    <label for="scheduleTitle">排班标题</label>
+                    <input type="text" id="scheduleTitle" required>
                 </div>
                 <div class="form-group">
-                    <label for="taskTitle">任务标题</label>
-                    <input type="text" id="taskTitle" required>
+                    <label for="scheduleDate">日期</label>
+                    <input type="date" id="scheduleDate" required>
                 </div>
-                <div class="form-group">
-                    <label for="taskDate">日期</label>
-                    <input type="date" id="taskDate" required>
-                </div>
-                <div class="form-group" id="normalTimeGroup">
-                    <label for="taskTime">时间</label>
-                    <input type="time" id="taskTime">
-                </div>
-                <!-- 工作时间设置（仅工作类别显示） -->
-                <div class="work-time-section" id="workTimeSection" style="display: none;">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="workStartTime">上班时间</label>
-                            <input type="time" id="workStartTime">
-                        </div>
-                        <div class="form-group">
-                            <label for="workEndTime">下班时间</label>
-                            <input type="time" id="workEndTime">
-                        </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="workStartTime">上班时间</label>
+                        <input type="time" id="workStartTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="workEndTime">下班时间</label>
+                        <input type="time" id="workEndTime" required>
                     </div>
                 </div>
                 <div class="form-actions">
@@ -138,7 +114,7 @@
         </div>
     </div>
 
-    <script type="module" src="/js/tasks.js?v=1.0.15"></script>
+    <script type="module" src="/js/schedule.js?v=1.0.15"></script>
     <script type="module" src="/js/simpleAuth.js?v=1.0.18"></script>
 </body>
 </html>

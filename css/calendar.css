@@ -30,6 +30,7 @@
 .calendar-day {
     aspect-ratio: 1;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     position: relative;
@@ -83,6 +84,146 @@
 
 .calendar-day.has-mixed-tasks::after {
     background: linear-gradient(45deg, #FF6B6B 50%, #51CF66 50%);
+}
+
+/* 排班表组件样式 */
+.schedule-container {
+    background: var(--cream-light);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.schedule-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: var(--cream-primary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.schedule-weekday {
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.schedule-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    min-height: 300px;
+}
+
+.schedule-day {
+    border-bottom: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    position: relative;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+}
+
+.schedule-day:nth-child(7n) {
+    border-right: none;
+}
+
+.schedule-day:hover {
+    background: var(--cream-accent);
+}
+
+.schedule-day.today {
+    background: var(--cream-warm);
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.schedule-day.selected {
+    background: var(--cream-warm);
+    font-weight: 600;
+    box-shadow: inset 0 0 0 2px rgba(240, 230, 140, 0.5);
+}
+
+.schedule-day-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.day-name {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.day-date {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.schedule-day-content {
+    padding: 0.5rem;
+    flex-grow: 1;
+    overflow-y: auto;
+    max-height: 200px;
+}
+
+.schedule-item {
+    background: var(--cream-secondary);
+    border-radius: var(--border-radius-small);
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.schedule-item:hover {
+    background: var(--cream-accent);
+    transform: translateY(-1px);
+}
+
+.schedule-item-title {
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+}
+
+.schedule-item-time {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.schedule-empty {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    text-align: center;
+    padding: 1rem 0;
+    font-style: italic;
+}
+
+/* 任务数量显示 */
+.task-count {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: #FF6B6B;
+    color: white;
+    font-size: 0.6rem;
+    font-weight: bold;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
 }
 
 /* 日历任务指示器 */
@@ -180,6 +321,36 @@
         width: 3px;
         height: 3px;
     }
+    
+    .task-count {
+        width: 14px;
+        height: 14px;
+        font-size: 0.5rem;
+    }
+    
+    .schedule-days {
+        min-height: 250px;
+    }
+    
+    .schedule-day-header {
+        padding: 0.3rem;
+    }
+    
+    .day-name {
+        font-size: 0.7rem;
+    }
+    
+    .day-date {
+        font-size: 1rem;
+    }
+    
+    .schedule-item-title {
+        font-size: 0.8rem;
+    }
+    
+    .schedule-item-time {
+        font-size: 0.7rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -198,5 +369,39 @@
         height: 4px;
         bottom: 2px;
         right: 2px;
+    }
+    
+    .task-count {
+        width: 12px;
+        height: 12px;
+        font-size: 0.45rem;
+    }
+    
+    .schedule-days {
+        min-height: 200px;
+    }
+    
+    .schedule-day-header {
+        padding: 0.2rem;
+    }
+    
+    .day-name {
+        font-size: 0.6rem;
+    }
+    
+    .day-date {
+        font-size: 0.9rem;
+    }
+    
+    .schedule-item {
+        padding: 0.3rem;
+    }
+    
+    .schedule-item-title {
+        font-size: 0.75rem;
+    }
+    
+    .schedule-item-time {
+        font-size: 0.65rem;
     }
 }

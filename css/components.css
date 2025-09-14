@@ -512,9 +512,9 @@
 .modal-content {
     background: var(--cream-light);
     border-radius: var(--border-radius-large);
-    padding: 2rem;
+    padding: 1.5rem;
     width: 90%;
-    max-width: 500px;
+    max-width: 400px;
     box-shadow: var(--shadow-medium);
     transform: scale(0.9);
     transition: transform 0.3s ease;
@@ -528,13 +528,13 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
     border-bottom: 1px solid var(--border-color);
 }
 
 .modal-title {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 600;
     color: var(--text-primary);
 }
@@ -564,13 +564,14 @@
 .task-form {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    margin-bottom: 0.75rem;
 }
 
 .form-row {
@@ -587,19 +588,19 @@
 .form-group label {
     font-weight: 600;
     color: var(--text-primary);
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
 }
 
 .form-group input,
 .form-group textarea,
 .form-group select {
-    padding: 0.75rem;
+    padding: 0.6rem;
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     background: var(--cream-light);
     color: var(--text-primary);
-    font-size: 1rem;
+    font-size: 0.9rem;
     transition: var(--transition);
     width: 100%; /* 确保输入框占满容器 */
     box-sizing: border-box; /* 包含padding和border */
@@ -620,50 +621,6 @@
     margin-top: 1rem;
 }
 
-/* 消息提示 */
-.toast {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: var(--cream-warm);
-    color: var(--text-primary);
-    padding: 1rem 1.5rem;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-medium);
-    z-index: 1100;
-    transform: translateX(100%);
-    transition: transform 0.3s ease;
-}
-
-.toast.show {
-    transform: translateX(0);
-}
-
-.toast.success {
-    background: #D4F4DD;
-    color: #1F5F3F;
-}
-
-.toast.error {
-    background: #FED7D7;
-    color: #9B2C2C;
-}
-
-/* 加载状态 */
-.loading {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 3px solid var(--border-color);
-    border-radius: 50%;
-    border-top-color: var(--cream-warm);
-    animation: spin 1s ease-in-out infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
 /* 响应式设计 */
 @media (max-width: 768px) {
     .tasks-layout {
@@ -678,7 +635,8 @@
     
     .modal-content {
         width: 95%;
-        padding: 1.5rem;
+        padding: 1rem;
+        max-width: 350px;
     }
     
     .form-row {
@@ -696,5 +654,67 @@
     
     .task-actions {
         align-self: flex-end;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendar-day {
+        font-size: 0.75rem;
+        aspect-ratio: 1.1;
+    }
+    
+    .calendar-weekday {
+        padding: 0.4rem 0.2rem;
+        font-size: 0.65rem;
+    }
+    
+    .calendar-day.has-tasks::after {
+        width: 4px;
+        height: 4px;
+        bottom: 2px;
+        right: 2px;
+    }
+    
+    .modal-content {
+        padding: 0.75rem;
+        max-width: 300px;
+        width: 95%;
+        margin: 0.5rem auto;
+    }
+    
+    .modal-title {
+        font-size: 1.1rem;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+    
+    .btn-submit,
+    .btn-cancel {
+        width: 100%;
+        padding: 0.6rem;
+        font-size: 0.9rem;
+    }
+    
+    .task-action-btn {
+        padding: 0.2rem;
+        font-size: 0.8rem;
+    }
+    
+    .task-title {
+        font-size: 0.9rem;
+    }
+    
+    .task-meta {
+        font-size: 0.75rem;
+    }
+    
+    .task-category {
+        font-size: 0.65rem;
+        padding: 0.1rem 0.3rem;
     }
 }
