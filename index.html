@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人生活管家</title>
+    <link rel="stylesheet" href="css/main.css?v=1.0.14">
+    <link rel="stylesheet" href="css/components.css?v=1.0.14">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">🏠 个人生活管家</h1>
+            <div class="header-right">
+                <nav class="nav">
+                    <a href="index.html" class="nav-link active">首页</a>
+                    <a href="pages/tasks.html" class="nav-link">任务计划</a>
+                </nav>
+                <button class="login-btn" id="loginBtn">登录</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <section class="hero">
+                <h2 class="hero-title">让生活更有序，让每一天都充满意义</h2>
+                <p class="hero-subtitle">简约而温暖的生活管理工具</p>
+            </section>
+
+            <section class="features">
+                <div class="feature-card" id="tasks-feature">
+                    <div class="feature-icon">📅</div>
+                    <h3 class="feature-title">生活起居任务计划</h3>
+                    <p class="feature-description">用日历清单的方式管理您的日常任务，让每一天都井井有条</p>
+                    <button class="feature-button" onclick="navigateToTasks()">开始使用</button>
+                </div>
+
+                <div class="feature-card coming-soon">
+                    <div class="feature-icon">🎯</div>
+                    <h3 class="feature-title">目标管理</h3>
+                    <p class="feature-description">即将推出：设定和追踪您的长期目标</p>
+                    <button class="feature-button" disabled>敬请期待</button>
+                </div>
+
+                <div class="feature-card coming-soon">
+                    <div class="feature-icon">💡</div>
+                    <h3 class="feature-title">生活提醒</h3>
+                    <p class="feature-description">即将推出：智能的生活提醒助手</p>
+                    <button class="feature-button" disabled>敬请期待</button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 个人生活管家 - 让生活更美好</p>
+        </div>
+    </footer>
+
+    <!-- 登录/注册弹窗 -->
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="authModalTitle">用户登录</h3>
+                <button class="modal-close" id="closeAuthModal">&times;</button>
+            </div>
+            <form class="auth-form" id="authForm">
+                <div class="form-group">
+                    <label for="authEmail">邮箱</label>
+                    <input type="email" id="authEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="authPassword">密码</label>
+                    <input type="password" id="authPassword" required>
+                </div>
+                <div class="form-group" id="confirmPasswordGroup" style="display: none;">
+                    <label for="authConfirmPassword">确认密码</label>
+                    <input type="password" id="authConfirmPassword">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" id="cancelAuth">取消</button>
+                    <button type="submit" class="btn-submit" id="submitAuth">登录</button>
+                </div>
+            </form>
+            <div class="auth-footer">
+                <p id="authSwitchText">还没有账户？<a href="#" id="switchToRegister">立即注册</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 导航到任务页面的函数
+        function navigateToTasks() {
+            window.location.href = 'pages/tasks.html';
+        }
+    </script>
+    <script type="module" src="js/simpleAuth.js?v=1.0.18"></script>
+</body>
+</html>

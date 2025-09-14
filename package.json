@@ -1,0 +1,19 @@
+{
+  "name": "personal-life-assistant",
+  "version": "1.0.0",
+  "description": "个人生活管家网站",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npx serve .",
+    "start": "npx serve .",
+    "build": "echo \"No build step required for this project\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "serve": "^14.2.0"
+  }
+}

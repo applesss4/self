@@ -1,0 +1,202 @@
+/* 日历组件样式 */
+.calendar-container {
+    background: var(--cream-light);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: var(--cream-primary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.calendar-weekday {
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    transition: var(--transition);
+    border-bottom: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.calendar-day:nth-child(7n) {
+    border-right: none;
+}
+
+.calendar-day:hover {
+    background: var(--cream-accent);
+}
+
+.calendar-day.other-month {
+    color: var(--text-light);
+    background: #FAFAF8;
+}
+
+.calendar-day.today {
+    background: var(--cream-warm);
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.calendar-day.selected {
+    background: var(--cream-warm);
+    font-weight: 600;
+    box-shadow: inset 0 0 0 2px rgba(240, 230, 140, 0.5);
+}
+
+.calendar-day.has-tasks::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 6px;
+    height: 6px;
+    background: #FF6B6B;
+    border-radius: 50%;
+}
+
+.calendar-day.has-completed-tasks::after {
+    background: #51CF66;
+}
+
+.calendar-day.has-mixed-tasks::after {
+    background: linear-gradient(45deg, #FF6B6B 50%, #51CF66 50%);
+}
+
+/* 日历任务指示器 */
+.task-indicators {
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 2px;
+}
+
+.task-indicator {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--text-secondary);
+}
+
+.task-indicator.life {
+    background: #51CF66;
+}
+
+.task-indicator.work {
+    background: #339AF0;
+}
+
+.task-indicator.health {
+    background: #FF922B;
+}
+
+.task-indicator.completed {
+    opacity: 0.5;
+}
+
+/* 迷你日历（如果需要） */
+.mini-calendar {
+    width: 100%;
+    font-size: 0.8rem;
+}
+
+.mini-calendar .calendar-day {
+    aspect-ratio: 1.2;
+    font-size: 0.75rem;
+}
+
+.mini-calendar .calendar-weekday {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.7rem;
+}
+
+/* 日历加载状态 */
+.calendar-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    color: var(--text-secondary);
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.calendar-loading .loading {
+    width: 30px;
+    height: 30px;
+    border-width: 4px;
+}
+
+/* 日历空状态 */
+.calendar-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: var(--text-light);
+    font-style: italic;
+}
+
+/* 响应式日历 */
+@media (max-width: 768px) {
+    .calendar-day {
+        font-size: 0.8rem;
+    }
+    
+    .calendar-weekday {
+        padding: 0.5rem 0.25rem;
+        font-size: 0.75rem;
+    }
+    
+    .task-indicators {
+        bottom: 1px;
+    }
+    
+    .task-indicator {
+        width: 3px;
+        height: 3px;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendar-day {
+        font-size: 0.75rem;
+        aspect-ratio: 1.1;
+    }
+    
+    .calendar-weekday {
+        padding: 0.4rem 0.2rem;
+        font-size: 0.65rem;
+    }
+    
+    .calendar-day.has-tasks::after {
+        width: 4px;
+        height: 4px;
+        bottom: 2px;
+        right: 2px;
+    }
+}

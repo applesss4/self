@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务计划 - 个人生活管家</title>
+    <link rel="stylesheet" href="../css/main.css?v=1.0.15">
+    <link rel="stylesheet" href="../css/components.css?v=1.0.15">
+    <link rel="stylesheet" href="../css/calendar.css?v=1.0.15">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">🏠 个人生活管家</h1>
+            <div class="header-right">
+                <nav class="nav">
+                    <a href="../index.html" class="nav-link">首页</a>
+                    <a href="tasks.html" class="nav-link active">任务计划</a>
+                </nav>
+                <button class="login-btn" id="loginBtn">登录</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <div class="page-header">
+                <h2 class="page-title">📅 生活起居任务计划</h2>
+                <button class="add-task-btn" id="addTaskBtn">+ 添加任务</button>
+            </div>
+
+            <div class="tasks-layout">
+                <div class="calendar-section">
+                    <div class="calendar-header">
+                        <button class="month-nav-btn" id="prevMonth">‹</button>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <h3 class="current-month" id="currentMonth">2025年9月</h3>
+                            <button class="btn-today" id="todayBtn">今日</button>
+                        </div>
+                        <button class="month-nav-btn" id="nextMonth">›</button>
+                    </div>
+                    <div class="calendar-container" id="calendarContainer">
+                        <!-- 日历将在这里动态生成 -->
+                    </div>
+                </div>
+
+                <div class="tasks-section">
+                    <div class="tasks-header">
+                        <h3 class="tasks-title">今日任务</h3>
+                        <span class="tasks-date" id="selectedDate">2025年9月13日</span>
+                    </div>
+                    <div class="tasks-list" id="tasksList">
+                        <!-- 任务列表将在这里动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 添加/编辑任务模态框 -->
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">添加任务</h3>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <form class="task-form" id="taskForm">
+                <input type="hidden" id="taskId">  <!-- 添加隐藏的 taskId 字段 -->
+                <div class="form-group">
+                    <label for="taskCategory">分类</label>
+                    <select id="taskCategory">
+                        <option value="life">生活</option>
+                        <option value="work">工作</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="taskTitle">任务标题</label>
+                    <input type="text" id="taskTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="taskDate">日期</label>
+                    <input type="date" id="taskDate" required>
+                </div>
+                <div class="form-group" id="normalTimeGroup">
+                    <label for="taskTime">时间</label>
+                    <input type="time" id="taskTime">
+                </div>
+                <!-- 工作时间设置（仅工作类别显示） -->
+                <div class="work-time-section" id="workTimeSection" style="display: none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="workStartTime">上班时间</label>
+                            <input type="time" id="workStartTime">
+                        </div>
+                        <div class="form-group">
+                            <label for="workEndTime">下班时间</label>
+                            <input type="time" id="workEndTime">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" id="cancelBtn">取消</button>
+                    <button type="submit" class="btn-submit">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 登录/注册弹窗 -->
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="authModalTitle">用户登录</h3>
+                <button class="modal-close" id="closeAuthModal">&times;</button>
+            </div>
+            <form class="auth-form" id="authForm">
+                <div class="form-group">
+                    <label for="authEmail">邮箱</label>
+                    <input type="email" id="authEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="authPassword">密码</label>
+                    <input type="password" id="authPassword" required>
+                </div>
+                <div class="form-group" id="confirmPasswordGroup" style="display: none;">
+                    <label for="authConfirmPassword">确认密码</label>
+                    <input type="password" id="authConfirmPassword">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" id="cancelAuth">取消</button>
+                    <button type="submit" class="btn-submit" id="submitAuth">登录</button>
+                </div>
+            </form>
+            <div class="auth-footer">
+                <p id="authSwitchText">还没有账户？<a href="#" id="switchToRegister">立即注册</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="../js/tasks.js?v=1.0.15"></script>
+    <script type="module" src="../js/simpleAuth.js?v=1.0.18"></script>
+</body>
+</html>

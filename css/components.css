@@ -1,0 +1,700 @@
+/* 登录表单 */
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.login-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.login-form .form-group label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.login-form .form-group input {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--cream-light);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: var(--transition);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.login-form .form-group input:focus {
+    outline: none;
+    border-color: var(--cream-warm);
+    box-shadow: 0 0 0 3px rgba(240, 230, 140, 0.2);
+}
+
+.login-form .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+/* 认证表单 */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.auth-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.auth-form .form-group label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.auth-form .form-group input {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--cream-light);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: var(--transition);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.auth-form .form-group input:focus {
+    outline: none;
+    border-color: var(--cream-warm);
+    box-shadow: 0 0 0 3px rgba(240, 230, 140, 0.2);
+}
+
+.auth-form .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+/* 认证标签页 */
+.auth-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
+}
+
+.auth-tab {
+    background: transparent;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+}
+
+.auth-tab.active {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.auth-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--cream-warm);
+    border-radius: 3px 3px 0 0;
+}
+
+.auth-tab:hover:not(.active) {
+    color: var(--text-primary);
+    background: var(--cream-accent);
+}
+
+/* 认证页脚 */
+.auth-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.auth-footer a {
+    color: var(--cream-warm);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.auth-footer a:hover {
+    color: var(--text-primary);
+    text-decoration: underline;
+}
+
+/* 登录表单 */
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.login-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.login-form .form-group label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.login-form .form-group input {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--cream-light);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: var(--transition);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.login-form .form-group input:focus {
+    outline: none;
+    border-color: var(--cream-warm);
+    box-shadow: 0 0 0 3px rgba(240, 230, 140, 0.2);
+}
+
+.login-form .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+/* 按钮组件 */
+.feature-button,
+.add-task-btn,
+.btn-submit,
+.btn-cancel {
+    background: var(--cream-accent);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    display: inline-block;
+}
+
+.feature-button:hover,
+.add-task-btn:hover,
+.btn-submit:hover {
+    background: var(--cream-warm);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-soft);
+}
+
+.feature-button:disabled,
+.add-task-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-submit {
+    background: var(--cream-warm);
+}
+
+.btn-cancel {
+    background: transparent;
+    color: var(--text-secondary);
+}
+
+.btn-cancel:hover {
+    background: var(--cream-secondary);
+    color: var(--text-primary);
+}
+
+.btn-today {
+    background: var(--cream-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-small);
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-today:hover {
+    background: var(--cream-warm);
+    transform: translateY(-1px);
+}
+
+/* 任务布局 */
+.tasks-layout {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.calendar-section {
+    background: var(--cream-secondary);
+    border-radius: var(--border-radius-large);
+    padding: 2rem;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid var(--border-color);
+}
+
+.tasks-section {
+    background: var(--cream-secondary);
+    border-radius: var(--border-radius-large);
+    padding: 2rem;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid var(--border-color);
+}
+
+/* 日历头部 */
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.month-nav-btn {
+    background: var(--cream-accent);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 1.2rem;
+    color: var(--text-primary);
+}
+
+.month-nav-btn:hover {
+    background: var(--cream-warm);
+    transform: scale(1.1);
+}
+
+.current-month {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* 任务区域头部 */
+.tasks-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tasks-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.tasks-date {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* 任务列表 */
+.tasks-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.tasks-empty {
+    text-align: center;
+    color: var(--text-light);
+    font-style: italic;
+    padding: 2rem;
+    background: var(--cream-light);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    margin: 1rem 0;
+}
+
+.task-item {
+    background: var(--cream-light);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    transition: var(--transition);
+}
+
+.task-item:hover {
+    transform: translateX(2px);
+    box-shadow: var(--shadow-soft);
+}
+
+.task-item.completed {
+    opacity: 0.7;
+}
+
+.task-item.completed .task-title {
+    text-decoration: line-through;
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.25rem;
+}
+
+.task-title {
+    font-weight: 500;
+    color: var(--text-primary);
+    flex: 1;
+    font-size: 0.95rem;
+    line-height: 1.3;
+}
+
+.task-actions {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.task-action-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: var(--border-radius-small);
+    transition: var(--transition);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.task-action-btn:hover {
+    background: var(--cream-accent);
+    color: var(--text-primary);
+}
+
+.task-meta {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.task-description {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin-top: 0.25rem;
+}
+
+.task-category {
+    display: inline-block;
+    padding: 0.15rem 0.4rem;
+    border-radius: var(--border-radius-small);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.task-category.life {
+    background: #E8F5E8;
+    color: #2D5A2D;
+}
+
+.task-category.work {
+    background: #E8F0FF;
+    color: #1E3A8A;
+}
+
+/* 工作时间区域样式 */
+.work-time-section {
+    margin: 0.75rem 0;
+    padding: 0.75rem;
+    background: var(--cream-accent);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.work-time-section .form-row {
+    margin-bottom: 0;
+}
+
+/* 工作时间显示样式 */
+.work-time {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    background: #E8F0FF;
+    padding: 0.15rem 0.4rem;
+    border-radius: var(--border-radius-small);
+    margin-right: 0.5rem;
+}
+
+.task-time {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    background: var(--cream-accent);
+    padding: 0.15rem 0.4rem;
+    border-radius: var(--border-radius-small);
+    margin-right: 0.5rem;
+}
+
+/* 确保表单元素对齐 */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem; /* 添加底部间距 */
+}
+
+/* 添加过渡效果 */
+#normalTimeGroup,
+#workTimeSection {
+    transition: all 0.3s ease-in-out;
+}
+
+/* 模态框 */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+}
+
+.modal-content {
+    background: var(--cream-light);
+    border-radius: var(--border-radius-large);
+    padding: 2rem;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: var(--shadow-medium);
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.modal.active .modal-content {
+    transform: scale(1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    background: transparent;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: var(--transition);
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.modal-close:hover {
+    background: var(--cream-accent);
+    color: var(--text-primary);
+}
+
+/* 表单组件 */
+.task-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+/* 确保普通时间组在隐藏时不影响布局 */
+.form-group#normalTimeGroup {
+    min-height: 80px; /* 与工作时间组高度保持一致 */
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--cream-light);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: var(--transition);
+    width: 100%; /* 确保输入框占满容器 */
+    box-sizing: border-box; /* 包含padding和border */
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--cream-warm);
+    box-shadow: 0 0 0 3px rgba(240, 230, 140, 0.2);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+/* 消息提示 */
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--cream-warm);
+    color: var(--text-primary);
+    padding: 1rem 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-medium);
+    z-index: 1100;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+}
+
+.toast.show {
+    transform: translateX(0);
+}
+
+.toast.success {
+    background: #D4F4DD;
+    color: #1F5F3F;
+}
+
+.toast.error {
+    background: #FED7D7;
+    color: #9B2C2C;
+}
+
+/* 加载状态 */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--border-color);
+    border-radius: 50%;
+    border-top-color: var(--cream-warm);
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .tasks-layout {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .calendar-section,
+    .tasks-section {
+        padding: 1.5rem;
+    }
+    
+    .modal-content {
+        width: 95%;
+        padding: 1.5rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .task-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .task-actions {
+        align-self: flex-end;
+    }
+}
