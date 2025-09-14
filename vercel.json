@@ -20,6 +20,10 @@
       "dest": "/index.html"
     },
     {
+      "src": "/pages/tasks.html",
+      "dest": "/pages/tasks.html"
+    },
+    {
       "src": "/pages/tasks",
       "dest": "/pages/tasks.html"
     },
