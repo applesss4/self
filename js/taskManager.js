@@ -213,6 +213,7 @@ class TaskManager {
                 return [];
             }
         } else {
+            // 确保本地日期比较使用相同的格式
             return this.tasks.filter(task => task.date === date);
         }
     }
@@ -305,13 +306,11 @@ class TaskManager {
     }
 
     // 获取今日任务
-    async getTodayTasks() {
-        const today = new Date().toISOString().split('T')[0];
-        if (this.isOnline) {
-            return await this.getTasksByDate(today);
-        } else {
-            return this.getTasksByDate(today);
-        }
+    getTodayTasks() {
+        // 使用本地日期而不是toISOString
+        const today = new Date();
+        const todayStr = formatDateToLocal(today);
+        return this.tasks.filter(task => task.date === todayStr);
     }
 
     // 获取本周任务
@@ -426,3 +425,17 @@ class TaskManager {
 }
 
 export default TaskManager;
+
+// 辅助函数：将Date对象格式化为本地日期字符串 (YYYY-MM-DD)
+function formatDateToLocal(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// 辅助函数：将本地日期字符串解析为Date对象
+function parseLocalDate(dateString) {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+}

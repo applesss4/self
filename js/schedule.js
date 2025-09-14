@@ -1,5 +1,6 @@
 // 工作排班表主逻辑
 import TaskManager from './taskManager.js';
+import SupabaseAuth from './supabaseAuth.js';  // 导入 SupabaseAuth 类
 
 // 辅助函数：将Date对象格式化为本地日期字符串 (YYYY-MM-DD)
 function formatDateToLocal(date) {
@@ -50,13 +51,22 @@ async function init() {
     // 初始化 Supabase 认证
     supabaseAuth = new SupabaseAuth();
     
+    // 设置当前日期为今天
+    state.currentDate = new Date();
+    state.selectedDate = formatDateToLocal(new Date());
+    
     // 检查用户登录状态
     const user = await supabaseAuth.getCurrentUser();
     if (user) {
-        // 启用在线模式
+        // 用户已登录，启用在线模式
         taskManager.setOnlineMode(true);
         // 订阅实时更新
         subscribeToRealtimeUpdates();
+        // 加载任务
+        state.tasks = await taskManager.loadTasks();
+    } else {
+        // 用户未登录，加载本地任务
+        state.tasks = await taskManager.loadTasks();
     }
     
     // 监听认证状态变化
@@ -80,12 +90,6 @@ async function init() {
     
     // 初始化排班表
     renderSchedule();
-    
-    // 加载并显示任务
-    await loadAndDisplayTasks();
-    
-    // 更新今日按钮状态
-    updateTodayButton();
 }
 
 // 获取 DOM 元素
@@ -108,12 +112,16 @@ function bindEventListeners() {
         // 移动到上周
         state.currentDate.setDate(state.currentDate.getDate() - 7);
         renderSchedule();
+        // 确保在切换周后更新排班显示
+        updateScheduleDisplay();
     });
-    
+
     DOM.nextWeekBtn?.addEventListener('click', () => {
         // 移动到下周
         state.currentDate.setDate(state.currentDate.getDate() + 7);
         renderSchedule();
+        // 确保在切换周后更新排班显示
+        updateScheduleDisplay();
     });
     
     // 今日按钮
@@ -343,6 +351,7 @@ function goToToday() {
     state.selectedDate = formatDateToLocal(new Date());
     renderSchedule();
     updateScheduleForSelectedDate();
+    updateScheduleDisplay();
     updateTodayButton();
 }
 
@@ -357,9 +366,15 @@ function updateTodayButton() {
 
 // 加载并显示任务
 async function loadAndDisplayTasks() {
-    state.tasks = await taskManager.loadTasks();
-    updateScheduleForSelectedDate();
-    renderSchedule();
+    try {
+        state.tasks = await taskManager.loadTasks();
+        updateScheduleForSelectedDate();
+        // 更新排班表显示
+        updateScheduleDisplay();
+    } catch (error) {
+        console.error('加载任务失败:', error);
+        showToast('加载任务失败，请重试', 'error');
+    }
 }
 
 // 更新选中日期的排班显示

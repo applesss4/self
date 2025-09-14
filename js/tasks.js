@@ -1,6 +1,20 @@
 // 任务页面主逻辑
 import TaskManager from './taskManager.js';
-import SupabaseAuth from './supabaseAuth.js';
+import SupabaseAuth from './supabaseAuth.js';  // 导入 SupabaseAuth 类
+
+// 辅助函数：将Date对象格式化为本地日期字符串 (YYYY-MM-DD)
+function formatDateToLocal(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// 辅助函数：将本地日期字符串解析为Date对象
+function parseLocalDate(dateString) {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+}
 
 // 初始化任务管理器
 const taskManager = new TaskManager();
@@ -26,7 +40,7 @@ const DOM = {
 // 当前状态
 const state = {
     currentMonth: new Date(),
-    selectedDate: new Date().toISOString().split('T')[0],
+    selectedDate: formatDateToLocal(new Date()),
     tasks: []
 };
 
@@ -77,6 +91,9 @@ async function init() {
     
     // 更新今日按钮状态
     updateTodayButton();
+    
+    // 显示今日任务
+    displayTodayTasks();
 }
 
 // 获取 DOM 元素
@@ -93,6 +110,7 @@ function getDOMElements() {
     DOM.workTimeSection = document.getElementById('workTimeSection');
     DOM.normalTimeGroup = document.getElementById('normalTimeGroup');
     DOM.todayBtn = document.querySelector('.btn-today');
+    DOM.todayTasksList = document.querySelector('.today-tasks-list');  // 获取今日任务列表元素
 }
 
 // 绑定事件监听器
@@ -247,9 +265,10 @@ function renderCalendar() {
     // 渲染日期
     const currentDate = new Date(startDate);
     while (currentDate <= endDate) {
-        const dateStr = currentDate.toISOString().split('T')[0];
+        // 使用本地日期格式而不是toISOString
+        const dateStr = formatDateToLocal(currentDate);
         const isCurrentMonth = currentDate.getMonth() === month;
-        const isToday = dateStr === new Date().toISOString().split('T')[0];
+        const isToday = dateStr === formatDateToLocal(new Date());
         
         const dayElement = document.createElement('div');
         dayElement.className = `calendar-day ${isCurrentMonth ? 'current-month' : 'other-month'} ${isToday ? 'today' : ''} ${dateStr === state.selectedDate ? 'selected' : ''}`;
@@ -287,7 +306,9 @@ function selectDate(dateStr) {
 function goToToday() {
     const today = new Date();
     state.currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    state.selectedDate = today.toISOString().split('T')[0];
+    // 使用本地日期格式而不是toISOString
+    const todayStr = formatDateToLocal(today);
+    state.selectedDate = todayStr;
     renderCalendar();
     updateTasksForSelectedDate();
     updateTodayButton();
@@ -295,7 +316,7 @@ function goToToday() {
 
 // 更新今日按钮状态
 function updateTodayButton() {
-    const isTodaySelected = state.selectedDate === new Date().toISOString().split('T')[0];
+    const isTodaySelected = state.selectedDate === formatDateToLocal(new Date());
     if (DOM.todayBtn) {
         DOM.todayBtn.textContent = isTodaySelected ? '今日' : '跳转到今日';
         DOM.todayBtn.classList.toggle('active', isTodaySelected);
@@ -307,6 +328,35 @@ async function loadAndDisplayTasks() {
     state.tasks = await taskManager.loadTasks();
     updateTasksForSelectedDate();
     renderCalendar();
+    // 更新今日任务显示
+    displayTodayTasks();
+}
+
+// 显示今日任务
+async function displayTodayTasks() {
+    // 获取今日任务
+    const todayStr = formatDateToLocal(new Date());
+    let todayTasks;
+    
+    if (taskManager.isOnline) {
+        todayTasks = await taskManager.getTasksByDate(todayStr);
+    } else {
+        todayTasks = taskManager.getTasksByDate(todayStr);
+    }
+    
+    // 如果有今日任务列表元素，则更新显示
+    if (DOM.todayTasksList) {
+        DOM.todayTasksList.innerHTML = '';
+        
+        if (todayTasks.length === 0) {
+            DOM.todayTasksList.innerHTML = '<div class="tasks-empty"><p>今天还没有任务</p></div>';
+        } else {
+            todayTasks.forEach(task => {
+                const taskElement = createTaskElement(task);
+                DOM.todayTasksList.appendChild(taskElement);
+            });
+        }
+    }
 }
 
 // 更新选中日期的任务显示
@@ -325,7 +375,8 @@ async function updateTasksForSelectedDate() {
     DOM.tasksList.innerHTML = '';
     
     // 更新页面标题中的日期
-    const selectedDateObj = new Date(state.selectedDate);
+    // 使用本地日期解析而不是直接创建Date对象
+    const selectedDateObj = parseLocalDate(state.selectedDate);
     const dateStr = selectedDateObj.toLocaleDateString('zh-CN', {
         year: 'numeric',
         month: 'long',
@@ -557,7 +608,8 @@ function updateCalendarTaskCounts() {
     // 创建日期到任务数量的映射
     const taskCounts = {};
     state.tasks.forEach(task => {
-        const taskDate = new Date(task.date);
+        // 使用本地日期格式而不是toISOString
+        const taskDate = parseLocalDate(task.date);
         if (taskDate.getFullYear() === year && taskDate.getMonth() === month) {
             taskCounts[task.date] = (taskCounts[task.date] || 0) + 1;
         }
