@@ -32,6 +32,10 @@
       "dest": "/pages/$1"
     },
     {
+      "src": "/pages",
+      "dest": "/pages/tasks.html"
+    },
+    {
       "src": "/js/(.*)",
       "dest": "/js/$1"
     },
