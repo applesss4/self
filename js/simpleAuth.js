@@ -184,8 +184,10 @@ function updateLoginButton(user) {
     const loginBtn = document.getElementById('loginBtn');
     if (loginBtn) {
         if (user) {
-            loginBtn.textContent = `登出 (${user.email.split('@')[0]})`;
+            // 用户已登录，只显示"退出"，不显示用户名
+            loginBtn.textContent = '退出';
         } else {
+            // 用户未登录，显示"登录"
             loginBtn.textContent = '登录';
         }
     }
@@ -240,7 +242,8 @@ async function handleAuth() {
         try {
             const result = await supabaseAuth.signIn(email, password);
             if (result.success) {
-                showToast(`欢迎回来，${email}！登录成功。`, 'success');
+                // 修改提示信息，不再显示用户名
+                showToast('登录成功！', 'success');
                 closeAuthModalFunc();
                 document.getElementById('authForm').reset();
                 
@@ -260,13 +263,13 @@ async function handleSignOut() {
     try {
         const result = await supabaseAuth.signOut();
         if (result.success) {
-            showToast('已成功登出', 'success');
+            showToast('已成功退出', 'success');
             updateLoginButton(null);
         } else {
-            showToast(`登出失败: ${result.error}`, 'error');
+            showToast(`退出失败: ${result.error}`, 'error');
         }
     } catch (error) {
-        showToast(`登出异常: ${error.message}`, 'error');
+        showToast(`退出异常: ${error.message}`, 'error');
     }
 }
 

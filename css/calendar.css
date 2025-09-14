@@ -351,6 +351,16 @@
     .schedule-item-time {
         font-size: 0.7rem;
     }
+    
+    /* 确保排班表在移动端也能正确显示 */
+    .schedule-layout {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .schedule-container {
+        min-width: 600px; /* 确保在小屏幕上也能正确显示 */
+    }
 }
 
 @media (max-width: 480px) {
@@ -403,5 +413,10 @@
     
     .schedule-item-time {
         font-size: 0.65rem;
+    }
+    
+    /* 在极小屏幕上进一步优化 */
+    .schedule-container {
+        min-width: 500px;
     }
 }

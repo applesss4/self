@@ -261,13 +261,17 @@ function getWeekInfo(date) {
     const year = startDate.getFullYear();
     const month = startDate.getMonth() + 1;
     
-    // 计算这是该月的第几周
+    // 计算这是该月的第几周（正确的方法）
+    // 找到该月的第一天
     const firstDayOfMonth = new Date(year, month - 1, 1);
+    
+    // 找到该月第一个星期日（一周的开始）
     const firstDayOfWeek = firstDayOfMonth.getDay();
     const firstWeekStart = new Date(firstDayOfMonth);
     firstWeekStart.setDate(firstDayOfMonth.getDate() - firstDayOfWeek);
     
-    const weekNumber = Math.ceil(((startDate - firstWeekStart) / (7 * 24 * 60 * 60 * 1000)) + 1);
+    // 计算当前周的开始日期与该月第一周开始日期之间的周数差异
+    const weekNumber = Math.floor((startDate - firstWeekStart) / (7 * 24 * 60 * 60 * 1000)) + 1;
     
     // 显示格式：几月第几周
     const display = `${month}月第${weekNumber}周`;
