@@ -84,6 +84,7 @@ function getDOMElements() {
     DOM.tasksList = document.getElementById('tasksList');
     DOM.scheduleForm = document.getElementById('scheduleForm');
     DOM.addTaskBtn = document.querySelector('.add-task-btn');
+    DOM.exportBtn = document.getElementById('exportBtn');
     DOM.todayBtn = document.getElementById('todayBtn');
 }
 
@@ -116,6 +117,9 @@ function bindEventListeners() {
         
         document.getElementById('scheduleModal').classList.add('active');
     });
+    
+    // 导出按钮
+    DOM.exportBtn?.addEventListener('click', exportScheduleAsImage);
     
     // 排班表单提交
     DOM.scheduleForm?.addEventListener('submit', handleScheduleSubmit);
@@ -625,6 +629,162 @@ function showToast(message, type = 'info') {
             toast.remove();
         }, 300);
     }, 3000);
+}
+
+// 导出排班表为图片
+function exportScheduleAsImage() {
+    // 确保DOM已完全渲染
+    setTimeout(() => {
+        // 获取要导出的元素
+        const scheduleContainer = document.querySelector('.schedule-container');
+        
+        if (!scheduleContainer) {
+            showToast('无法找到排班表容器', 'error');
+            return;
+        }
+        
+        // 禁用导出按钮防止重复点击
+        if (DOM.exportBtn) {
+            DOM.exportBtn.disabled = true;
+            DOM.exportBtn.textContent = '正在导出...';
+        }
+        
+        try {
+            // 使用 html2canvas 库将元素转换为图片
+            // 创建script标签动态加载html2canvas
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+            script.onload = function() {
+                // 配置选项
+                const options = {
+                    backgroundColor: '#FFFFFB', // 与页面背景色一致
+                    scale: 2, // 提高图片质量
+                    useCORS: true,
+                    logging: false,
+                    scrollY: -window.scrollY // 修复滚动位置问题
+                };
+                
+                // 转换为canvas
+                html2canvas(scheduleContainer, options).then(canvas => {
+                    // 将canvas转换为图片数据
+                    const imageData = canvas.toDataURL('image/png');
+                    
+                    // 创建新窗口显示图片，并提供下载提示
+                    const newWindow = window.open();
+                    newWindow.document.write(`
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>工作排班表导出</title>
+                            <style>
+                                body {
+                                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                                    text-align: center;
+                                    padding: 20px;
+                                    background: #f5f5dc;
+                                }
+                                .container {
+                                    max-width: 800px;
+                                    margin: 0 auto;
+                                    background: white;
+                                    padding: 20px;
+                                    border-radius: 12px;
+                                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                                }
+                                .image-container {
+                                    margin: 20px 0;
+                                }
+                                img {
+                                    max-width: 100%;
+                                    height: auto;
+                                    border: 1px solid #e6dcc7;
+                                    border-radius: 8px;
+                                }
+                                .download-btn {
+                                    background: #f0e68c;
+                                    border: 1px solid #e6dcc7;
+                                    border-radius: 8px;
+                                    padding: 12px 24px;
+                                    font-size: 16px;
+                                    cursor: pointer;
+                                    text-decoration: none;
+                                    display: inline-block;
+                                    margin: 10px 5px;
+                                }
+                                .download-btn:hover {
+                                    background: #fffacd;
+                                    transform: translateY(-2px);
+                                }
+                                .instructions {
+                                    color: #8b7355;
+                                    margin: 20px 0;
+                                    line-height: 1.6;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="container">
+                                <h2>工作排班表导出成功</h2>
+                                <div class="instructions">
+                                    <p>图片已生成，请右键点击图片选择"另存为"保存到您的设备，</p>
+                                    <p>或点击下方按钮直接下载。</p>
+                                </div>
+                                <div class="image-container">
+                                    <img src="${imageData}" alt="工作排班表" />
+                                </div>
+                                <div>
+                                    <a href="${imageData}" download="工作排班表_${new Date().toISOString().slice(0, 10)}.png" class="download-btn">
+                                        📥 直接下载图片
+                                    </a>
+                                    <button class="download-btn" onclick="window.close()">关闭窗口</button>
+                                </div>
+                            </div>
+                        </body>
+                        </html>
+                    `);
+                    newWindow.document.close();
+                    
+                    // 恢复导出按钮
+                    if (DOM.exportBtn) {
+                        DOM.exportBtn.disabled = false;
+                        DOM.exportBtn.textContent = '📥 导出图片';
+                    }
+                    
+                    showToast('排班表已成功导出，请在新窗口中查看和下载', 'success');
+                }).catch(error => {
+                    console.error('导出失败:', error);
+                    showToast('导出失败，请重试', 'error');
+                    
+                    // 恢复导出按钮
+                    if (DOM.exportBtn) {
+                        DOM.exportBtn.disabled = false;
+                        DOM.exportBtn.textContent = '📥 导出图片';
+                    }
+                });
+            };
+            
+            script.onerror = function() {
+                showToast('加载导出组件失败，请重试', 'error');
+                
+                // 恢复导出按钮
+                if (DOM.exportBtn) {
+                    DOM.exportBtn.disabled = false;
+                    DOM.exportBtn.textContent = '📥 导出图片';
+                }
+            };
+            
+            document.head.appendChild(script);
+        } catch (error) {
+            console.error('导出失败:', error);
+            showToast('导出失败，请重试', 'error');
+            
+            // 恢复导出按钮
+            if (DOM.exportBtn) {
+                DOM.exportBtn.disabled = false;
+                DOM.exportBtn.textContent = '📥 导出图片';
+            }
+        }
+    }, 100);
 }
 
 // 页面加载完成后初始化
