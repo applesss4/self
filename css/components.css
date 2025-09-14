@@ -691,6 +691,16 @@
     .page-header-actions {
         width: 100%;
         justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    /* 移动端按钮调整 */
+    .add-task-btn,
+    .export-btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+        margin: 0.25rem;
+        min-width: 120px; /* 确保按钮在移动端有足够的宽度 */
     }
 }
 
@@ -755,10 +765,25 @@
         padding: 0.1rem 0.3rem;
     }
     
-    /* 移动端按钮调整 */
+    /* 移动端按钮进一步调整 */
     .add-task-btn,
     .export-btn {
-        padding: 0.6rem 1.2rem;
-        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        min-width: 110px;
+    }
+    
+    .page-header-actions {
+        gap: 0.5rem;
+    }
+    
+    /* 确保在极小屏幕上按钮不会溢出 */
+    @media (max-width: 320px) {
+        .add-task-btn,
+        .export-btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            min-width: 100px;
+        }
     }
 }

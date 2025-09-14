@@ -1,6 +1,19 @@
 // 工作排班表主逻辑
 import TaskManager from './taskManager.js';
-import SupabaseAuth from './supabaseAuth.js';
+
+// 辅助函数：将Date对象格式化为本地日期字符串 (YYYY-MM-DD)
+function formatDateToLocal(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// 辅助函数：将本地日期字符串解析为Date对象
+function parseLocalDate(dateString) {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+}
 
 // 初始化任务管理器
 const taskManager = new TaskManager();
@@ -22,7 +35,7 @@ const DOM = {
 // 当前状态
 const state = {
     currentDate: new Date(),
-    selectedDate: new Date().toISOString().split('T')[0],
+    selectedDate: formatDateToLocal(new Date()),
     tasks: []
 };
 
@@ -218,8 +231,8 @@ function renderSchedule() {
     
     // 渲染日期
     weekDates.forEach((dateObj, index) => {
-        const dateStr = dateObj.dateStr;
-        const isToday = dateStr === new Date().toISOString().split('T')[0];
+        const dateStr = formatDateToLocal(dateObj.date);
+        const isToday = dateStr === formatDateToLocal(new Date());
         const isSelected = dateStr === state.selectedDate;
         
         const dayElement = document.createElement('div');
@@ -308,7 +321,7 @@ function getWeekDates(date) {
         
         dates.push({
             date: currentDate,
-            dateStr: currentDate.toISOString().split('T')[0],
+            dateStr: formatDateToLocal(currentDate),
             dayName: dayNames[i]
         });
     }
@@ -327,7 +340,7 @@ function selectDate(dateStr) {
 // 跳转到今天
 function goToToday() {
     state.currentDate = new Date();
-    state.selectedDate = new Date().toISOString().split('T')[0];
+    state.selectedDate = formatDateToLocal(new Date());
     renderSchedule();
     updateScheduleForSelectedDate();
     updateTodayButton();
@@ -335,7 +348,7 @@ function goToToday() {
 
 // 更新今日按钮状态
 function updateTodayButton() {
-    const isTodaySelected = state.selectedDate === new Date().toISOString().split('T')[0];
+    const isTodaySelected = state.selectedDate === formatDateToLocal(new Date());
     if (DOM.todayBtn) {
         DOM.todayBtn.textContent = isTodaySelected ? '今日' : '跳转到今日';
         DOM.todayBtn.classList.toggle('active', isTodaySelected);
@@ -655,13 +668,23 @@ function exportScheduleAsImage() {
             const script = document.createElement('script');
             script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
             script.onload = function() {
-                // 配置选项
+                // 配置选项 - 为移动端优化
                 const options = {
                     backgroundColor: '#FFFFFB', // 与页面背景色一致
                     scale: 2, // 提高图片质量
                     useCORS: true,
                     logging: false,
-                    scrollY: -window.scrollY // 修复滚动位置问题
+                    scrollY: -window.scrollY, // 修复滚动位置问题
+                    width: scheduleContainer.scrollWidth, // 确保完整宽度
+                    height: scheduleContainer.scrollHeight, // 确保完整高度
+                    onclone: function(clonedDoc) {
+                        // 克隆文档时的处理
+                        const clonedContainer = clonedDoc.querySelector('.schedule-container');
+                        if (clonedContainer) {
+                            // 确保在移动端也能正确显示
+                            clonedContainer.style.overflow = 'visible';
+                        }
+                    }
                 };
                 
                 // 转换为canvas
@@ -669,88 +692,273 @@ function exportScheduleAsImage() {
                     // 将canvas转换为图片数据
                     const imageData = canvas.toDataURL('image/png');
                     
-                    // 创建新窗口显示图片，并提供下载提示
-                    const newWindow = window.open();
-                    newWindow.document.write(`
-                        <!DOCTYPE html>
-                        <html>
-                        <head>
-                            <title>工作排班表导出</title>
-                            <style>
-                                body {
-                                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                                    text-align: center;
-                                    padding: 20px;
-                                    background: #f5f5dc;
-                                }
-                                .container {
-                                    max-width: 800px;
-                                    margin: 0 auto;
-                                    background: white;
-                                    padding: 20px;
-                                    border-radius: 12px;
-                                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                                }
-                                .image-container {
-                                    margin: 20px 0;
-                                }
-                                img {
-                                    max-width: 100%;
-                                    height: auto;
-                                    border: 1px solid #e6dcc7;
-                                    border-radius: 8px;
-                                }
-                                .download-btn {
-                                    background: #f0e68c;
-                                    border: 1px solid #e6dcc7;
-                                    border-radius: 8px;
-                                    padding: 12px 24px;
-                                    font-size: 16px;
-                                    cursor: pointer;
-                                    text-decoration: none;
-                                    display: inline-block;
-                                    margin: 10px 5px;
-                                }
-                                .download-btn:hover {
-                                    background: #fffacd;
-                                    transform: translateY(-2px);
-                                }
-                                .instructions {
-                                    color: #8b7355;
-                                    margin: 20px 0;
-                                    line-height: 1.6;
-                                }
-                            </style>
-                        </head>
-                        <body>
-                            <div class="container">
-                                <h2>工作排班表导出成功</h2>
-                                <div class="instructions">
-                                    <p>图片已生成，请右键点击图片选择"另存为"保存到您的设备，</p>
-                                    <p>或点击下方按钮直接下载。</p>
-                                </div>
-                                <div class="image-container">
-                                    <img src="${imageData}" alt="工作排班表" />
-                                </div>
-                                <div>
-                                    <a href="${imageData}" download="工作排班表_${new Date().toISOString().slice(0, 10)}.png" class="download-btn">
-                                        📥 直接下载图片
-                                    </a>
-                                    <button class="download-btn" onclick="window.close()">关闭窗口</button>
-                                </div>
-                            </div>
-                        </body>
-                        </html>
-                    `);
-                    newWindow.document.close();
+                    // 检测是否为移动设备
+                    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
                     
-                    // 恢复导出按钮
-                    if (DOM.exportBtn) {
-                        DOM.exportBtn.disabled = false;
-                        DOM.exportBtn.textContent = '📥 导出图片';
+                    // 检测是否为iOS设备（特殊处理）
+                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                    
+                    if (isMobile) {
+                        // 移动端处理 - 创建新窗口显示图片
+                        const newWindow = window.open();
+                        if (!newWindow) {
+                            // 如果弹窗被阻止，提供替代方案
+                            showToast('弹窗被浏览器阻止，请允许弹窗或手动保存图片', 'error');
+                            
+                            // 恢复导出按钮
+                            if (DOM.exportBtn) {
+                                DOM.exportBtn.disabled = false;
+                                DOM.exportBtn.textContent = '📥 导出图片';
+                            }
+                            
+                            return;
+                        }
+                        
+                        newWindow.document.write(`
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                <title>工作排班表导出</title>
+                                <style>
+                                    body {
+                                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                                        text-align: center;
+                                        padding: 20px;
+                                        background: #f5f5dc;
+                                        margin: 0;
+                                    }
+                                    .container {
+                                        max-width: 100%;
+                                        margin: 0 auto;
+                                        background: white;
+                                        padding: 20px;
+                                        border-radius: 12px;
+                                        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                                    }
+                                    .image-container {
+                                        margin: 20px 0;
+                                        overflow-x: auto;
+                                    }
+                                    img {
+                                        max-width: 100%;
+                                        height: auto;
+                                        border: 1px solid #e6dcc7;
+                                        border-radius: 8px;
+                                    }
+                                    .download-btn {
+                                        background: #f0e68c;
+                                        border: 1px solid #e6dcc7;
+                                        border-radius: 8px;
+                                        padding: 12px 24px;
+                                        font-size: 16px;
+                                        cursor: pointer;
+                                        text-decoration: none;
+                                        display: inline-block;
+                                        margin: 10px 5px;
+                                        min-width: 120px;
+                                    }
+                                    .download-btn:hover {
+                                        background: #fffacd;
+                                        transform: translateY(-2px);
+                                    }
+                                    .instructions {
+                                        color: #8b7355;
+                                        margin: 20px 0;
+                                        line-height: 1.6;
+                                    }
+                                    .mobile-instructions {
+                                        background: #fffacd;
+                                        padding: 15px;
+                                        border-radius: 8px;
+                                        margin: 20px 0;
+                                        border: 1px solid #e6dcc7;
+                                    }
+                                    @media (max-width: 768px) {
+                                        body {
+                                            padding: 10px;
+                                        }
+                                        .container {
+                                            padding: 15px;
+                                        }
+                                        .download-btn {
+                                            padding: 10px 16px;
+                                            font-size: 14px;
+                                            width: 100%;
+                                            margin: 5px 0;
+                                        }
+                                    }
+                                </style>
+                            </head>
+                            <body>
+                                <div class="container">
+                                    <h2>工作排班表导出成功</h2>
+                                    <div class="mobile-instructions">
+                                        <p><strong>移动端保存说明：</strong></p>
+                                        <p>1. 点击下方"直接下载图片"按钮</p>
+                                        <p>2. 如果无法直接下载，请长按图片选择"保存图片"</p>
+                                        <p>3. 或点击图片后选择分享到相册</p>
+                                    </div>
+                                    <div class="image-container">
+                                        <img src="${imageData}" alt="工作排班表" id="scheduleImage" />
+                                    </div>
+                                    <div>
+                                        <button class="download-btn" id="downloadBtn">
+                                            📥 直接下载图片
+                                        </button>
+                                        <button class="download-btn" onclick="window.close()">关闭窗口</button>
+                                    </div>
+                                </div>
+                                <script>
+                                    document.getElementById('downloadBtn').addEventListener('click', function() {
+                                        const link = document.createElement('a');
+                                        link.href = '${imageData}';
+                                        link.download = '工作排班表_${new Date().toISOString().slice(0, 10)}.png';
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        document.body.removeChild(link);
+                                    });
+                                <\/script>
+                            </body>
+                            </html>
+                        `);
+                        newWindow.document.close();
+                        
+                        // 恢复导出按钮
+                        if (DOM.exportBtn) {
+                            DOM.exportBtn.disabled = false;
+                            DOM.exportBtn.textContent = '📥 导出图片';
+                        }
+                        
+                        showToast('排班表已成功导出，请在新窗口中查看和下载', 'success');
+                    } else {
+                        // 桌面端处理 - 尝试直接下载
+                        try {
+                            // 创建下载链接
+                            const link = document.createElement('a');
+                            link.download = `工作排班表_${new Date().toISOString().slice(0, 10)}.png`;
+                            link.href = imageData;
+                            link.target = '_blank'; // 在新标签页中打开
+                            
+                            // 触发下载
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            
+                            // 恢复导出按钮
+                            if (DOM.exportBtn) {
+                                DOM.exportBtn.disabled = false;
+                                DOM.exportBtn.textContent = '📥 导出图片';
+                            }
+                            
+                            showToast('排班表已成功导出为图片', 'success');
+                        } catch (downloadError) {
+                            // 如果直接下载失败，回退到新窗口显示
+                            const newWindow = window.open();
+                            if (!newWindow) {
+                                showToast('弹窗被浏览器阻止，请允许弹窗', 'error');
+                                
+                                // 恢复导出按钮
+                                if (DOM.exportBtn) {
+                                    DOM.exportBtn.disabled = false;
+                                    DOM.exportBtn.textContent = '📥 导出图片';
+                                }
+                                
+                                return;
+                            }
+                            
+                            newWindow.document.write(`
+                                <!DOCTYPE html>
+                                <html>
+                                <head>
+                                    <title>工作排班表导出</title>
+                                    <style>
+                                        body {
+                                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                                            text-align: center;
+                                            padding: 20px;
+                                            background: #f5f5dc;
+                                        }
+                                        .container {
+                                            max-width: 800px;
+                                            margin: 0 auto;
+                                            background: white;
+                                            padding: 20px;
+                                            border-radius: 12px;
+                                            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                                        }
+                                        .image-container {
+                                            margin: 20px 0;
+                                        }
+                                        img {
+                                            max-width: 100%;
+                                            height: auto;
+                                            border: 1px solid #e6dcc7;
+                                            border-radius: 8px;
+                                        }
+                                        .download-btn {
+                                            background: #f0e68c;
+                                            border: 1px solid #e6dcc7;
+                                            border-radius: 8px;
+                                            padding: 12px 24px;
+                                            font-size: 16px;
+                                            cursor: pointer;
+                                            text-decoration: none;
+                                            display: inline-block;
+                                            margin: 10px 5px;
+                                        }
+                                        .download-btn:hover {
+                                            background: #fffacd;
+                                            transform: translateY(-2px);
+                                        }
+                                        .instructions {
+                                            color: #8b7355;
+                                            margin: 20px 0;
+                                            line-height: 1.6;
+                                        }
+                                    </style>
+                                </head>
+                                <body>
+                                    <div class="container">
+                                        <h2>工作排班表导出成功</h2>
+                                        <div class="instructions">
+                                            <p>图片已生成，请右键点击图片选择"另存为"保存到您的设备，</p>
+                                            <p>或点击下方按钮直接下载。</p>
+                                        </div>
+                                        <div class="image-container">
+                                            <img src="${imageData}" alt="工作排班表" id="scheduleImage" />
+                                        </div>
+                                        <div>
+                                            <button class="download-btn" id="downloadBtn">
+                                                📥 直接下载图片
+                                            </button>
+                                            <button class="download-btn" onclick="window.close()">关闭窗口</button>
+                                        </div>
+                                    </div>
+                                    <script>
+                                        document.getElementById('downloadBtn').addEventListener('click', function() {
+                                            const link = document.createElement('a');
+                                            link.href = '${imageData}';
+                                            link.download = '工作排班表_${new Date().toISOString().slice(0, 10)}.png';
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            document.body.removeChild(link);
+                                        });
+                                    <\/script>
+                                </body>
+                                </html>
+                            `);
+                            newWindow.document.close();
+                            
+                            // 恢复导出按钮
+                            if (DOM.exportBtn) {
+                                DOM.exportBtn.disabled = false;
+                                DOM.exportBtn.textContent = '📥 导出图片';
+                            }
+                            
+                            showToast('排班表已成功导出，请在新窗口中查看和下载', 'success');
+                        }
                     }
-                    
-                    showToast('排班表已成功导出，请在新窗口中查看和下载', 'success');
                 }).catch(error => {
                     console.error('导出失败:', error);
                     showToast('导出失败，请重试', 'error');
