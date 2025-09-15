@@ -21,27 +21,47 @@ class FoodUI {
             return;
         }
         
-        // 显示加载状态
-        this.showLoadingState();
-        
-        // 等待存储初始化完成
-        await this.foodStorage.initialize();
-        
-        // 隐藏加载状态
-        this.hideLoadingState();
-        
-        this.bindEvents();
-        this.renderFoods();
-        this.updateCartUI();
-        
-        // 绑定功能按钮事件
-        this.bindFeaturesButtonEvents();
-        
-        // 检查用户登录状态并更新功能按钮
-        this.checkUserStatusAndShowFeaturesButton();
-        
-        // 为导航链接添加登录检查
-        this.addLoginCheckToNavLinks();
+        try {
+            // 显示加载状态
+            this.showLoadingState();
+            
+            // 等待存储初始化完成
+            await this.foodStorage.initialize();
+            
+            // 隐藏加载状态
+            this.hideLoadingState();
+            
+            this.bindEvents();
+            this.renderFoods();
+            this.updateCartUI();
+            
+            // 确保DOM已完全加载后再绑定功能按钮事件
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    this.bindFeaturesButtonEvents();
+                    this.checkUserStatusAndShowFeaturesButton();
+                    this.addLoginCheckToNavLinks();
+                });
+            } else {
+                // DOM已加载完成，直接绑定事件
+                this.bindFeaturesButtonEvents();
+                this.checkUserStatusAndShowFeaturesButton();
+                this.addLoginCheckToNavLinks();
+            }
+        } catch (error) {
+            console.error('初始化过程中出错:', error);
+            // 即使出错也要确保基本功能可用
+            this.bindEvents();
+            this.renderFoods();
+            this.updateCartUI();
+            
+            // 延迟绑定功能按钮事件，确保DOM元素已加载
+            setTimeout(() => {
+                this.bindFeaturesButtonEvents();
+                this.checkUserStatusAndShowFeaturesButton();
+                this.addLoginCheckToNavLinks();
+            }, 100);
+        }
         
         // 监听订单实时更新事件
         window.addEventListener('ordersUpdated', () => {
@@ -56,28 +76,44 @@ class FoodUI {
 
     // 为导航链接添加登录检查
     addLoginCheckToNavLinks() {
+        // 确保在DOM加载完成后再处理
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.addLoginCheckToNavLinks();
+            });
+            return;
+        }
+        
         // 获取所有导航链接（除了首页）
         const navLinks = document.querySelectorAll('.nav-link:not([href="/"])');
         
         // 为每个链接添加点击事件监听器
         navLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                // 检查用户是否已登录
-                const loginStatus = sessionStorage.getItem('isLoggedIn');
-                if (loginStatus !== 'true') {
-                    // 阻止默认跳转行为
-                    e.preventDefault();
-                    
-                    // 显示提示消息
-                    this.showToast('请先登录后再访问此功能', 'error');
-                    
-                    // 显示登录模态框
-                    const authModal = document.getElementById('authModal');
-                    if (authModal) {
-                        authModal.classList.add('active');
+            // 移除已存在的事件监听器，防止重复绑定
+            const newLink = link.cloneNode(true);
+            link.parentNode.replaceChild(newLink, link);
+            
+            // 重新获取引用并绑定事件
+            const updatedLink = document.querySelector(`.nav-link[href="${newLink.getAttribute('href')}"]`);
+            if (updatedLink) {
+                updatedLink.addEventListener('click', function(e) {
+                    // 检查用户是否已登录
+                    const loginStatus = sessionStorage.getItem('isLoggedIn');
+                    if (loginStatus !== 'true') {
+                        // 阻止默认跳转行为
+                        e.preventDefault();
+                        
+                        // 显示提示消息
+                        this.showToast('请先登录后再访问此功能', 'error');
+                        
+                        // 显示登录模态框
+                        const authModal = document.getElementById('authModal');
+                        if (authModal) {
+                            authModal.classList.add('active');
+                        }
                     }
-                }
-            }.bind(this));
+                }.bind(this));
+            }
         });
     }
 
@@ -172,38 +208,71 @@ class FoodUI {
 
     // 绑定功能按钮事件
     bindFeaturesButtonEvents() {
-        // 功能按钮点击事件
-        const featuresBtn = document.getElementById('featuresBtn');
-        if (featuresBtn) {
-            featuresBtn.addEventListener('click', () => {
-                this.openFeaturesModal();
+        // 确保在DOM加载完成后再绑定事件
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.bindFeaturesButtonEvents();
             });
+            return;
+        }
+        
+        // 使用更安全的方式绑定功能按钮事件
+        const bindEventSafely = (elementId, eventType, handler) => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                // 检查是否已经绑定了事件
+                const boundAttribute = `data-${eventType}-bound`;
+                if (element.hasAttribute(boundAttribute)) {
+                    return true; // 已经绑定过，无需重复绑定
+                }
+                
+                // 绑定事件并标记已绑定
+                element.addEventListener(eventType, handler);
+                element.setAttribute(boundAttribute, 'true');
+                return true;
+            }
+            return false;
+        };
+        
+        // 功能按钮点击事件
+        const isFeaturesBtnBound = bindEventSafely('featuresBtn', 'click', () => {
+            this.openFeaturesModal();
+        });
+        
+        // 如果功能按钮绑定失败，尝试延迟绑定
+        if (!isFeaturesBtnBound) {
+            setTimeout(() => {
+                bindEventSafely('featuresBtn', 'click', () => {
+                    this.openFeaturesModal();
+                });
+            }, 100);
         }
         
         // 关闭功能菜单模态框
-        const closeFeaturesModal = document.getElementById('closeFeaturesModal');
-        if (closeFeaturesModal) {
-            closeFeaturesModal.addEventListener('click', () => {
-                this.closeFeaturesModalFunc();
-            });
-        }
+        bindEventSafely('closeFeaturesModal', 'click', () => {
+            this.closeFeaturesModalFunc();
+        });
         
         // 点击模态框外部关闭
         const featuresModal = document.getElementById('featuresModal');
-        if (featuresModal) {
+        if (featuresModal && !featuresModal.hasAttribute('data-click-bound')) {
             featuresModal.addEventListener('click', (e) => {
                 if (e.target.id === 'featuresModal') {
                     this.closeFeaturesModalFunc();
                 }
             });
+            featuresModal.setAttribute('data-click-bound', 'true');
         }
         
-        // ESC键关闭模态框
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                this.closeFeaturesModalFunc();
-            }
-        });
+        // ESC键关闭模态框（只绑定一次）
+        if (!document.body.hasAttribute('data-esc-bound')) {
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    this.closeFeaturesModalFunc();
+                }
+            });
+            document.body.setAttribute('data-esc-bound', 'true');
+        }
     }
 
     // 打开功能菜单模态框
@@ -224,6 +293,14 @@ class FoodUI {
 
     // 检查用户登录状态并更新功能按钮和菜单项
     checkUserStatusAndShowFeaturesButton() {
+        // 确保在DOM加载完成后再处理
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.checkUserStatusAndShowFeaturesButton();
+            });
+            return;
+        }
+        
         try {
             // 从sessionStorage获取登录状态
             const loginStatus = sessionStorage.getItem('isLoggedIn');
@@ -236,23 +313,43 @@ class FoodUI {
                 // 用户已登录，显示功能按钮并更新菜单项样式
                 if (featuresBtn) {
                     featuresBtn.style.display = 'block';
+                    // 确保功能按钮可点击
+                    featuresBtn.disabled = false;
+                    featuresBtn.style.pointerEvents = 'auto';
+                    featuresBtn.style.opacity = '1';
+                    // 确保按钮有正确的CSS类
+                    featuresBtn.classList.remove('not-logged-in');
+                    featuresBtn.classList.add('logged-in');
                 }
                 
                 // 为所有菜单项添加登录样式类
                 menuItems.forEach(item => {
                     item.classList.add('logged-in');
                     item.classList.remove('not-logged-in');
+                    // 确保菜单项可点击
+                    item.style.pointerEvents = 'auto';
+                    item.style.opacity = '1';
                 });
             } else {
                 // 用户未登录，仍然显示功能按钮但更新菜单项样式
                 if (featuresBtn) {
                     featuresBtn.style.display = 'block';
+                    // 确保功能按钮可点击（但菜单项不可跳转）
+                    featuresBtn.disabled = false;
+                    featuresBtn.style.pointerEvents = 'auto';
+                    featuresBtn.style.opacity = '1';
+                    // 确保按钮有正确的CSS类
+                    featuresBtn.classList.remove('logged-in');
+                    featuresBtn.classList.add('not-logged-in');
                 }
                 
                 // 为所有菜单项添加未登录样式类
                 menuItems.forEach(item => {
                     item.classList.add('not-logged-in');
                     item.classList.remove('logged-in');
+                    // 设置菜单项为不可跳转状态
+                    item.style.pointerEvents = 'none';
+                    item.style.opacity = '0.6';
                 });
             }
         } catch (error) {
@@ -1207,11 +1304,32 @@ class FoodStorage extends SupabaseFoodStorage {
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', async () => {
     const foodUI = new FoodUI();
-    // 等待存储初始化完成
-    await foodUI.foodStorage.initialize();
-    foodUI.bindEvents();
-    foodUI.renderFoods();
-    foodUI.updateCartUI();
+    try {
+        // 初始化UI
+        await foodUI.init();
+    } catch (error) {
+        console.error('初始化买菜页面时出错:', error);
+        // 即使初始化出错，也尝试绑定基本事件
+        foodUI.bindEvents();
+        foodUI.renderFoods();
+        foodUI.updateCartUI();
+        
+        // 确保功能按钮事件被绑定
+        setTimeout(() => {
+            foodUI.bindFeaturesButtonEvents();
+            foodUI.checkUserStatusAndShowFeaturesButton();
+        }, 100);
+    }
+    
+    // 确保功能按钮事件被绑定（额外保障）
+    setTimeout(() => {
+        try {
+            foodUI.bindFeaturesButtonEvents();
+            foodUI.checkUserStatusAndShowFeaturesButton();
+        } catch (error) {
+            console.error('绑定功能按钮事件时出错:', error);
+        }
+    }, 500);
     
     // 监听订单实时更新事件
     window.addEventListener('ordersUpdated', () => {

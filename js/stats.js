@@ -178,7 +178,15 @@ class StatsUI {
                     window.supabaseAuth.getCurrentUser().then(user => {
                         if (user) {
                             // 用户已登录，执行登出操作
-                            window.supabaseAuth.signOut();
+                            window.supabaseAuth.signOut().then(result => {
+                                if (result.success) {
+                                    // 清除登录状态标记
+                                    sessionStorage.removeItem('isLoggedIn');
+                                    
+                                    // 跳转到首页
+                                    window.location.href = '/';
+                                }
+                            });
                         } else {
                             // 用户未登录，打开登录模态框
                             const authModal = document.getElementById('authModal');

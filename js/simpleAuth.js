@@ -276,8 +276,11 @@ async function handleSignOut() {
     try {
         const result = await supabaseAuth.signOut();
         if (result.success) {
-            showToast('已成功退出', 'success');
-            updateLoginButton(null);
+            // 清除登录状态标记
+            sessionStorage.removeItem('isLoggedIn');
+            
+            // 立即跳转到首页
+            window.location.href = '/';
         } else {
             showToast(`退出失败: ${result.error}`, 'error');
         }
