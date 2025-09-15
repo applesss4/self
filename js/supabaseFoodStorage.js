@@ -195,12 +195,6 @@ class SupabaseFoodStorage {
 
     // 从数据库加载数据
     async loadFromDatabase() {
-        // 如果缓存有效且有数据，直接返回
-        if (this.isCacheValid() && this.foods.length > 0) {
-            console.log('使用缓存数据');
-            return;
-        }
-
         try {
             const user = await this.supabaseAuth.getCurrentUser();
             if (!user) {
