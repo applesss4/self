@@ -65,8 +65,8 @@
     
     <div class="test-section">
         <h2>用户认证测试</h2>
-        <input type="email" id="testEmail" placeholder="邮箱">
-        <input type="password" id="testPassword" placeholder="密码">
+        <input type="email" id="testEmail" placeholder="邮箱" value="123@123.com">
+        <input type="password" id="testPassword" placeholder="密码" value="123">
         <br>
         <button id="testSignIn">登录测试</button>
         <button id="testSignUp">注册测试</button>
@@ -258,6 +258,9 @@
                 stateResult.className = 'test-result error';
             }
         });
+        
+        // 使用预设账号进行登录测试
+        document.getElementById('testSignIn').click();
     </script>
 </body>
 </html>
