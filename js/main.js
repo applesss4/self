@@ -75,13 +75,13 @@ function bindAuthEvents() {
             document.getElementById('featuresSection').style.display = 'grid';
             document.getElementById('featuresBtn').style.display = 'block';
             
-            // 显示欢迎消息
-            showToast('登录成功！', 'success');
+            // 显示自定义提示消息
+            showCustomToast('成功进入发财人生管理系统', 'success');
             
-            // 2秒后自动跳转到任务计划页面
+            // 3秒后自动跳转到任务计划页面
             setTimeout(() => {
                 window.location.href = '/pages/tasks.html';
-            }, 2000);
+            }, 3000);
         } else if (event === 'SIGNED_OUT') {
             // 登出，显示登录框，隐藏功能区域
             document.getElementById('authSection').style.display = 'block';
@@ -131,7 +131,7 @@ async function handleAuth() {
     
     // 简单验证
     if (!email || !password) {
-        showToast('请输入邮箱和密码', 'error');
+        showCustomToast('请输入邮箱和密码', 'error');
         return;
     }
     
@@ -141,16 +141,16 @@ async function handleAuth() {
     if (isRegisterMode) {
         // 注册模式验证
         if (password !== confirmPassword) {
-            showToast('两次输入的密码不一致', 'error');
+            showCustomToast('两次输入的密码不一致', 'error');
             return;
         }
         if (password.length < 6) {
-            showToast('密码至少需要6个字符', 'error');
+            showCustomToast('密码至少需要6个字符', 'error');
             return;
         }
         // 简单邮箱验证
         if (!email.includes('@')) {
-            showToast('请输入有效的邮箱地址', 'error');
+            showCustomToast('请输入有效的邮箱地址', 'error');
             return;
         }
         
@@ -158,14 +158,14 @@ async function handleAuth() {
         try {
             const result = await supabaseAuth.signUp(email, password);
             if (result.success) {
-                showToast('注册成功！请登录。', 'success');
+                showCustomToast('注册成功！请登录。', 'success');
                 switchToLoginForm();
                 document.getElementById('authForm').reset();
             } else {
-                showToast(`注册失败: ${result.error}`, 'error');
+                showCustomToast(`注册失败: ${result.error}`, 'error');
             }
         } catch (error) {
-            showToast(`注册异常: ${error.message}`, 'error');
+            showCustomToast(`注册异常: ${error.message}`, 'error');
         }
     } else {
         // 登录模式
@@ -175,16 +175,16 @@ async function handleAuth() {
                 // 登录成功，将在认证状态变化监听器中处理页面跳转
                 sessionStorage.setItem('isLoggedIn', 'true');
             } else {
-                showToast(`登录失败: ${result.error}`, 'error');
+                showCustomToast(`登录失败: ${result.error}`, 'error');
             }
         } catch (error) {
-            showToast(`登录异常: ${error.message}`, 'error');
+            showCustomToast(`登录异常: ${error.message}`, 'error');
         }
     }
 }
 
-// 显示提示消息
-function showToast(message, type = 'info') {
+// 显示自定义提示消息
+function showCustomToast(message, type = 'info') {
     // 移除现有的提示
     const existingToast = document.querySelector('.toast');
     if (existingToast) {
@@ -202,11 +202,13 @@ function showToast(message, type = 'info') {
         background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1'};
         color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460'};
         padding: 1rem 1.5rem;
-        border-radius: 0.5rem;
+        border-radius: var(--border-radius);
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         z-index: 1000;
         transform: translateX(100%);
         transition: transform 0.3s ease;
+        max-width: 300px;
+        text-align: center;
     `;
     
     document.body.appendChild(toast);
@@ -221,7 +223,7 @@ function showToast(message, type = 'info') {
         toast.style.transform = 'translateX(100%)';
         setTimeout(() => {
             toast.remove();
-        }, 3000);
+        }, 300);
     }, 3000);
 }
 
