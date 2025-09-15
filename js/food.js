@@ -34,8 +34,15 @@ class FoodUI {
     }
 
     async init() {
+        // 显示加载状态
+        this.showLoadingState();
+        
         // 等待存储初始化完成
         await this.foodStorage.initialize();
+        
+        // 隐藏加载状态
+        this.hideLoadingState();
+        
         this.bindEvents();
         this.renderFoods();
         this.updateCartUI();
@@ -145,6 +152,22 @@ class FoodUI {
         }
     }
 
+    // 显示加载状态
+    showLoadingState() {
+        const foodGrid = document.getElementById('foodGrid');
+        if (foodGrid) {
+            foodGrid.innerHTML = '<div class="loading-message">正在加载数据...</div>';
+        }
+    }
+
+    // 隐藏加载状态
+    hideLoadingState() {
+        const foodGrid = document.getElementById('foodGrid');
+        if (foodGrid && foodGrid.querySelector('.loading-message')) {
+            foodGrid.innerHTML = '';
+        }
+    }
+
     // 渲染菜品
     renderFoods() {
         const foods = this.foodStorage.getFoodsByCategory(this.currentCategory);
@@ -188,14 +211,20 @@ class FoodUI {
         
         // 使用图片或默认图标
         const imageHtml = food.image ? 
-            `<img src="${food.image}" alt="${food.name}" class="food-image">` : 
+            `<img src="${food.image}" alt="${food.name}" class="food-image" loading="lazy">` : 
             `<div class="food-image">${this.getCategoryIcon(food.category)}</div>`;
         
         // 只有当有超市信息时才显示超市名称
         const supermarketHtml = cheapestSupermarket ? 
             `<div class="food-supermarket">${cheapestSupermarket}</div>` : '';
         
-        foodElement.innerHTML = `
+        // 使用文档片段来减少DOM操作
+        const fragment = document.createDocumentFragment();
+        
+        // 创建包装容器
+        const container = document.createElement('div');
+        
+        container.innerHTML = `
             ${imageHtml}
             <div class="food-name">${food.name}</div>
             <div class="food-price">¥${cheapestPrice.toFixed(2)}</div>
@@ -204,6 +233,13 @@ class FoodUI {
                 <button class="add-to-cart" data-id="${food.id}">加入购物车</button>
             </div>
         `;
+        
+        // 将内容添加到片段中
+        while (container.firstChild) {
+            fragment.appendChild(container.firstChild);
+        }
+        
+        foodElement.appendChild(fragment);
 
         // 绑定菜品点击事件，显示详情
         foodElement.addEventListener('click', (e) => {
@@ -575,96 +611,103 @@ class FoodUI {
         cartItems.innerHTML = '';
         if (items.length === 0) {
             cartItems.innerHTML = '<div class="empty-cart">购物车为空</div>';
-        } else {
-            // 按超市分组商品
-            const supermarketGroups = {};
+            return;
+        }
+        
+        // 使用文档片段来减少DOM操作
+        const fragment = document.createDocumentFragment();
+        
+        // 按超市分组商品
+        const supermarketGroups = {};
+        
+        items.forEach(item => {
+            // 查找最便宜的超市作为默认超市
+            let cheapestSupermarket = '';
+            if (item.food.supermarkets && item.food.supermarkets.length > 0) {
+                const cheapest = item.food.supermarkets.reduce((min, supermarket) => {
+                    return supermarket.price < min.price ? supermarket : min;
+                }, item.food.supermarkets[0]);
+                cheapestSupermarket = cheapest.name;
+            }
             
-            items.forEach(item => {
-                // 查找最便宜的超市作为默认超市
-                let cheapestSupermarket = '';
-                if (item.food.supermarkets && item.food.supermarkets.length > 0) {
-                    const cheapest = item.food.supermarkets.reduce((min, supermarket) => {
-                        return supermarket.price < min.price ? supermarket : min;
-                    }, item.food.supermarkets[0]);
-                    cheapestSupermarket = cheapest.name;
-                }
-                
-                // 如果没有超市信息，则使用"其他"作为默认分组
-                if (!cheapestSupermarket) {
-                    cheapestSupermarket = '其他';
-                }
-                
-                // 如果该超市还没有分组，则创建
-                if (!supermarketGroups[cheapestSupermarket]) {
-                    supermarketGroups[cheapestSupermarket] = [];
-                }
-                
-                // 将商品添加到对应超市分组
-                supermarketGroups[cheapestSupermarket].push(item);
+            // 如果没有超市信息，则使用"其他"作为默认分组
+            if (!cheapestSupermarket) {
+                cheapestSupermarket = '其他';
+            }
+            
+            // 如果该超市还没有分组，则创建
+            if (!supermarketGroups[cheapestSupermarket]) {
+                supermarketGroups[cheapestSupermarket] = [];
+            }
+            
+            // 将商品添加到对应超市分组
+            supermarketGroups[cheapestSupermarket].push(item);
+        });
+        
+        // 为每个超市分组创建HTML
+        Object.keys(supermarketGroups).forEach(supermarket => {
+            // 创建超市标题
+            const supermarketHeader = document.createElement('div');
+            supermarketHeader.className = 'supermarket-header';
+            supermarketHeader.innerHTML = `<h4>${supermarket}</h4>`;
+            fragment.appendChild(supermarketHeader);
+            
+            // 为该超市的商品创建列表
+            supermarketGroups[supermarket].forEach(item => {
+                const cartItemElement = document.createElement('div');
+                cartItemElement.className = 'cart-item';
+                cartItemElement.innerHTML = `
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">${item.food.name}</div>
+                        <div class="cart-item-price">¥${item.food.price.toFixed(2)} × ${item.quantity}</div>
+                    </div>
+                    <div class="cart-item-controls">
+                        <button class="quantity-btn decrease" data-id="${item.food.id}">-</button>
+                        <span class="cart-item-quantity">${item.quantity}</span>
+                        <button class="quantity-btn increase" data-id="${item.food.id}">+</button>
+                        <button class="remove-item" data-id="${item.food.id}">×</button>
+                    </div>
+                `;
+                fragment.appendChild(cartItemElement);
             });
-            
-            // 为每个超市分组创建HTML
-            Object.keys(supermarketGroups).forEach(supermarket => {
-                // 创建超市标题
-                const supermarketHeader = document.createElement('div');
-                supermarketHeader.className = 'supermarket-header';
-                supermarketHeader.innerHTML = `<h4>${supermarket}</h4>`;
-                cartItems.appendChild(supermarketHeader);
-                
-                // 为该超市的商品创建列表
-                supermarketGroups[supermarket].forEach(item => {
-                    const cartItemElement = document.createElement('div');
-                    cartItemElement.className = 'cart-item';
-                    cartItemElement.innerHTML = `
-                        <div class="cart-item-info">
-                            <div class="cart-item-name">${item.food.name}</div>
-                            <div class="cart-item-price">¥${item.food.price.toFixed(2)} × ${item.quantity}</div>
-                        </div>
-                        <div class="cart-item-controls">
-                            <button class="quantity-btn decrease" data-id="${item.food.id}">-</button>
-                            <span class="cart-item-quantity">${item.quantity}</span>
-                            <button class="quantity-btn increase" data-id="${item.food.id}">+</button>
-                            <button class="remove-item" data-id="${item.food.id}">×</button>
-                        </div>
-                    `;
-                    cartItems.appendChild(cartItemElement);
-                });
-            });
-            
-            // 绑定事件
-            cartItems.querySelectorAll('.decrease').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const foodId = e.target.dataset.id;
-                    const item = items.find(i => i.food.id === foodId);
-                    if (item && item.quantity > 1) {
-                        this.foodStorage.updateCartItemQuantity(foodId, item.quantity - 1);
-                        this.updateCartUI();
-                    } else {
-                        this.foodStorage.removeFromCart(foodId);
-                        this.updateCartUI();
-                    }
-                });
-            });
-            
-            cartItems.querySelectorAll('.increase').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const foodId = e.target.dataset.id;
-                    const item = items.find(i => i.food.id === foodId);
-                    if (item) {
-                        this.foodStorage.updateCartItemQuantity(foodId, item.quantity + 1);
-                        this.updateCartUI();
-                    }
-                });
-            });
-            
-            cartItems.querySelectorAll('.remove-item').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const foodId = e.target.dataset.id;
+        });
+        
+        // 一次性添加所有元素到DOM
+        cartItems.appendChild(fragment);
+        
+        // 绑定事件
+        cartItems.querySelectorAll('.decrease').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const foodId = e.target.dataset.id;
+                const item = items.find(i => i.food.id === foodId);
+                if (item && item.quantity > 1) {
+                    this.foodStorage.updateCartItemQuantity(foodId, item.quantity - 1);
+                    this.updateCartUI();
+                } else {
                     this.foodStorage.removeFromCart(foodId);
                     this.updateCartUI();
-                });
+                }
             });
-        }
+        });
+        
+        cartItems.querySelectorAll('.increase').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const foodId = e.target.dataset.id;
+                const item = items.find(i => i.food.id === foodId);
+                if (item) {
+                    this.foodStorage.updateCartItemQuantity(foodId, item.quantity + 1);
+                    this.updateCartUI();
+                }
+            });
+        });
+        
+        cartItems.querySelectorAll('.remove-item').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const foodId = e.target.dataset.id;
+                this.foodStorage.removeFromCart(foodId);
+                this.updateCartUI();
+            });
+        });
         
         // 更新总价
         cartTotal.textContent = `¥${total.toFixed(2)}`;
@@ -735,6 +778,9 @@ class FoodUI {
 
         // 按日期倒序排列订单
         const sortedOrders = [...todayOrders].sort((a, b) => b.id - a.id);
+        
+        // 使用文档片段来减少DOM操作
+        const fragment = document.createDocumentFragment();
 
         sortedOrders.forEach(order => {
             // 创建订单容器
@@ -756,7 +802,7 @@ class FoodUI {
             `;
             
             orderElement.appendChild(orderHeader);
-            orderItems.appendChild(orderElement);
+            fragment.appendChild(orderElement);
             
             // 按超市分组商品
             const supermarketGroups = {};
@@ -787,7 +833,7 @@ class FoodUI {
                 const supermarketHeader = document.createElement('div');
                 supermarketHeader.className = 'supermarket-header';
                 supermarketHeader.innerHTML = `<h4>${supermarket}</h4>`;
-                orderItems.appendChild(supermarketHeader);
+                fragment.appendChild(supermarketHeader);
                 
                 // 为该超市的商品创建列表项
                 supermarketGroups[supermarket].forEach(item => {
@@ -802,7 +848,7 @@ class FoodUI {
                             ¥${(item.price * item.quantity).toFixed(2)}
                         </div>
                     `;
-                    orderItems.appendChild(itemElement);
+                    fragment.appendChild(itemElement);
                 });
             });
             
@@ -810,8 +856,11 @@ class FoodUI {
             const divider = document.createElement('div');
             divider.style.borderBottom = '1px solid var(--border-color)';
             divider.style.margin = '0.5rem 0';
-            orderItems.appendChild(divider);
+            fragment.appendChild(divider);
         });
+        
+        // 一次性添加所有元素到DOM
+        orderItems.appendChild(fragment);
     }
 
     // 结算

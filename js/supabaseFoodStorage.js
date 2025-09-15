@@ -9,6 +9,9 @@ class SupabaseFoodStorage {
         this.cart = [];
         this.orders = [];
         this.isOnline = true; // 始终使用在线模式
+        // 添加缓存时间戳
+        this.cacheTimestamp = 0;
+        this.cacheExpiry = 5 * 60 * 1000; // 5分钟缓存过期时间
         this.initialize();
     }
 
@@ -33,8 +36,19 @@ class SupabaseFoodStorage {
         }
     }
 
+    // 检查缓存是否有效
+    isCacheValid() {
+        return (Date.now() - this.cacheTimestamp) < this.cacheExpiry;
+    }
+
     // 从数据库加载数据
     async loadFromDatabase() {
+        // 如果缓存有效且有数据，直接返回
+        if (this.isCacheValid() && this.foods.length > 0) {
+            console.log('使用缓存数据');
+            return;
+        }
+
         try {
             const user = await this.supabaseAuth.getCurrentUser();
             if (!user) {
@@ -44,35 +58,52 @@ class SupabaseFoodStorage {
                 return;
             }
 
-            // 获取菜品数据
-            const { data: foodsData, error: foodsError } = await supabase
-                .from('foods')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false });
+            // 并行加载菜品和订单数据以提高性能
+            const [foodsResult, ordersResult] = await Promise.allSettled([
+                supabase
+                    .from('foods')
+                    .select('id,user_id,name,category,price,unit,image,supermarkets,created_at')
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false }),
+                supabase
+                    .from('orders')
+                    .select('id,user_id,items,total,date,created_at')
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false })
+            ]);
 
-            if (foodsError) {
-                console.error('获取菜品数据失败:', foodsError);
+            // 处理菜品数据
+            if (foodsResult.status === 'fulfilled') {
+                const { data: foodsData, error: foodsError } = foodsResult.value;
+                if (foodsError) {
+                    console.error('获取菜品数据失败:', foodsError);
+                    this.foods = [];
+                } else {
+                    this.foods = foodsData || [];
+                    console.log(`从数据库加载了 ${this.foods.length} 个菜品`);
+                }
+            } else {
+                console.error('获取菜品数据失败:', foodsResult.reason);
                 this.foods = [];
-            } else {
-                this.foods = foodsData || [];
-                console.log(`从数据库加载了 ${this.foods.length} 个菜品`);
             }
 
-            // 获取订单数据
-            const { data: ordersData, error: ordersError } = await supabase
-                .from('orders')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false });
-
-            if (ordersError) {
-                console.error('获取订单数据失败:', ordersError);
+            // 处理订单数据
+            if (ordersResult.status === 'fulfilled') {
+                const { data: ordersData, error: ordersError } = ordersResult.value;
+                if (ordersError) {
+                    console.error('获取订单数据失败:', ordersError);
+                    this.orders = [];
+                } else {
+                    this.orders = ordersData || [];
+                    console.log(`从数据库加载了 ${this.orders.length} 个订单`);
+                }
+            } else {
+                console.error('获取订单数据失败:', ordersResult.reason);
                 this.orders = [];
-            } else {
-                this.orders = ordersData || [];
-                console.log(`从数据库加载了 ${this.orders.length} 个订单`);
             }
+
+            // 更新缓存时间戳
+            this.cacheTimestamp = Date.now();
 
             // 购物车数据仍然使用localStorage（因为购物车通常是临时的）
             const cartData = localStorage.getItem('food_manager_cart');
@@ -210,7 +241,7 @@ class SupabaseFoodStorage {
         this.foods = this.foods.filter(food => food.id !== foodId);
         // 从购物车中移除该菜品
         this.cart = this.cart.filter(item => item.foodId !== foodId);
-        this.saveCart();
+        this.saveCartToLocalStorage();
         return true;
     }
 
@@ -240,7 +271,7 @@ class SupabaseFoodStorage {
         } else {
             this.cart.push({ foodId, quantity });
         }
-        this.saveCart();
+        this.saveCartToLocalStorage();
         return true;
     }
 
@@ -252,7 +283,7 @@ class SupabaseFoodStorage {
                 this.removeFromCart(foodId);
             } else {
                 item.quantity = quantity;
-                this.saveCart();
+                this.saveCartToLocalStorage();
             }
             return true;
         }
@@ -262,7 +293,7 @@ class SupabaseFoodStorage {
     // 从购物车移除商品
     removeFromCart(foodId) {
         this.cart = this.cart.filter(item => item.foodId !== foodId);
-        this.saveCart();
+        this.saveCartToLocalStorage();
         return true;
     }
 
@@ -280,7 +311,7 @@ class SupabaseFoodStorage {
     // 清空购物车
     clearCart() {
         this.cart = [];
-        this.saveCart();
+        this.saveCartToLocalStorage();
         return true;
     }
 
@@ -335,6 +366,11 @@ class SupabaseFoodStorage {
         this.isOnline = true;
         // 从数据库加载数据
         await this.loadFromDatabase();
+    }
+
+    // 保存购物车到localStorage
+    saveCartToLocalStorage() {
+        localStorage.setItem('food_manager_cart', JSON.stringify(this.cart));
     }
 }
 

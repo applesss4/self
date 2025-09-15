@@ -6,7 +6,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const SUPABASE_URL = typeof process !== 'undefined' && process.env.NEXT_PUBLIC_SUPABASE_URL || import.meta.env?.VITE_SUPABASE_URL || 'https://ncgjyulrxlavejpgriju.supabase.co';
 const SUPABASE_ANON_KEY = typeof process !== 'undefined' && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || import.meta.env?.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jZ2p5dWxyeGxhdmVqcGdyaWp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc4MDc2MzIsImV4cCI6MjA3MzM4MzYzMn0.yM0nV0WUOO1UdUuRWCKjs4k3-W3FkflrpzK1cD3ULkk';
 
-// 创建 Supabase 客户端
+// 创建 Supabase 客户端，添加性能优化配置
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: {
         // 确保自动获取用户会话
@@ -14,11 +14,15 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         persistSession: true,
         detectSessionInUrl: true
     },
-    // 添加更详细的日志
+    // 添加性能优化配置
     global: {
         headers: {
             'X-Client-Info': 'personal-life-assistant'
         }
+    },
+    // 添加请求超时配置
+    db: {
+        schema: 'public'
     }
 });
 

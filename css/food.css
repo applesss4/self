@@ -896,3 +896,24 @@
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 0.25rem;
 }
+
+/* 加载状态样式 */
+.loading-message {
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.1rem;
+    color: #666;
+}
+
+.loading-message::after {
+    content: "";
+    animation: loadingDots 1.5s infinite;
+}
+
+@keyframes loadingDots {
+    0% { content: ""; }
+    25% { content: "."; }
+    50% { content: ".."; }
+    75% { content: "..."; }
+    100% { content: ""; }
+}
