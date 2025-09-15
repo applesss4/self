@@ -90,10 +90,8 @@ function bindAuthEvents() {
             
             // 不再显示登录成功的弹窗提示
             
-            // 3秒后自动跳转到任务计划页面
-            setTimeout(() => {
-                window.location.href = '/pages/tasks.html';
-            }, 3000);
+            // 立即跳转到任务计划页面
+            window.location.href = '/pages/tasks.html';
         } else if (event === 'SIGNED_OUT') {
             // 登出，显示登录框
             document.getElementById('authSection').style.display = 'block';
@@ -185,8 +183,9 @@ async function handleAuth() {
         try {
             const result = await supabaseAuth.signIn(email, password);
             if (result.success) {
-                // 登录成功，将在认证状态变化监听器中处理页面跳转
+                // 登录成功，立即跳转到任务计划页面
                 sessionStorage.setItem('isLoggedIn', 'true');
+                window.location.href = '/pages/tasks.html';
             } else {
                 showCustomToast(`登录失败: ${result.error}`, 'error');
             }

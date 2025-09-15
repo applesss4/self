@@ -106,11 +106,8 @@ class FoodUI {
                         // 显示提示消息
                         this.showToast('请先登录后再访问此功能', 'error');
                         
-                        // 显示登录模态框
-                        const authModal = document.getElementById('authModal');
-                        if (authModal) {
-                            authModal.classList.add('active');
-                        }
+                        // 重定向到首页
+                        window.location.href = '/';
                     }
                 }.bind(this));
             }

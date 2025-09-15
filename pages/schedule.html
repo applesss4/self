@@ -104,38 +104,8 @@
         </div>
     </div>
 
-    <!-- 登录/注册弹窗 -->
-    <div class="modal" id="authModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title" id="authModalTitle">用户登录</h3>
-                <button class="modal-close" id="closeAuthModal">&times;</button>
-            </div>
-            <form class="auth-form" id="authForm">
-                <div class="form-group">
-                    <label for="authEmail">邮箱</label>
-                    <input type="email" id="authEmail" required>
-                </div>
-                <div class="form-group">
-                    <label for="authPassword">密码</label>
-                    <input type="password" id="authPassword" required>
-                </div>
-                <div class="form-group" id="confirmPasswordGroup" style="display: none;">
-                    <label for="authConfirmPassword">确认密码</label>
-                    <input type="password" id="authConfirmPassword">
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-cancel" id="cancelAuth">取消</button>
-                    <button type="submit" class="btn-submit" id="submitAuth">登录</button>
-                </div>
-            </form>
-            <div class="auth-footer">
-                <p id="authSwitchText">还没有账户？<a href="#" id="switchToRegister">立即注册</a></p>
-            </div>
-        </div>
-    </div>
+
 
     <script type="module" src="/js/schedule.js?v=1.0.34" async></script>
-    <script type="module" src="/js/simpleAuth.js?v=1.0.34" async></script>
 </body>
 </html>
