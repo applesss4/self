@@ -1,0 +1,564 @@
+// 数据统计模块
+import SupabaseAuth from './supabaseAuth.js';
+
+// 菜品数据存储
+class FoodStorage {
+    constructor() {
+        this.foods = [];
+        this.cart = [];
+        this.orders = [];
+        this.loadFromLocalStorage();
+    }
+
+    // 从localStorage加载数据
+    loadFromLocalStorage() {
+        const foodsData = localStorage.getItem('food_manager_foods');
+        const cartData = localStorage.getItem('food_manager_cart');
+        const ordersData = localStorage.getItem('food_manager_orders');
+        
+        if (foodsData) {
+            this.foods = JSON.parse(foodsData);
+        }
+        
+        if (cartData) {
+            this.cart = JSON.parse(cartData);
+        }
+        
+        if (ordersData) {
+            this.orders = JSON.parse(ordersData);
+        }
+    }
+
+    // 获取所有订单
+    getOrders() {
+        return this.orders;
+    }
+}
+
+// 页面UI管理
+class StatsUI {
+    constructor() {
+        this.foodStorage = new FoodStorage();
+        this.init();
+    }
+
+    init() {
+        this.renderStats();
+        this.bindEvents();
+    }
+
+    bindEvents() {
+        // ESC键关闭模态框
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.closeOrderDetail();
+            }
+        });
+        
+        // 订单详情模态框关闭按钮
+        document.getElementById('closeOrderDetail')?.addEventListener('click', () => {
+            this.closeOrderDetail();
+        });
+        
+        // 点击订单详情模态框外部关闭
+        document.getElementById('orderDetailModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'orderDetailModal') {
+                this.closeOrderDetail();
+            }
+        });
+    }
+
+    // 渲染统计数据
+    renderStats() {
+        // 获取订单数据
+        const orders = this.foodStorage.getOrders();
+        
+        if (orders.length === 0) {
+            document.getElementById('monthlySummary').innerHTML = '<div class="empty-stats">暂无订单数据</div>';
+            document.getElementById('weeklySummary').innerHTML = '<div class="empty-stats">暂无订单数据</div>';
+            document.getElementById('orderList').innerHTML = '<div class="empty-stats">暂无订单数据</div>';
+            document.getElementById('priceChanges').innerHTML = '<div class="empty-stats">暂无价格变化数据</div>';
+            return;
+        }
+
+        // 按月份分组订单
+        const monthlyData = this.groupOrdersByMonth(orders);
+        
+        // 按周分组订单
+        const weeklyData = this.groupOrdersByWeek(orders);
+        
+        // 计算每月总金额及变化趋势
+        const monthlySummary = this.calculateMonthlySummary(monthlyData);
+        
+        // 计算每周总金额及变化趋势
+        const weeklySummary = this.calculateWeeklySummary(weeklyData);
+        
+        // 计算菜品价格变化
+        const priceChanges = this.calculatePriceChanges(orders);
+        
+        // 渲染月度统计
+        this.renderMonthlySummary(monthlySummary);
+        
+        // 渲染周度统计
+        this.renderWeeklySummary(weeklySummary);
+        
+        // 渲染订单列表
+        this.renderOrderList(orders);
+        
+        // 渲染价格变化
+        this.renderPriceChanges(priceChanges);
+    }
+
+    // 渲染月度统计
+    renderMonthlySummary(monthlySummary) {
+        const container = document.getElementById('monthlySummary');
+        
+        if (monthlySummary.length === 0) {
+            container.innerHTML = '<div class="empty-stats">暂无月度数据</div>';
+            return;
+        }
+        
+        container.innerHTML = monthlySummary.map((month, index) => `
+            <div class="monthly-summary">
+                <div class="monthly-amount">${month.month}: ¥${month.total.toFixed(2)}</div>
+                ${index > 0 ? `
+                    <div class="monthly-change ${month.change >= 0 ? 'change-positive' : 'change-negative'}">
+                        ${month.change >= 0 ? '↑' : '↓'} ${Math.abs(month.change).toFixed(2)}% 
+                        ${month.change >= 0 ? '增加' : '减少'}
+                    </div>
+                ` : ''}
+            </div>
+        `).join('');
+    }
+
+    // 渲染周度统计
+    renderWeeklySummary(weeklySummary) {
+        const container = document.getElementById('weeklySummary');
+        
+        if (weeklySummary.length === 0) {
+            container.innerHTML = '<div class="empty-stats">暂无周度数据</div>';
+            return;
+        }
+        
+        container.innerHTML = weeklySummary.map((week, index) => `
+            <div class="weekly-summary">
+                <div class="weekly-amount">${week.week}: ¥${week.total.toFixed(2)}</div>
+                ${index > 0 ? `
+                    <div class="weekly-change ${week.change >= 0 ? 'change-positive' : 'change-negative'}">
+                        ${week.change >= 0 ? '↑' : '↓'} ${Math.abs(week.change).toFixed(2)}% 
+                        ${week.change >= 0 ? '增加' : '减少'}
+                    </div>
+                ` : ''}
+            </div>
+        `).join('');
+    }
+
+    // 渲染订单列表
+    renderOrderList(orders) {
+        const container = document.getElementById('orderList');
+        
+        if (orders.length === 0) {
+            container.innerHTML = '<div class="empty-stats">暂无订单数据</div>';
+            return;
+        }
+        
+        container.innerHTML = `
+            <div class="order-list">
+                ${orders.map(order => `
+                    <div class="order-item-summary" data-order-id="${order.id}">
+                        <div class="order-id">订单号: ${order.id}</div>
+                        <div class="order-date">${order.date}</div>
+                        <div class="order-price">¥${order.total.toFixed(2)}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        // 绑定订单点击事件
+        document.querySelectorAll('.order-item-summary').forEach(item => {
+            item.addEventListener('click', (e) => {
+                const orderId = e.currentTarget.dataset.orderId;
+                this.showOrderDetail(orderId);
+            });
+        });
+    }
+
+    // 渲染价格变化
+    renderPriceChanges(priceChanges) {
+        const container = document.getElementById('priceChanges');
+        
+        if (priceChanges.length === 0) {
+            container.innerHTML = '<div class="empty-stats">暂无价格变化数据</div>';
+            return;
+        }
+        
+        container.innerHTML = `
+            <div class="price-change-list">
+                ${priceChanges.map(change => `
+                    <div class="price-change-item">
+                        <div class="food-name">${change.name}</div>
+                        <div class="price-diff ${change.diff >= 0 ? 'diff-positive' : 'diff-negative'}">
+                            ${change.diff > 0 ? `涨了 ${change.diff.toFixed(2)} 元` : `降了 ${Math.abs(change.diff).toFixed(2)} 元`}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    // 按月份分组订单
+    groupOrdersByMonth(orders) {
+        const monthlyData = {};
+        
+        orders.forEach(order => {
+            // 从订单日期提取年月
+            // 使用更可靠的日期解析方法
+            const dateParts = order.date.split(/[\s年月日:/]+/);
+            const year = parseInt(dateParts[0]);
+            const month = parseInt(dateParts[1]) - 1; // JavaScript月份从0开始
+            const date = new Date(year, month);
+            
+            const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+            const monthLabel = `${year}年${month + 1}月`;
+            
+            if (!monthlyData[monthKey]) {
+                monthlyData[monthKey] = {
+                    label: monthLabel,
+                    orders: [],
+                    total: 0
+                };
+            }
+            
+            monthlyData[monthKey].orders.push(order);
+            monthlyData[monthKey].total += order.total;
+        });
+        
+        return monthlyData;
+    }
+
+    // 按周分组订单
+    groupOrdersByWeek(orders) {
+        const weeklyData = {};
+        
+        orders.forEach(order => {
+            // 从订单日期提取年月日
+            // 使用更可靠的日期解析方法
+            const dateParts = order.date.split(/[\s年月日:/]+/);
+            const year = parseInt(dateParts[0]);
+            const month = parseInt(dateParts[1]) - 1; // JavaScript月份从0开始
+            const day = parseInt(dateParts[2]);
+            const date = new Date(year, month, day);
+            
+            // 获取该日期在当月是第几周
+            const weekOfMonth = this.getWeekOfMonth(date);
+            
+            // 格式化周标识（只显示当月第几周，不显示年月）
+            const weekKey = `W${weekOfMonth}`;
+            const weekLabel = `第${weekOfMonth}周`;
+            
+            if (!weeklyData[weekKey]) {
+                weeklyData[weekKey] = {
+                    label: weekLabel,
+                    orders: [],
+                    total: 0
+                };
+            }
+            
+            weeklyData[weekKey].orders.push(order);
+            weeklyData[weekKey].total += order.total;
+        });
+        
+        return weeklyData;
+    }
+
+    // 获取日期在当月是第几周（以周一为一周的开始）
+    getWeekOfMonth(date) {
+        // 获取当月第一天
+        const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+        
+        // 获取当月第一天是星期几 (0=周日, 1=周一, ..., 6=周六)
+        const firstDayOfWeek = firstDayOfMonth.getDay();
+        
+        // 调整为以周一为一周的开始
+        // 如果第一天是周日(0)，则视为第7天
+        const adjustedFirstDay = firstDayOfWeek === 0 ? 7 : firstDayOfWeek;
+        
+        // 计算日期在当月是第几天
+        const dayOfMonth = date.getDate();
+        
+        // 计算该日期在当月是第几周
+        // 需要考虑当月第一周的偏移
+        const weekNumber = Math.ceil((dayOfMonth + adjustedFirstDay - 1) / 7);
+        
+        return weekNumber;
+    }
+
+    // 获取日期所在的年份和周数信息（使用ISO 8601标准）
+    getWeekInfo(date) {
+        // 创建日期副本以避免修改原日期
+        const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        // 设置为周四（确保在同一周内）
+        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+        // 获取年份
+        const year = d.getUTCFullYear();
+        // 获取1月4日的日期
+        const yearStart = new Date(Date.UTC(year, 0, 4));
+        // 计算周数
+        const weekNumber = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        return { year, week: weekNumber };
+    }
+
+    // 计算每月总金额及变化趋势
+    calculateMonthlySummary(monthlyData) {
+        const months = Object.keys(monthlyData)
+            .sort()
+            .map(key => ({
+                month: monthlyData[key].label,
+                total: monthlyData[key].total
+            }));
+        
+        // 计算变化率
+        for (let i = 1; i < months.length; i++) {
+            const previous = months[i - 1].total;
+            const current = months[i].total;
+            months[i].change = previous !== 0 ? ((current - previous) / previous) * 100 : 0;
+        }
+        
+        // 第一个月没有变化率
+        if (months.length > 0) {
+            months[0].change = 0;
+        }
+        
+        // 按时间倒序排列
+        return months.reverse();
+    }
+
+    // 计算每周总金额及变化趋势
+    calculateWeeklySummary(weeklyData) {
+        // 对于只显示当月第几周的情况，我们需要特殊处理排序
+        // 提取周数并按数值排序
+        const weekKeys = Object.keys(weeklyData)
+            .sort((a, b) => {
+                const weekA = parseInt(a.replace('W', ''));
+                const weekB = parseInt(b.replace('W', ''));
+                return weekA - weekB;
+            })
+            .map(key => ({
+                week: weeklyData[key].label,
+                total: weeklyData[key].total
+            }));
+        
+        // 计算变化率
+        for (let i = 1; i < weekKeys.length; i++) {
+            const previous = weekKeys[i - 1].total;
+            const current = weekKeys[i].total;
+            weekKeys[i].change = previous !== 0 ? ((current - previous) / previous) * 100 : 0;
+        }
+        
+        // 第一周没有变化率
+        if (weekKeys.length > 0) {
+            weekKeys[0].change = 0;
+        }
+        
+        // 按周数倒序排列（最近的周在前）
+        return weekKeys.reverse();
+    }
+
+    // 计算菜品价格变化
+    calculatePriceChanges(orders) {
+        // 获取所有菜品的最新价格和历史价格
+        const foodPrices = {};
+        
+        // 遍历所有订单，记录每个菜品的价格历史
+        orders.forEach(order => {
+            // 使用更可靠的日期解析方法
+            const dateParts = order.date.split(/[\s年月日:/]+/);
+            const year = parseInt(dateParts[0]);
+            const month = parseInt(dateParts[1]) - 1; // JavaScript月份从0开始
+            const day = parseInt(dateParts[2]);
+            const hour = parseInt(dateParts[3]) || 0;
+            const minute = parseInt(dateParts[4]) || 0;
+            const second = parseInt(dateParts[5]) || 0;
+            const date = new Date(year, month, day, hour, minute, second);
+            
+            order.items.forEach(item => {
+                if (!foodPrices[item.name]) {
+                    foodPrices[item.name] = [];
+                }
+                foodPrices[item.name].push({
+                    price: item.price,
+                    date: date
+                });
+            });
+        });
+        
+        // 计算每个菜品的价格变化
+        const priceChanges = [];
+        
+        Object.keys(foodPrices).forEach(foodName => {
+            const prices = foodPrices[foodName];
+            if (prices.length > 1) {
+                // 按日期排序
+                prices.sort((a, b) => a.date - b.date);
+                
+                // 获取最早和最晚的价格
+                const firstPrice = prices[0].price;
+                const lastPrice = prices[prices.length - 1].price;
+                const diff = lastPrice - firstPrice;
+                
+                // 只显示有变化的菜品
+                if (diff !== 0) {
+                    priceChanges.push({
+                        name: foodName,
+                        firstPrice: firstPrice,
+                        lastPrice: lastPrice,
+                        diff: diff
+                    });
+                }
+            }
+        });
+        
+        // 按价格变化绝对值排序
+        return priceChanges.sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff));
+    }
+
+    // 显示订单详情
+    showOrderDetail(orderId) {
+        const orders = this.foodStorage.getOrders();
+        const order = orders.find(o => o.id === orderId);
+        
+        if (!order) {
+            this.showToast('未找到订单信息', 'error');
+            return;
+        }
+        
+        const orderDetailModal = document.getElementById('orderDetailModal');
+        const orderDetailContent = document.getElementById('orderDetailContent');
+        
+        if (orderDetailContent) {
+            // 计算订单总价
+            const orderTotal = order.items.reduce((total, item) => {
+                return total + (item.price * item.quantity);
+            }, 0);
+            
+            let html = `
+                <div class="order-detail-header">
+                    <div class="order-detail-info">
+                        <div class="order-detail-id">订单号: ${order.id}</div>
+                        <div class="order-detail-date">下单时间: ${order.date}</div>
+                        <div class="order-detail-total">总价: ¥${orderTotal.toFixed(2)}</div>
+                    </div>
+                </div>
+                <div class="order-detail-items">
+                    <h4>商品列表</h4>
+            `;
+            
+            // 按超市分组商品
+            const supermarketGroups = {};
+            
+            order.items.forEach(item => {
+                // 查找最便宜的超市
+                let cheapestSupermarket = '其他';
+                if (item.supermarkets && item.supermarkets.length > 0) {
+                    const cheapest = item.supermarkets.reduce((min, supermarket) => {
+                        return supermarket.price < min.price ? supermarket : min;
+                    }, item.supermarkets[0]);
+                    cheapestSupermarket = cheapest.name;
+                }
+                
+                // 如果该超市还没有分组，则创建
+                if (!supermarketGroups[cheapestSupermarket]) {
+                    supermarketGroups[cheapestSupermarket] = [];
+                }
+                
+                // 将商品添加到对应超市分组
+                supermarketGroups[cheapestSupermarket].push(item);
+            });
+            
+            // 为每个超市分组创建HTML
+            Object.keys(supermarketGroups).forEach(supermarket => {
+                // 创建超市标题
+                html += `<div class="supermarket-header"><h4>${supermarket}</h4></div>`;
+                
+                // 为该超市的商品创建列表项
+                supermarketGroups[supermarket].forEach(item => {
+                    html += `
+                        <div class="order-item">
+                            <div class="order-item-info">
+                                <div class="order-item-name">${item.name}</div>
+                                <div class="order-item-price">¥${item.price.toFixed(2)} × ${item.quantity}</div>
+                            </div>
+                            <div class="order-item-quantity">
+                                ¥${(item.price * item.quantity).toFixed(2)}
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+            
+            html += `
+                </div>
+            `;
+            
+            orderDetailContent.innerHTML = html;
+        }
+        
+        // 显示模态框
+        orderDetailModal.classList.add('active');
+    }
+
+    // 关闭订单详情
+    closeOrderDetail() {
+        const orderDetailModal = document.getElementById('orderDetailModal');
+        if (orderDetailModal) {
+            orderDetailModal.classList.remove('active');
+        }
+    }
+
+    // 显示提示消息
+    showToast(message, type = 'info') {
+        // 移除现有的提示
+        const existingToast = document.querySelector('.toast');
+        if (existingToast) {
+            existingToast.remove();
+        }
+        
+        // 创建新提示
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1'};
+            color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460'};
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // 显示动画
+        setTimeout(() => {
+            toast.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // 自动隐藏
+        setTimeout(() => {
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 3000);
+    }
+}
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', () => {
+    new StatsUI();
+});

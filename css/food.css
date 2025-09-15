@@ -1,0 +1,898 @@
+/* 菜品页面特定样式 */
+
+/* 分类筛选 */
+.category-filter {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.category-btn {
+    background: var(--cream-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.category-btn:hover,
+.category-btn.active {
+    background: var(--cream-warm);
+    color: var(--text-primary);
+}
+
+/* 菜品网格布局 */
+.food-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.food-item {
+    background: var(--cream-light);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 0.75rem;
+    text-align: center;
+    transition: var(--transition);
+    box-shadow: var(--shadow-soft);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.food-item:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-medium);
+}
+
+.food-image {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 0.5rem;
+    background: var(--cream-accent);
+    border-radius: var(--border-radius-small);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.food-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: var(--border-radius-small);
+}
+
+.food-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+    flex: 1;
+}
+
+.food-price {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.1rem;
+    font-size: 0.95rem;
+}
+
+.food-supermarket {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.food-unit {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    display: none;
+}
+
+.food-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.add-to-cart {
+    background: var(--cream-warm);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-small);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: var(--transition);
+    width: 100%;
+}
+
+.add-to-cart:hover {
+    background: #F0E68C;
+    transform: scale(1.05);
+}
+
+/* 购物车悬浮按钮 */
+.cart-float {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 60px;
+    height: 60px;
+    background: var(--cream-warm);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-medium);
+    z-index: 100;
+    transition: var(--transition);
+}
+
+.cart-float:hover {
+    transform: scale(1.1);
+}
+
+.cart-icon {
+    font-size: 1.5rem;
+}
+
+.cart-count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff4757;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+/* 购物车侧边栏 */
+.cart-sidebar {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 350px;
+    height: 100vh;
+    background: var(--cream-light);
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    transition: right 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.cart-sidebar.active {
+    right: 0;
+}
+
+.cart-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cart-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.cart-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.cart-close:hover {
+    background: var(--cream-accent);
+    color: var(--text-primary);
+}
+
+.cart-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.supermarket-header {
+    background: var(--cream-warm);
+    padding: 0.5rem 1rem;
+    margin: 1rem -1rem 0.5rem -1rem;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.supermarket-header:first-child {
+    margin-top: 0;
+    border-top: none;
+}
+
+.supermarket-header h4 {
+    margin: 0;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.cart-item-info {
+    flex: 1;
+}
+
+.cart-item-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.cart-item-price {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.cart-item-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quantity-btn {
+    background: var(--cream-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: var(--transition);
+}
+
+.quantity-btn:hover {
+    background: var(--cream-accent);
+}
+
+.cart-item-quantity {
+    font-size: 0.9rem;
+    min-width: 30px;
+    text-align: center;
+}
+
+.remove-item {
+    background: none;
+    border: none;
+    color: #ff6b6b;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: var(--transition);
+}
+
+.remove-item:hover {
+    color: #ff4757;
+}
+
+.cart-footer {
+    padding: 1rem;
+    border-top: 1px solid var(--border-color);
+    background: var(--cream-light);
+}
+
+.cart-total {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-align: center;
+    color: var(--text-primary);
+}
+
+/* 菜品表单 */
+.food-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.supermarket-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.supermarket-inputs .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 0;
+}
+
+.supermarket-inputs .form-group {
+    margin-bottom: 0;
+}
+
+.form-group input,
+.form-group select {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+}
+
+/* 图片上传样式 */
+#foodImage {
+    padding: 0.5rem;
+    background: var(--cream-light);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--border-radius-small);
+    width: 100%;
+}
+
+.image-preview {
+    margin-top: 0.5rem;
+    text-align: center;
+}
+
+.image-preview img {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: var(--border-radius-small);
+    display: none;
+}
+
+/* 菜品模态框优化 */
+#foodModal .modal-content {
+    max-width: 90%;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+@media (min-width: 768px) {
+    #foodModal .modal-content {
+        max-width: 500px;
+    }
+}
+
+/* 菜品详情模态框 */
+.food-detail-modal {
+    max-width: 90%;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.food-detail-content {
+    padding: 1rem 0;
+}
+
+.food-detail-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.food-detail-image {
+    width: 80px;
+    height: 80px;
+    background: var(--cream-accent);
+    border-radius: var(--border-radius-small);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.food-detail-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: var(--border-radius-small);
+}
+
+.food-detail-info h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+}
+
+.food-detail-price {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0.5rem 0;
+}
+
+.food-detail-unit {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.food-detail-section {
+    margin-bottom: 1.5rem;
+}
+
+.food-detail-section h4 {
+    margin: 0 0 0.75rem 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.25rem;
+}
+
+.supermarket-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.supermarket-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: var(--cream-secondary);
+    border-radius: var(--border-radius-small);
+    border: 1px solid var(--border-color);
+}
+
+.supermarket-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.lowest-price-tag {
+    background: #ff6b6b;
+    color: white;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+    border-radius: var(--border-radius-small);
+    font-weight: 600;
+}
+
+.supermarket-price-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.supermarket-price {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.edit-price-btn,
+.save-price-btn,
+.cancel-price-btn {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-small);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.edit-price-btn {
+    background: var(--cream-warm);
+    color: var(--text-primary);
+}
+
+.save-price-btn {
+    background: var(--cream-warm);
+    color: var(--text-primary);
+}
+
+.cancel-price-btn {
+    background: var(--cream-secondary);
+    color: var(--text-secondary);
+}
+
+.edit-price-btn:hover,
+.save-price-btn:hover {
+    background: #F0E68C;
+}
+
+.cancel-price-btn:hover {
+    background: var(--cream-accent);
+}
+
+.price-input {
+    width: 80px;
+    padding: 0.25rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-small);
+    font-size: 0.9rem;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .food-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 0.75rem;
+    }
+    
+    .food-item {
+        padding: 0.6rem;
+    }
+    
+    .food-image {
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
+    }
+    
+    .food-name {
+        font-size: 0.85rem;
+    }
+    
+    .food-price {
+        font-size: 0.9rem;
+    }
+    
+    .cart-sidebar {
+        width: 300px;
+    }
+    
+    .category-filter {
+        gap: 0.5rem;
+    }
+    
+    .category-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+    
+    .food-detail-modal {
+        max-width: 95%;
+    }
+    
+    .supermarket-inputs .form-row {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    #foodModal .modal-content,
+    .food-detail-modal {
+        max-height: 95vh;
+    }
+    
+    .food-detail-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .food-detail-image {
+        width: 70px;
+        height: 70px;
+        font-size: 1.75rem;
+    }
+    
+    .food-detail-info h3 {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .food-grid {
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 0.5rem;
+    }
+    
+    .food-item {
+        padding: 0.5rem;
+    }
+    
+    .food-image {
+        width: 45px;
+        height: 45px;
+        font-size: 1.1rem;
+    }
+    
+    .food-name {
+        font-size: 0.8rem;
+    }
+    
+    .food-price {
+        font-size: 0.85rem;
+    }
+    
+    .food-category {
+        font-size: 0.6rem;
+        padding: 0.15rem 0.3rem;
+    }
+    
+    .food-supermarket,
+    .food-unit {
+        font-size: 0.65rem;
+    }
+    
+    .add-to-cart {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+    
+    .cart-sidebar {
+        width: 280px;
+    }
+    
+    .cart-float {
+        width: 50px;
+        height: 50px;
+        bottom: 1rem;
+        right: 1rem;
+    }
+    
+    .food-detail-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .supermarket-item {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+    
+    #foodModal .modal-content,
+    .food-detail-modal {
+        max-height: 95vh;
+    }
+    
+    .food-detail-image {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+    
+    .food-detail-info h3 {
+        font-size: 1.2rem;
+    }
+    
+    .supermarket-item {
+        padding: 0.6rem;
+    }
+    
+    /* 隐藏单位显示 */
+    .food-unit {
+        display: none;
+    }
+    
+    .lowest-price-tag {
+        font-size: 0.6rem;
+        padding: 0.15rem 0.3rem;
+    }
+}
+
+/* 订单侧边栏 */
+.order-sidebar {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 350px;
+    height: 100vh;
+    background: var(--cream-light);
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    transition: right 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.order-sidebar.active {
+    right: 0;
+}
+
+.order-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.order-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.order-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.order-close:hover {
+    background: var(--cream-accent);
+    color: var(--text-primary);
+}
+
+.order-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.order-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.order-item-info {
+    flex: 1;
+}
+
+.order-item-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.order-item-price {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.order-item-quantity {
+    font-size: 0.9rem;
+    min-width: 30px;
+    text-align: center;
+}
+
+.order-item-total {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.order-item-date {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.order-empty {
+    text-align: center;
+    color: var(--text-secondary);
+    font-style: italic;
+    padding: 2rem 0;
+}
+
+.order-summary {
+    padding: 1rem;
+    border-top: 1px solid var(--border-color);
+    background: var(--cream-light);
+}
+
+.order-total {
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-align: center;
+    color: var(--text-primary);
+}
+
+.header-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.order-btn,
+.stats-btn {
+    background: var(--cream-warm);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.order-btn:hover,
+.stats-btn:hover {
+    background: #F0E68C;
+    transform: translateY(-2px);
+}
+
+/* 移除了数据统计侧边栏相关样式 */
+
+/* 订单详情模态框 */
+.order-detail-modal {
+    max-width: 90%;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.order-detail-content {
+    padding: 1rem 0;
+}
+
+.order-detail-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.order-detail-info h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+}
+
+.order-detail-id,
+.order-detail-date,
+.order-detail-total {
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin: 0.25rem 0;
+}
+
+.order-detail-section {
+    margin-bottom: 1.5rem;
+}
+
+.order-detail-section h4 {
+    margin: 0 0 0.75rem 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.25rem;
+}

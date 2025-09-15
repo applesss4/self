@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据统计 - 个人生活管家</title>
+    <link rel="stylesheet" href="/css/main.css?v=1.0.15">
+    <link rel="stylesheet" href="/css/components.css?v=1.0.15">
+    <link rel="stylesheet" href="/css/food.css?v=1.0.15">
+    <style>
+        .main {
+            padding: 1rem 0;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 0 1rem;
+        }
+        
+        .page-title {
+            margin: 0;
+            color: var(--text-primary);
+        }
+        
+        .stats-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stats-card {
+            background: var(--cream-light);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-soft);
+        }
+        
+        .stats-card h3 {
+            margin-top: 0;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+        
+        .monthly-summary,
+        .weekly-summary {
+            background: var(--cream-secondary);
+            padding: 1rem;
+            border-radius: var(--border-radius-small);
+            margin-bottom: 1rem;
+        }
+        
+        .monthly-amount,
+        .weekly-amount {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .monthly-change,
+        .weekly-change {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        
+        .change-positive {
+            color: #28a745;
+        }
+        
+        .change-negative {
+            color: #dc3545;
+        }
+        
+        .order-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .order-item-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--cream-secondary);
+            border-radius: var(--border-radius-small);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: var(--transition);
+            flex-wrap: wrap;
+        }
+        
+        .order-item-summary:hover {
+            background: var(--cream-accent);
+        }
+        
+        .order-id {
+            font-weight: 500;
+            color: var(--text-primary);
+            flex: 1;
+            min-width: 100px;
+            word-break: break-all;
+        }
+        
+        .order-date {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            flex: 1;
+            min-width: 100px;
+            word-break: break-all;
+        }
+        
+        .order-price {
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .price-change-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .price-change-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--cream-secondary);
+            border-radius: var(--border-radius-small);
+            border: 1px solid var(--border-color);
+        }
+        
+        .food-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .price-diff {
+            font-weight: 600;
+        }
+        
+        .diff-positive {
+            color: #28a745;
+        }
+        
+        .diff-negative {
+            color: #dc3545;
+        }
+        
+        .empty-stats {
+            text-align: center;
+            color: var(--text-secondary);
+            font-style: italic;
+            padding: 2rem 0;
+        }
+        
+        /* 订单详情模态框 */
+        .order-detail-modal {
+            max-width: 90%;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .order-detail-content {
+            padding: 1rem 0;
+        }
+        
+        .order-detail-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .order-detail-info h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+        }
+        
+        .order-detail-id,
+        .order-detail-date,
+        .order-detail-total {
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin: 0.25rem 0;
+        }
+        
+        .order-detail-section {
+            margin-bottom: 1.5rem;
+        }
+        
+        .order-detail-section h4 {
+            margin: 0 0 0.75rem 0;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.25rem;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">🏠 个人生活管家</h1>
+            <div class="header-right">
+                <nav class="nav">
+                    <a href="/" class="nav-link">首页</a>
+                    <a href="/pages/tasks.html" class="nav-link">任务计划</a>
+                    <a href="/pages/schedule.html" class="nav-link">工作排班表</a>
+                    <a href="/pages/food.html" class="nav-link">买菜</a>
+                    <a href="/pages/stats.html" class="nav-link active">数据统计</a>
+                </nav>
+                <button class="login-btn" id="loginBtn">登录</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="stats-container">
+            <div class="page-header">
+                <h2 class="page-title">📊 数据统计</h2>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stats-card">
+                    <h3>月度采购金额</h3>
+                    <div id="monthlySummary">
+                        <!-- 月度统计将在这里动态生成 -->
+                    </div>
+                </div>
+                
+                <div class="stats-card">
+                    <h3>周度采购金额</h3>
+                    <div id="weeklySummary">
+                        <!-- 周度统计将在这里动态生成 -->
+                    </div>
+                </div>
+                
+                <div class="stats-card">
+                    <h3>订单记录</h3>
+                    <div id="orderList">
+                        <!-- 订单列表将在这里动态生成 -->
+                    </div>
+                </div>
+                
+                <div class="stats-card">
+                    <h3>菜品价格变化</h3>
+                    <div id="priceChanges">
+                        <!-- 价格变化将在这里动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 订单详情模态框 -->
+    <div class="modal" id="orderDetailModal">
+        <div class="modal-content order-detail-modal">
+            <div class="modal-header">
+                <h3 class="modal-title">订单详情</h3>
+                <button class="modal-close" id="closeOrderDetail">&times;</button>
+            </div>
+            <div class="order-detail-content" id="orderDetailContent">
+                <!-- 订单详情将在这里动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/js/stats.js?v=1.0.15"></script>
+    <script type="module" src="/js/simpleAuth.js?v=1.0.18"></script>
+</body>
+</html>

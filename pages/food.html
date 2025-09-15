@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>买菜 - 个人生活管家</title>
+    <link rel="stylesheet" href="/css/main.css?v=1.0.15">
+    <link rel="stylesheet" href="/css/components.css?v=1.0.15">
+    <link rel="stylesheet" href="/css/food.css?v=1.0.15">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">🏠 个人生活管家</h1>
+            <div class="header-right">
+                <nav class="nav">
+                    <a href="/" class="nav-link">首页</a>
+                    <a href="/pages/tasks.html" class="nav-link">任务计划</a>
+                    <a href="/pages/schedule.html" class="nav-link">工作排班表</a>
+                    <a href="/pages/food.html" class="nav-link active">买菜</a>
+                    <a href="/pages/stats.html" class="nav-link">数据统计</a>
+                </nav>
+                <button class="login-btn" id="loginBtn">登录</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <div class="page-header">
+                <h2 class="page-title">🛒 买菜</h2>
+                <div class="header-buttons">
+                    <button class="add-task-btn" id="addFoodBtn">+ 添加菜品</button>
+                    <button class="order-btn" id="orderBtn">📋 订单</button>
+                </div>
+            </div>
+
+            <!-- 菜品分类筛选 -->
+            <div class="category-filter">
+                <button class="category-btn active" data-category="all">全部</button>
+                <button class="category-btn" data-category="vegetable">蔬菜</button>
+                <button class="category-btn" data-category="meat">肉类</button>
+                <button class="category-btn" data-category="fruit">水果</button>
+                <button class="category-btn" data-category="seafood">海鲜</button>
+            </div>
+
+            <!-- 菜品展示区域 -->
+            <div class="food-grid" id="foodGrid">
+                <!-- 菜品将在这里动态生成 -->
+            </div>
+        </div>
+    </main>
+
+    <!-- 购物车悬浮按钮 -->
+    <div class="cart-float" id="cartFloat">
+        <div class="cart-icon">🛒</div>
+        <div class="cart-count" id="cartCount">0</div>
+    </div>
+
+    <!-- 购物车侧边栏 -->
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3>购物车</h3>
+            <button class="cart-close" id="closeCart">&times;</button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <!-- 购物车项目将在这里动态生成 -->
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                总计: <span id="cartTotal">¥0.00</span>
+            </div>
+            <button class="btn-submit" id="checkoutBtn">结算</button>
+        </div>
+    </div>
+
+    <!-- 订单侧边栏 -->
+    <div class="order-sidebar" id="orderSidebar">
+        <div class="order-header">
+            <h3>订单记录</h3>
+            <button class="order-close" id="closeOrder">&times;</button>
+        </div>
+        <div class="order-items" id="orderItems">
+            <!-- 订单项目将在这里动态生成 -->
+        </div>
+    </div>
+
+    <!-- 添加/编辑菜品模态框 -->
+    <div class="modal" id="foodModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">添加菜品</h3>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <form class="food-form" id="foodForm">
+                <input type="hidden" id="foodId">
+                <div class="form-group">
+                    <label for="foodImage">菜品图片</label>
+                    <input type="file" id="foodImage" accept="image/*">
+                    <div class="image-preview" id="imagePreview"></div>
+                </div>
+                <div class="form-group">
+                    <label for="foodName">菜品名称</label>
+                    <input type="text" id="foodName" required>
+                </div>
+                <div class="form-group">
+                    <label for="foodCategory">分类</label>
+                    <select id="foodCategory" required>
+                        <option value="vegetable">蔬菜</option>
+                        <option value="meat">肉类</option>
+                        <option value="fruit">水果</option>
+                        <option value="seafood">海鲜</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="foodUnit">单位</label>
+                    <input type="text" id="foodUnit" placeholder="如：500g/份" required>
+                </div>
+                <div class="form-group">
+                    <label>超市价格信息</label>
+                    <div class="supermarket-inputs">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="supermarketName">超市名称</label>
+                                <input type="text" id="supermarketName" placeholder="超市名称" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="supermarketPrice">价格 (¥)</label>
+                                <input type="number" id="supermarketPrice" step="0.01" min="0" placeholder="价格" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" id="cancelBtn">取消</button>
+                    <button type="submit" class="btn-submit">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 登录/注册弹窗 -->
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="authModalTitle">用户登录</h3>
+                <button class="modal-close" id="closeAuthModal">&times;</button>
+            </div>
+            <form class="auth-form" id="authForm">
+                <div class="form-group">
+                    <label for="authEmail">邮箱</label>
+                    <input type="email" id="authEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="authPassword">密码</label>
+                    <input type="password" id="authPassword" required>
+                </div>
+                <div class="form-group" id="confirmPasswordGroup" style="display: none;">
+                    <label for="authConfirmPassword">确认密码</label>
+                    <input type="password" id="authConfirmPassword">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" id="cancelAuth">取消</button>
+                    <button type="submit" class="btn-submit" id="submitAuth">登录</button>
+                </div>
+            </form>
+            <div class="auth-footer">
+                <p id="authSwitchText">还没有账户？<a href="#" id="switchToRegister">立即注册</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 菜品详情模态框 -->
+    <div class="modal" id="foodDetailModal">
+        <div class="modal-content food-detail-modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="detailModalTitle">菜品详情</h3>
+                <button class="modal-close" id="closeDetailModal">&times;</button>
+            </div>
+            <div class="food-detail-content" id="foodDetailContent">
+                <!-- 菜品详情将在这里动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/js/food.js?v=1.0.15"></script>
+    <script type="module" src="/js/simpleAuth.js?v=1.0.18"></script>
+    <!-- 数据迁移脚本 -->
+    <script type="module" src="/js/runMigration.js?v=1.0.19"></script>
+</body>
+</html>

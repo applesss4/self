@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>个人生活管家</title>
-    <link rel="stylesheet" href="/css/main.css?v=1.0.14">
-    <link rel="stylesheet" href="/css/components.css?v=1.0.14">
+    <title>个人生活管家 - 首页</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/components.css">
 </head>
 <body>
     <header class="header">
@@ -16,6 +16,8 @@
                     <a href="/" class="nav-link active">首页</a>
                     <a href="/pages/tasks.html" class="nav-link">任务计划</a>
                     <a href="/pages/schedule.html" class="nav-link">工作排班表</a>
+                    <a href="/pages/food.html" class="nav-link">买菜</a>
+                    <a href="/pages/stats.html" class="nav-link">数据统计</a>
                 </nav>
                 <button class="login-btn" id="loginBtn">登录</button>
             </div>
@@ -23,40 +25,47 @@
     </header>
 
     <main class="main">
+        <section class="hero">
+            <h2 class="hero-title">欢迎使用个人生活管家</h2>
+            <p class="hero-subtitle">一站式管理您的日常生活和工作任务</p>
+        </section>
+
         <div class="container">
-            <section class="hero">
-                <h2 class="hero-title">让生活更有序，让每一天都充满意义</h2>
-                <p class="hero-subtitle">简约而温暖的生活管理工具</p>
-            </section>
-
-            <section class="features">
-                <div class="feature-card" id="tasks-feature">
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">📝</div>
+                    <h3 class="feature-title">任务管理</h3>
+                    <p class="feature-description">创建、编辑和跟踪您的日常任务，支持分类和优先级设置</p>
+                    <a href="/pages/tasks.html" class="feature-button">开始使用</a>
+                </div>
+                    
+                <div class="feature-card">
                     <div class="feature-icon">📅</div>
-                    <h3 class="feature-title">生活起居任务计划</h3>
-                    <p class="feature-description">用日历清单的方式管理您的日常任务，让每一天都井井有条</p>
-                    <button class="feature-button" onclick="navigateToTasks()">开始使用</button>
+                    <h3 class="feature-title">日程安排</h3>
+                    <p class="feature-description">可视化日历视图，轻松安排和管理工作时间</p>
+                    <a href="/pages/schedule.html" class="feature-button">查看日程</a>
                 </div>
-
-                <div class="feature-card" id="schedule-feature">
+                    
+                <div class="feature-card">
+                    <div class="feature-icon">🛒</div>
+                    <h3 class="feature-title">买菜</h3>
+                    <p class="feature-description">在线选购新鲜食材，支持购物车功能</p>
+                    <a href="/pages/food.html" class="feature-button">开始买菜</a>
+                </div>
+                
+                <div class="feature-card">
                     <div class="feature-icon">📊</div>
-                    <h3 class="feature-title">工作排班表</h3>
-                    <p class="feature-description">以周为单位查看和管理工作排班，清晰展示上班时间和下班时间</p>
-                    <button class="feature-button" onclick="navigateToSchedule()">开始使用</button>
+                    <h3 class="feature-title">数据统计</h3>
+                    <p class="feature-description">查看采购数据统计，分析消费趋势</p>
+                    <a href="/pages/stats.html" class="feature-button">查看统计</a>
                 </div>
-
-                <div class="feature-card coming-soon">
-                    <div class="feature-icon">💡</div>
-                    <h3 class="feature-title">生活提醒</h3>
-                    <p class="feature-description">即将推出：智能的生活提醒助手</p>
-                    <button class="feature-button" disabled>敬请期待</button>
-                </div>
-            </section>
+            </div>
         </div>
     </main>
 
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2025 个人生活管家 - 让生活更美好</p>
+            <p>&copy; 2025 个人生活管家. 让生活更有序，让工作更高效。</p>
         </div>
     </footer>
 
@@ -91,17 +100,7 @@
         </div>
     </div>
 
-    <script>
-        // 导航到任务页面的函数
-        function navigateToTasks() {
-            window.location.href = '/pages/tasks.html';
-        }
-        
-        // 导航到排班表页面的函数
-        function navigateToSchedule() {
-            window.location.href = '/pages/schedule.html';
-        }
-    </script>
-    <script type="module" src="/js/simpleAuth.js?v=1.0.18"></script>
+    <script type="module" src="/js/main.js"></script>
+    <script type="module" src="/js/simpleAuth.js"></script>
 </body>
 </html>

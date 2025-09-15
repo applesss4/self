@@ -468,6 +468,60 @@
     color: #1E3A8A;
 }
 
+.task-category.personal {
+    background: #F0E6FF;
+    color: #4C1D95;
+}
+
+.task-category.other {
+    background: #E0E0E0;
+    color: #333333;
+}
+
+/* 采购分类样式 */
+.task-category.food {
+    background: #E8F5E8;
+    color: #2D5A2D;
+}
+
+.task-category.household {
+    background: #E8F0FF;
+    color: #1E3A8A;
+}
+
+.task-category.personal {
+    background: #F0E6FF;
+    color: #4C1D95;
+}
+
+.task-category.other {
+    background: #E0E0E0;
+    color: #333333;
+}
+
+/* 分类标题 */
+.task-category-header {
+    margin: 1rem 0 0.5rem 0;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.task-category-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* 采购数量样式 */
+.task-quantity {
+    font-size: 0.8rem;
+    background: var(--cream-accent);
+    padding: 0.15rem 0.4rem;
+    border-radius: var(--border-radius-small);
+}
+
 /* 工作时间区域样式 */
 .work-time-section {
     margin: 0.75rem 0;

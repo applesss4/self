@@ -8,12 +8,16 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "npx serve .",
     "start": "npx serve .",
-    "build": "echo \"No build step required for this project\""
+    "build": "echo \"No build step required for this project\"",
+    "schema": "node get_schema.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "serve": "^14.2.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.0.0"
   }
 }
