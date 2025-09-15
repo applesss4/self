@@ -820,11 +820,15 @@ function checkUserStatusAndShowFeaturesButton() {
             // 用户已登录，显示功能按钮
             if (featuresBtn) {
                 featuresBtn.style.display = 'block';
+                // 添加登录样式类
+                featuresBtn.classList.add('loggedIn');
             }
         } else {
             // 用户未登录，隐藏功能按钮
             if (featuresBtn) {
                 featuresBtn.style.display = 'none';
+                // 移除登录样式类
+                featuresBtn.classList.remove('loggedIn');
             }
         }
     } catch (error) {

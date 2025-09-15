@@ -564,6 +564,57 @@
     margin-right: 0.5rem;
 }
 
+/* 功能菜单按钮样式 */
+#featuresBtn {
+    /* 默认样式（未登录时为灰色） */
+    background: #cccccc;
+    color: #666666;
+    border: 1px solid #bbbbbb;
+    border-radius: var(--border-radius);
+    padding: 0.6rem 1.5rem;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: var(--shadow-soft);
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+#featuresBtn.loggedIn {
+    /* 登录后的样式（与登录按钮相同） */
+    background: linear-gradient(135deg, var(--cream-accent) 0%, var(--cream-warm) 100%);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+#featuresBtn.loggedIn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: 0.5s;
+}
+
+#featuresBtn.loggedIn:hover {
+    background: linear-gradient(135deg, var(--cream-warm) 0%, var(--cream-accent) 100%);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
+}
+
+#featuresBtn.loggedIn:hover::before {
+    left: 100%;
+}
+
+#featuresBtn.loggedIn:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-soft);
+}
+
 /* 功能菜单模态框样式 */
 .features-menu {
     display: flex;

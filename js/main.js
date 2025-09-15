@@ -22,16 +22,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function checkUserStatus() {
     try {
         const user = await supabaseAuth.getCurrentUser();
+        const featuresBtn = document.getElementById('featuresBtn');
+        
         if (user) {
             // 用户已登录，显示功能区域，隐藏登录框
             document.getElementById('authSection').style.display = 'none';
             document.getElementById('featuresSection').style.display = 'grid';
-            document.getElementById('featuresBtn').style.display = 'block';
+            if (featuresBtn) {
+                featuresBtn.style.display = 'block';
+                // 添加登录样式类
+                featuresBtn.classList.add('loggedIn');
+            }
         } else {
             // 用户未登录，显示登录框，隐藏功能区域
             document.getElementById('authSection').style.display = 'block';
             document.getElementById('featuresSection').style.display = 'none';
-            document.getElementById('featuresBtn').style.display = 'none';
+            if (featuresBtn) {
+                featuresBtn.style.display = 'none';
+                // 移除登录样式类
+                featuresBtn.classList.remove('loggedIn');
+            }
         }
     } catch (error) {
         console.error('检查用户状态时出错:', error);
@@ -69,11 +79,17 @@ function bindAuthEvents() {
     // 监听认证状态变化
     supabaseAuth.onAuthStateChange((event, session) => {
         console.log('认证状态变化:', event);
+        const featuresBtn = document.getElementById('featuresBtn');
+        
         if (event === 'SIGNED_IN') {
             // 登录成功，隐藏登录框，显示功能区域
             document.getElementById('authSection').style.display = 'none';
             document.getElementById('featuresSection').style.display = 'grid';
-            document.getElementById('featuresBtn').style.display = 'block';
+            if (featuresBtn) {
+                featuresBtn.style.display = 'block';
+                // 添加登录样式类
+                featuresBtn.classList.add('loggedIn');
+            }
             
             // 显示自定义提示消息
             showCustomToast('成功进入发财人生管理系统', 'success');
@@ -86,7 +102,11 @@ function bindAuthEvents() {
             // 登出，显示登录框，隐藏功能区域
             document.getElementById('authSection').style.display = 'block';
             document.getElementById('featuresSection').style.display = 'none';
-            document.getElementById('featuresBtn').style.display = 'none';
+            if (featuresBtn) {
+                featuresBtn.style.display = 'none';
+                // 移除登录样式类
+                featuresBtn.classList.remove('loggedIn');
+            }
         }
     });
 }

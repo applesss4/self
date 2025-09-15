@@ -1,6 +1,5 @@
 // 工作排班表主逻辑
 import TaskManager from './taskManager.js';
-import SupabaseAuth from './supabaseAuth.js';  // 导入 SupabaseAuth 类
 
 // 辅助函数：将Date对象格式化为本地日期字符串 (YYYY-MM-DD)
 function formatDateToLocal(date) {
@@ -266,11 +265,15 @@ function checkUserStatusAndShowFeaturesButton() {
             // 用户已登录，显示功能按钮
             if (featuresBtn) {
                 featuresBtn.style.display = 'block';
+                // 添加登录样式类
+                featuresBtn.classList.add('loggedIn');
             }
         } else {
             // 用户未登录，隐藏功能按钮
             if (featuresBtn) {
                 featuresBtn.style.display = 'none';
+                // 移除登录样式类
+                featuresBtn.classList.remove('loggedIn');
             }
         }
     } catch (error) {
