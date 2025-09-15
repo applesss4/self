@@ -1,5 +1,6 @@
 // 工作排班表主逻辑
 import TaskManager from './taskManager.js';
+import SupabaseAuth from './supabaseAuth.js';  // 导入 SupabaseAuth 类
 
 // 辅助函数：将Date对象格式化为本地日期字符串 (YYYY-MM-DD)
 function formatDateToLocal(date) {
@@ -138,6 +139,9 @@ async function init() {
     
     // 绑定功能按钮事件
     bindFeaturesButtonEvents();
+    
+    // 检查用户登录状态并更新功能按钮
+    checkUserStatusAndShowFeaturesButton();
 }
 
 // 为导航链接添加登录检查
