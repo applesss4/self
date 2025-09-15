@@ -1,4 +1,5 @@
 // 菜品管理模块
+// 版本: 1.0.32
 import SupabaseAuth from './supabaseAuth.js';
 import SupabaseFoodStorage from './supabaseFoodStorage.js';
 

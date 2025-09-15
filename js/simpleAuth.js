@@ -1,4 +1,5 @@
 // 简化版认证功能（已升级为Supabase认证）
+// 版本: 1.0.32
 import supabase from './supabase.js';
 import SupabaseAuth from './supabaseAuth.js';
 
@@ -72,27 +73,8 @@ function bindAuthEvents() {
         // 检查用户登录状态并监听变化
         checkUserStatus();
         
-        // 监听认证状态变化
-        // 先取消之前的订阅（如果有的话）
-        if (authSubscription) {
-            authSubscription.unsubscribe();
-        }
-        
-        // 重新订阅认证状态变化
-        authSubscription = supabaseAuth.onAuthStateChange((event, session) => {
-            console.log('认证状态变化:', event, session?.user?.id);
-            if (event === 'SIGNED_IN') {
-                updateLoginButton(session.user);
-                // 在首页登录时，设置 sessionStorage
-                if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
-                    sessionStorage.setItem('isLoggedIn', 'true');
-                }
-            } else if (event === 'SIGNED_OUT') {
-                updateLoginButton(null);
-                // 登出时，清除 sessionStorage
-                sessionStorage.removeItem('isLoggedIn');
-            }
-        });
+        // 在首页不需要监听认证状态变化，避免与main.js冲突
+        // 认证状态变化由main.js统一处理
     } else {
         // 如果元素还没加载完成，稍后再试
         setTimeout(bindAuthEvents, 500);

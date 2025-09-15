@@ -1,4 +1,5 @@
 // 工作排班表主逻辑
+// 版本: 1.0.32
 import TaskManager from './taskManager.js';
 
 // 辅助函数：将Date对象格式化为本地日期字符串 (YYYY-MM-DD)

@@ -1,4 +1,5 @@
 // 主页面逻辑
+// 版本: 1.0.32
 import SupabaseAuth from './supabaseAuth.js';
 
 let supabaseAuth = null;
@@ -79,17 +80,10 @@ function bindAuthEvents() {
     // 监听认证状态变化
     supabaseAuth.onAuthStateChange((event, session) => {
         console.log('认证状态变化:', event);
-        const featuresBtn = document.getElementById('featuresBtn');
         
         if (event === 'SIGNED_IN') {
-            // 登录成功，隐藏登录框，显示功能区域
+            // 登录成功，隐藏登录框
             document.getElementById('authSection').style.display = 'none';
-            document.getElementById('featuresSection').style.display = 'grid';
-            if (featuresBtn) {
-                featuresBtn.style.display = 'block';
-                // 添加登录样式类
-                featuresBtn.classList.add('loggedIn');
-            }
             
             // 设置登录状态标记
             sessionStorage.setItem('isLoggedIn', 'true');
@@ -102,14 +96,8 @@ function bindAuthEvents() {
                 window.location.href = '/pages/tasks.html';
             }, 3000);
         } else if (event === 'SIGNED_OUT') {
-            // 登出，显示登录框，隐藏功能区域
+            // 登出，显示登录框
             document.getElementById('authSection').style.display = 'block';
-            document.getElementById('featuresSection').style.display = 'none';
-            if (featuresBtn) {
-                featuresBtn.style.display = 'none';
-                // 移除登录样式类
-                featuresBtn.classList.remove('loggedIn');
-            }
             
             // 清除登录状态标记
             sessionStorage.removeItem('isLoggedIn');

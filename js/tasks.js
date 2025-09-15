@@ -1,4 +1,5 @@
 // 工作任务主逻辑
+// 版本: 1.0.32
 import TaskManager from './taskManager.js';
 import SupabaseAuth from './supabaseAuth.js';  // 导入 SupabaseAuth 类
 
