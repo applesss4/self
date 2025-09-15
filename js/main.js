@@ -1,10 +1,81 @@
 // 主页面逻辑
 import SupabaseAuth from './supabaseAuth.js';
 
-document.addEventListener('DOMContentLoaded', function() {
-    // 页面加载完成后初始化
-    init();
+document.addEventListener('DOMContentLoaded', async () => {
+    // 为导航链接添加登录检查
+    addLoginCheckToNavLinks();
+    
+    // 其他主页逻辑...
 });
+
+// 为导航链接添加登录检查
+function addLoginCheckToNavLinks() {
+    // 获取所有导航链接（除了首页）
+    const navLinks = document.querySelectorAll('.nav-link:not([href="/"])');
+    
+    // 为每个链接添加点击事件监听器
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            // 检查用户是否已登录
+            const loginStatus = sessionStorage.getItem('isLoggedIn');
+            if (loginStatus !== 'true') {
+                // 阻止默认跳转行为
+                e.preventDefault();
+                
+                // 显示提示消息
+                showToast('请先登录后再访问此功能', 'error');
+                
+                // 显示登录模态框
+                const authModal = document.getElementById('authModal');
+                if (authModal) {
+                    authModal.classList.add('active');
+                }
+            }
+        });
+    });
+}
+
+// 显示提示消息
+function showToast(message, type = 'info') {
+    // 移除现有的提示
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    // 创建新提示
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1'};
+        color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460'};
+        padding: 1rem 1.5rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 1000;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // 显示动画
+    setTimeout(() => {
+        toast.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // 自动隐藏
+    setTimeout(() => {
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 3000);
+}
 
 function init() {
     // 设置今天的日期

@@ -33,11 +33,8 @@ class FoodUI {
         this.renderFoods();
         this.updateCartUI();
         
-        // 绑定功能按钮事件
-        this.bindFeaturesButtonEvents();
-        
-        // 检查用户登录状态并更新功能按钮
-        this.checkUserStatusAndShowFeaturesButton();
+        // 为导航链接添加登录检查
+        this.addLoginCheckToNavLinks();
         
         // 监听订单实时更新事件
         window.addEventListener('ordersUpdated', () => {
@@ -47,6 +44,33 @@ class FoodUI {
             if (orderSidebar && orderSidebar.classList.contains('active')) {
                 this.renderOrders();
             }
+        });
+    }
+
+    // 为导航链接添加登录检查
+    addLoginCheckToNavLinks() {
+        // 获取所有导航链接（除了首页）
+        const navLinks = document.querySelectorAll('.nav-link:not([href="/"])');
+        
+        // 为每个链接添加点击事件监听器
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                // 检查用户是否已登录
+                const loginStatus = sessionStorage.getItem('isLoggedIn');
+                if (loginStatus !== 'true') {
+                    // 阻止默认跳转行为
+                    e.preventDefault();
+                    
+                    // 显示提示消息
+                    this.showToast('请先登录后再访问此功能', 'error');
+                    
+                    // 显示登录模态框
+                    const authModal = document.getElementById('authModal');
+                    if (authModal) {
+                        authModal.classList.add('active');
+                    }
+                }
+            }.bind(this));
         });
     }
 

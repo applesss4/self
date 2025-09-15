@@ -115,11 +115,8 @@ class StatsUI {
         await this.renderStats();
         this.bindEvents();
         
-        // 绑定功能按钮事件
-        this.bindFeaturesButtonEvents();
-        
-        // 检查用户登录状态并更新功能按钮
-        this.checkUserStatusAndShowFeaturesButton();
+        // 为导航链接添加登录检查
+        this.addLoginCheckToNavLinks();
     }
 
     // 初始化认证模块
@@ -195,75 +192,73 @@ class StatsUI {
         }
     }
 
-    // 绑定功能按钮事件
-    bindFeaturesButtonEvents() {
-        // 功能按钮点击事件
-        const featuresBtn = document.getElementById('featuresBtn');
-        if (featuresBtn) {
-            featuresBtn.addEventListener('click', this.openFeaturesModal);
-        }
+    // 为导航链接添加登录检查
+    addLoginCheckToNavLinks() {
+        // 获取所有导航链接（除了首页）
+        const navLinks = document.querySelectorAll('.nav-link:not([href="/"])');
         
-        // 关闭功能菜单模态框
-        const closeFeaturesModal = document.getElementById('closeFeaturesModal');
-        if (closeFeaturesModal) {
-            closeFeaturesModal.addEventListener('click', this.closeFeaturesModalFunc);
-        }
-        
-        // 点击模态框外部关闭
-        const featuresModal = document.getElementById('featuresModal');
-        if (featuresModal) {
-            featuresModal.addEventListener('click', (e) => {
-                if (e.target.id === 'featuresModal') {
-                    this.closeFeaturesModalFunc();
+        // 为每个链接添加点击事件监听器
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                // 检查用户是否已登录
+                const loginStatus = sessionStorage.getItem('isLoggedIn');
+                if (loginStatus !== 'true') {
+                    // 阻止默认跳转行为
+                    e.preventDefault();
+                    
+                    // 显示提示消息
+                    this.showToast('请先登录后再访问此功能', 'error');
+                    
+                    // 显示登录模态框
+                    const authModal = document.getElementById('authModal');
+                    if (authModal) {
+                        authModal.classList.add('active');
+                    }
                 }
-            });
-        }
-        
-        // ESC键关闭模态框
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                this.closeFeaturesModalFunc();
-            }
+            }.bind(this));
         });
     }
 
-    // 打开功能菜单模态框
-    openFeaturesModal() {
-        const featuresModal = document.getElementById('featuresModal');
-        if (featuresModal) {
-            featuresModal.classList.add('active');
+    // 显示提示消息
+    showToast(message, type = 'info') {
+        // 移除现有的提示
+        const existingToast = document.querySelector('.toast');
+        if (existingToast) {
+            existingToast.remove();
         }
-    }
-
-    // 关闭功能菜单模态框
-    closeFeaturesModalFunc() {
-        const featuresModal = document.getElementById('featuresModal');
-        if (featuresModal) {
-            featuresModal.classList.remove('active');
-        }
-    }
-
-    // 检查用户登录状态并更新功能按钮
-    checkUserStatusAndShowFeaturesButton() {
-        try {
-            // 从sessionStorage获取登录状态
-            const loginStatus = sessionStorage.getItem('isLoggedIn');
-            const featuresBtn = document.getElementById('featuresBtn');
-            
-            if (loginStatus === 'true') {
-                // 用户已登录，显示功能按钮
-                if (featuresBtn) {
-                    featuresBtn.style.display = 'block';
-                }
-            } else {
-                // 用户未登录，隐藏功能按钮
-                if (featuresBtn) {
-                    featuresBtn.style.display = 'none';
-                }
-            }
-        } catch (error) {
-            console.error('检查用户状态时出错:', error);
-        }
+        
+        // 创建新提示
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1'};
+            color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460'};
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // 显示动画
+        setTimeout(() => {
+            toast.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // 自动隐藏
+        setTimeout(() => {
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 3000);
     }
 
     // 渲染统计数据
@@ -749,48 +744,6 @@ class StatsUI {
         if (orderDetailModal) {
             orderDetailModal.classList.remove('active');
         }
-    }
-
-    // 显示提示消息
-    showToast(message, type = 'info') {
-        // 移除现有的提示
-        const existingToast = document.querySelector('.toast');
-        if (existingToast) {
-            existingToast.remove();
-        }
-        
-        // 创建新提示
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.textContent = message;
-        toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1'};
-            color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460'};
-            padding: 1rem 1.5rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 1000;
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
-        `;
-        
-        document.body.appendChild(toast);
-        
-        // 显示动画
-        setTimeout(() => {
-            toast.style.transform = 'translateX(0)';
-        }, 100);
-        
-        // 自动隐藏
-        setTimeout(() => {
-            toast.style.transform = 'translateX(100%)';
-            setTimeout(() => {
-                toast.remove();
-            }, 300);
-        }, 3000);
     }
 }
 

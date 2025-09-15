@@ -127,9 +127,6 @@ async function init() {
     // 绑定事件监听器
     bindEventListeners();
     
-    // 绑定功能按钮事件
-    bindFeaturesButtonEvents();
-    
     // 检查是否从首页登录
     const loginStatus = sessionStorage.getItem('isLoggedIn');
     if (loginStatus !== 'true') {
@@ -158,8 +155,35 @@ async function init() {
     // 显示今日任务
     displayTodayTasks();
     
-    // 检查用户登录状态并更新功能按钮
-    checkUserStatusAndShowFeaturesButton();
+    // 为导航链接添加登录检查
+    addLoginCheckToNavLinks();
+}
+
+// 为导航链接添加登录检查
+function addLoginCheckToNavLinks() {
+    // 获取所有导航链接（除了首页）
+    const navLinks = document.querySelectorAll('.nav-link:not([href="/"])');
+    
+    // 为每个链接添加点击事件监听器
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            // 检查用户是否已登录
+            const loginStatus = sessionStorage.getItem('isLoggedIn');
+            if (loginStatus !== 'true') {
+                // 阻止默认跳转行为
+                e.preventDefault();
+                
+                // 显示提示消息
+                showToast('请先登录后再访问此功能', 'error');
+                
+                // 显示登录模态框
+                const authModal = document.getElementById('authModal');
+                if (authModal) {
+                    authModal.classList.add('active');
+                }
+            }
+        });
+    });
 }
 
 // 订阅实时更新 - 改进版本
