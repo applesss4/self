@@ -331,13 +331,20 @@ class SupabaseFoodStorage {
             return null;
         }
 
+        // 计算订单总价（如果未提供）
+        const total = order.total || order.items.reduce((sum, item) => {
+            return sum + (item.price * item.quantity);
+        }, 0);
+
         // 准备要插入的数据
         const orderToInsert = {
             user_id: user.id,
             items: order.items || [],
-            total: order.total || 0,
+            total: total,
             date: new Date()
         };
+
+        console.log('准备插入订单数据:', orderToInsert);
 
         const { data, error } = await supabase
             .from('orders')

@@ -887,6 +887,8 @@ class FoodUI {
             total: total
         };
         
+        console.log('准备创建订单:', order);
+        
         // 保存订单
         const result = await this.foodStorage.addOrder(order);
         
