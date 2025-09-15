@@ -33,6 +33,12 @@ class FoodUI {
         this.renderFoods();
         this.updateCartUI();
         
+        // 绑定功能按钮事件
+        this.bindFeaturesButtonEvents();
+        
+        // 检查用户登录状态并更新功能按钮
+        this.checkUserStatusAndShowFeaturesButton();
+        
         // 为导航链接添加登录检查
         this.addLoginCheckToNavLinks();
         
