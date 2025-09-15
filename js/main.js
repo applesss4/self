@@ -15,6 +15,9 @@ function init() {
     
     // 显示欢迎消息
     showWelcomeMessage();
+    
+    // 检查用户登录状态并更新导航栏
+    checkUserStatus();
 }
 
 function updateCurrentDate() {
@@ -48,6 +51,29 @@ function bindEventListeners() {
     });
 }
 
+// 检查用户登录状态并更新导航栏
+async function checkUserStatus() {
+    try {
+        // 从sessionStorage获取登录状态
+        const loginStatus = sessionStorage.getItem('isLoggedIn');
+        const pagesDropdown = document.getElementById('pagesDropdown');
+        
+        if (loginStatus === 'true') {
+            // 用户已登录，显示下拉菜单
+            if (pagesDropdown) {
+                pagesDropdown.style.display = 'block';
+            }
+        } else {
+            // 用户未登录，隐藏下拉菜单
+            if (pagesDropdown) {
+                pagesDropdown.style.display = 'none';
+            }
+        }
+    } catch (error) {
+        console.error('检查用户状态时出错:', error);
+    }
+}
+
 // 导航到任务页面
 function navigateToTasks() {
     window.location.href = 'pages/tasks.html';
@@ -57,6 +83,13 @@ function navigateToTasks() {
 function handleNavigation(event) {
     const link = event.target;
     const href = link.getAttribute('href');
+    
+    // 检查是否是功能页面链接且用户未登录
+    if (href && href.startsWith('/pages/') && sessionStorage.getItem('isLoggedIn') !== 'true') {
+        event.preventDefault();
+        alert('请先登录后再访问此页面');
+        return;
+    }
     
     // 添加页面切换动画
     document.body.style.opacity = '0.8';

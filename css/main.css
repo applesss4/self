@@ -23,6 +23,62 @@
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* 下拉菜单样式 */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-btn {
+    background-color: var(--cream-primary);
+    color: var(--text-primary);
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border: none;
+    cursor: pointer;
+    border-radius: var(--border-radius-small);
+    transition: var(--transition);
+}
+
+.dropdown-btn:hover {
+    background-color: var(--cream-accent);
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: var(--cream-light);
+    min-width: 160px;
+    box-shadow: var(--shadow-medium);
+    z-index: 1;
+    border-radius: var(--border-radius-small);
+    border: 1px solid var(--border-color);
+    right: 0;
+    top: 100%;
+    margin-top: 0.5rem;
+}
+
+.dropdown-content a {
+    color: var(--text-primary);
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    display: block;
+    border-bottom: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.dropdown-content a:hover {
+    background-color: var(--cream-accent);
+}
+
+.dropdown-content a:last-child {
+    border-bottom: none;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
 /* 基础重置 */
 * {
     margin: 0;

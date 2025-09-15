@@ -14,10 +14,16 @@
             <div class="header-right">
                 <nav class="nav">
                     <a href="/" class="nav-link active">首页</a>
-                    <a href="/pages/tasks.html" class="nav-link">任务计划</a>
-                    <a href="/pages/schedule.html" class="nav-link">工作排班表</a>
-                    <a href="/pages/food.html" class="nav-link">买菜</a>
-                    <a href="/pages/stats.html" class="nav-link">数据统计</a>
+                    <!-- 下拉菜单容器 -->
+                    <div class="dropdown" id="pagesDropdown" style="display: none;">
+                        <button class="dropdown-btn nav-link">功能菜单 ▼</button>
+                        <div class="dropdown-content">
+                            <a href="/pages/tasks.html" class="nav-link">任务计划</a>
+                            <a href="/pages/schedule.html" class="nav-link">工作排班表</a>
+                            <a href="/pages/food.html" class="nav-link">买菜</a>
+                            <a href="/pages/stats.html" class="nav-link">数据统计</a>
+                        </div>
+                    </div>
                 </nav>
                 <button class="login-btn" id="loginBtn">登录</button>
             </div>

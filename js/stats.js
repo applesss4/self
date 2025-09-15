@@ -339,7 +339,6 @@ class StatsUI {
             const dateParts = order.date.split(/[\s年月日:/]+/);
             const year = parseInt(dateParts[0]);
             const month = parseInt(dateParts[1]) - 1; // JavaScript月份从0开始
-            const date = new Date(year, month);
             
             const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
             const monthLabel = `${year}年${month + 1}月`;
