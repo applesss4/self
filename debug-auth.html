@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调试认证功能</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .test-result {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input {
+            padding: 8px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>调试认证功能</h1>
+    
+    <div class="test-section">
+        <h2>Supabase连接测试</h2>
+        <button id="testConnection">测试Supabase连接</button>
+        <div id="connectionResult" class="test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>用户认证测试</h2>
+        <input type="email" id="testEmail" placeholder="邮箱">
+        <input type="password" id="testPassword" placeholder="密码">
+        <br>
+        <button id="testSignIn">登录测试</button>
+        <button id="testSignUp">注册测试</button>
+        <button id="testSignOut">登出测试</button>
+        <button id="testGetCurrentUser">获取当前用户</button>
+        <div id="authResult" class="test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>实时状态</h2>
+        <button id="checkAuthState">检查认证状态</button>
+        <div id="stateResult" class="test-result"></div>
+    </div>
+
+    <script type="module">
+        // 从 CDN 导入 Supabase 客户端
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+        
+        // Supabase 配置
+        const SUPABASE_URL = 'https://ncgjyulrxlavejpgriju.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jZ2p5dWxyeGxhdmVqcGdyaWp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc4MDc2MzIsImV4cCI6MjA3MzM4MzYzMn0.yM0nV0WUOO1UdUuRWCKjs4k3-W3FkflrpzK1cD3ULkk';
+        
+        // 创建 Supabase 客户端
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // 获取DOM元素
+        const connectionResult = document.getElementById('connectionResult');
+        const authResult = document.getElementById('authResult');
+        const stateResult = document.getElementById('stateResult');
+        
+        // 测试Supabase连接
+        document.getElementById('testConnection').addEventListener('click', async () => {
+            try {
+                connectionResult.textContent = '正在测试连接...';
+                connectionResult.className = 'test-result';
+                
+                // 测试基本连接
+                const { data, error } = await supabase.from('users').select('id').limit(1);
+                
+                if (error) {
+                    connectionResult.textContent = `连接失败: ${JSON.stringify(error, null, 2)}`;
+                    connectionResult.className = 'test-result error';
+                } else {
+                    connectionResult.textContent = '连接成功！';
+                    connectionResult.className = 'test-result success';
+                }
+            } catch (error) {
+                connectionResult.textContent = `连接异常: ${error.message}`;
+                connectionResult.className = 'test-result error';
+            }
+        });
+        
+        // 测试登录
+        document.getElementById('testSignIn').addEventListener('click', async () => {
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+            
+            if (!email || !password) {
+                authResult.textContent = '请输入邮箱和密码';
+                authResult.className = 'test-result error';
+                return;
+            }
+            
+            try {
+                authResult.textContent = '正在登录...';
+                authResult.className = 'test-result';
+                
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+                
+                if (error) {
+                    authResult.textContent = `登录失败: ${JSON.stringify(error, null, 2)}`;
+                    authResult.className = 'test-result error';
+                } else {
+                    authResult.textContent = `登录成功: ${JSON.stringify(data, null, 2)}`;
+                    authResult.className = 'test-result success';
+                }
+            } catch (error) {
+                authResult.textContent = `登录异常: ${error.message}`;
+                authResult.className = 'test-result error';
+            }
+        });
+        
+        // 测试注册
+        document.getElementById('testSignUp').addEventListener('click', async () => {
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+            
+            if (!email || !password) {
+                authResult.textContent = '请输入邮箱和密码';
+                authResult.className = 'test-result error';
+                return;
+            }
+            
+            try {
+                authResult.textContent = '正在注册...';
+                authResult.className = 'test-result';
+                
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password
+                });
+                
+                if (error) {
+                    authResult.textContent = `注册失败: ${JSON.stringify(error, null, 2)}`;
+                    authResult.className = 'test-result error';
+                } else {
+                    authResult.textContent = `注册成功: ${JSON.stringify(data, null, 2)}`;
+                    authResult.className = 'test-result success';
+                }
+            } catch (error) {
+                authResult.textContent = `注册异常: ${error.message}`;
+                authResult.className = 'test-result error';
+            }
+        });
+        
+        // 测试登出
+        document.getElementById('testSignOut').addEventListener('click', async () => {
+            try {
+                authResult.textContent = '正在登出...';
+                authResult.className = 'test-result';
+                
+                const { error } = await supabase.auth.signOut();
+                
+                if (error) {
+                    authResult.textContent = `登出失败: ${JSON.stringify(error, null, 2)}`;
+                    authResult.className = 'test-result error';
+                } else {
+                    authResult.textContent = '登出成功';
+                    authResult.className = 'test-result success';
+                }
+            } catch (error) {
+                authResult.textContent = `登出异常: ${error.message}`;
+                authResult.className = 'test-result error';
+            }
+        });
+        
+        // 获取当前用户
+        document.getElementById('testGetCurrentUser').addEventListener('click', async () => {
+            try {
+                authResult.textContent = '正在获取用户信息...';
+                authResult.className = 'test-result';
+                
+                const { data: { user }, error } = await supabase.auth.getUser();
+                
+                if (error) {
+                    authResult.textContent = `获取用户信息失败: ${JSON.stringify(error, null, 2)}`;
+                    authResult.className = 'test-result error';
+                } else {
+                    authResult.textContent = `当前用户: ${JSON.stringify(user, null, 2)}`;
+                    authResult.className = 'test-result success';
+                }
+            } catch (error) {
+                authResult.textContent = `获取用户信息异常: ${error.message}`;
+                authResult.className = 'test-result error';
+            }
+        });
+        
+        // 检查认证状态
+        document.getElementById('checkAuthState').addEventListener('click', async () => {
+            try {
+                stateResult.textContent = '正在检查认证状态...';
+                stateResult.className = 'test-result';
+                
+                // 监听认证状态变化
+                const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+                    stateResult.textContent += `\n认证状态变化: ${event}\n会话: ${JSON.stringify(session, null, 2)}`;
+                });
+                
+                // 获取当前会话
+                const { data, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    stateResult.textContent = `获取会话失败: ${JSON.stringify(error, null, 2)}`;
+                    stateResult.className = 'test-result error';
+                } else {
+                    stateResult.textContent = `当前会话: ${JSON.stringify(data, null, 2)}`;
+                    stateResult.className = 'test-result success';
+                }
+                
+                // 5秒后取消订阅
+                setTimeout(() => {
+                    subscription.unsubscribe();
+                }, 5000);
+            } catch (error) {
+                stateResult.textContent = `检查认证状态异常: ${error.message}`;
+                stateResult.className = 'test-result error';
+            }
+        });
+    </script>
+</body>
+</html>
