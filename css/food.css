@@ -917,3 +917,61 @@
     75% { content: "..."; }
     100% { content: ""; }
 }
+
+/* 添加新超市表单样式 */
+.add-supermarket-section {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.add-supermarket-section h4 {
+    margin: 0 0 0.75rem 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.25rem;
+}
+
+.add-supermarket-section .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.add-supermarket-section .form-group {
+    margin-bottom: 0;
+}
+
+.supermarket-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-small);
+    font-size: 0.9rem;
+    background: var(--cream-light);
+}
+
+.supermarket-input:focus {
+    outline: none;
+    border-color: var(--cream-warm);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+#addSupermarketBtn {
+    background: var(--cream-warm);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+#addSupermarketBtn:hover {
+    background: #F0E68C;
+    transform: translateY(-2px);
+}

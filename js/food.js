@@ -12,6 +12,14 @@ class FoodUI {
     }
 
     async init() {
+        // 检查是否从首页登录
+        const loginStatus = sessionStorage.getItem('isLoggedIn');
+        if (loginStatus !== 'true') {
+            // 用户未在首页登录，重定向到首页
+            window.location.href = '/';
+            return;
+        }
+        
         // 显示加载状态
         this.showLoadingState();
         
@@ -215,7 +223,7 @@ class FoodUI {
         container.innerHTML = `
             ${imageHtml}
             <div class="food-name">${food.name}</div>
-            <div class="food-price">¥${cheapestPrice.toFixed(2)}</div>
+            <div class="food-price">${cheapestPrice.toFixed(2)} 日元</div>
             ${supermarketHtml}
             <div class="food-actions">
                 <button class="add-to-cart" data-id="${food.id}">加入购物车</button>
@@ -307,7 +315,7 @@ class FoodUI {
                 ${imageHtml}
                 <div class="food-detail-info">
                     <h3>${food.name}</h3>
-                    <div class="food-detail-price">¥${food.price.toFixed(2)}</div>
+                    <div class="food-detail-price">${food.price.toFixed(2)} 日元</div>
                     <div class="food-detail-unit">${food.unit}</div>
                 </div>
             </div>
@@ -326,11 +334,27 @@ class FoodUI {
                                 ${isLowest ? '<span class="lowest-price-tag">最低价</span>' : ''}
                             </div>
                             <div class="supermarket-price-container">
-                                <div class="supermarket-price">¥${parseFloat(supermarket.price).toFixed(2)}</div>
+                                <div class="supermarket-price">${parseFloat(supermarket.price).toFixed(2)} 日元</div>
                                 <button class="edit-price-btn" data-supermarket="${supermarket.name}" data-food-id="${foodId}">修改</button>
                             </div>
                         </div>
                     `}).join('')}
+                </div>
+                
+                <!-- 添加新超市的表单 -->
+                <div class="add-supermarket-section">
+                    <h4>添加新超市</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="newSupermarketName">超市名称</label>
+                            <input type="text" id="newSupermarketName" placeholder="超市名称" class="supermarket-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="newSupermarketPrice">价格 (日元)</label>
+                            <input type="number" id="newSupermarketPrice" step="0.01" min="0" placeholder="价格" class="supermarket-input">
+                        </div>
+                    </div>
+                    <button class="btn-submit" id="addSupermarketBtn" data-food-id="${foodId}">添加超市</button>
                 </div>
             </div>
         `;
@@ -344,7 +368,79 @@ class FoodUI {
             });
         });
 
+        // 绑定添加超市按钮事件
+        const addSupermarketBtn = content.querySelector('#addSupermarketBtn');
+        if (addSupermarketBtn) {
+            addSupermarketBtn.addEventListener('click', (e) => {
+                const foodId = e.target.dataset.foodId;
+                this.addNewSupermarket(foodId);
+            });
+        }
+
         modal.classList.add('active');
+    }
+
+    // 添加新超市
+    addNewSupermarket(foodId) {
+        const supermarketName = document.getElementById('newSupermarketName').value.trim();
+        const supermarketPrice = parseFloat(document.getElementById('newSupermarketPrice').value);
+
+        // 验证输入
+        if (!supermarketName) {
+            this.showToast('请输入超市名称', 'error');
+            return;
+        }
+
+        if (isNaN(supermarketPrice) || supermarketPrice < 0) {
+            this.showToast('请输入有效的价格', 'error');
+            return;
+        }
+
+        const food = this.foodStorage.getFoodById(foodId);
+        if (!food) {
+            this.showToast('未找到该商品', 'error');
+            return;
+        }
+
+        // 检查超市是否已存在
+        if (food.supermarkets.some(s => s.name === supermarketName)) {
+            this.showToast('该超市已存在', 'error');
+            return;
+        }
+
+        // 添加新超市
+        food.supermarkets.push({
+            name: supermarketName,
+            price: supermarketPrice
+        });
+
+        // 重新计算商品默认价格（最低价）
+        if (food.supermarkets.length > 0) {
+            const lowestPrice = Math.min(...food.supermarkets.map(s => s.price));
+            food.price = lowestPrice;
+        }
+
+        // 保存更新后的商品信息
+        this.foodStorage.updateFood(food)
+            .then(() => {
+                // 重新显示详情页面
+                this.showFoodDetail(foodId);
+                
+                // 重新渲染商品列表
+                this.renderFoods();
+                
+                // 更新购物车（如果该商品在购物车中）
+                this.updateCartUI();
+                
+                this.showToast('超市添加成功', 'success');
+                
+                // 清空输入框
+                document.getElementById('newSupermarketName').value = '';
+                document.getElementById('newSupermarketPrice').value = '';
+            })
+            .catch(error => {
+                this.showToast('添加超市失败: ' + error.message, 'error');
+            });
     }
 
     // 显示价格编辑输入框
@@ -647,7 +743,7 @@ class FoodUI {
                 cartItemElement.innerHTML = `
                     <div class="cart-item-info">
                         <div class="cart-item-name">${item.food.name}</div>
-                        <div class="cart-item-price">¥${item.food.price.toFixed(2)} × ${item.quantity}</div>
+                        <div class="cart-item-price">${item.food.price.toFixed(2)} 日元 × ${item.quantity}</div>
                     </div>
                     <div class="cart-item-controls">
                         <button class="quantity-btn decrease" data-id="${item.food.id}">-</button>
@@ -698,7 +794,7 @@ class FoodUI {
         });
         
         // 更新总价
-        cartTotal.textContent = `¥${total.toFixed(2)}`;
+        cartTotal.textContent = `${total.toFixed(2)} 日元`;
     }
 
     // 打开购物车
@@ -783,7 +879,7 @@ class FoodUI {
             orderHeader.innerHTML = `
                 <div class="order-item-name">订单号: ${shortOrderId}</div>
                 <div class="order-item-date">${formattedDate}</div>
-                <div class="order-item-total">总价: ¥${orderTotal.toFixed(2)}</div>
+                <div class="order-item-total">总价: ${orderTotal.toFixed(2)} 日元</div>
             `;
             
             orderElement.appendChild(orderHeader);
@@ -827,10 +923,10 @@ class FoodUI {
                     itemElement.innerHTML = `
                         <div class="order-item-info">
                             <div class="order-item-name">${item.name}</div>
-                            <div class="order-item-price">¥${item.price.toFixed(2)} × ${item.quantity}</div>
+                            <div class="order-item-price">${item.price.toFixed(2)} 日元 × ${item.quantity}</div>
                         </div>
                         <div class="order-item-quantity">
-                            ¥${(item.price * item.quantity).toFixed(2)}
+                            ${(item.price * item.quantity).toFixed(2)} 日元
                         </div>
                     `;
                     fragment.appendChild(itemElement);
@@ -889,7 +985,7 @@ class FoodUI {
             // 检查结果是否成功
             if (result && !result.error && result.id) {
                 // 显示成功消息
-                const message = `结算成功！订单号: ${result.id} 总价: ¥${total.toFixed(2)}`;
+                const message = `结算成功！订单号: ${result.id} 总价: ${total.toFixed(2)} 日元`;
                 this.showToast(message, 'success');
                 
                 // 清空购物车

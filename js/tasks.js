@@ -1,4 +1,4 @@
-// 任务页面主逻辑
+// 工作任务主逻辑
 import TaskManager from './taskManager.js';
 import SupabaseAuth from './supabaseAuth.js';  // 导入 SupabaseAuth 类
 
@@ -23,7 +23,6 @@ let realtimeSubscription = null;
 
 // DOM 元素
 const DOM = {
-    currentDate: null,
     currentMonth: null,
     prevMonthBtn: null,
     nextMonthBtn: null,
@@ -31,10 +30,8 @@ const DOM = {
     tasksList: null,
     taskForm: null,
     addTaskBtn: null,
-    categorySelect: null,
-    workTimeSection: null,
-    normalTimeGroup: null,
-    todayBtn: null
+    todayBtn: null,
+    selectedDate: null
 };
 
 // 当前状态
@@ -44,73 +41,17 @@ const state = {
     tasks: []
 };
 
-// 初始化应用
-async function init() {
-    // 获取 DOM 元素
-    getDOMElements();
-    
-    // 绑定事件监听器
-    bindEventListeners();
-    
-    // 初始化 Supabase 认证
-    supabaseAuth = new SupabaseAuth();
-    
-    // 检查用户登录状态
-    const user = await supabaseAuth.getCurrentUser();
-    if (user) {
-        // 启用在线模式
-        taskManager.setOnlineMode(true);
-        // 订阅实时更新
-        subscribeToRealtimeUpdates();
-    }
-    
-    // 监听认证状态变化
-    supabaseAuth.onAuthStateChange((event, session) => {
-        if (session?.user) {
-            // 用户已登录，启用在线模式
-            taskManager.setOnlineMode(true);
-            // 订阅实时更新
-            subscribeToRealtimeUpdates();
-            // 重新加载任务
-            loadAndDisplayTasks();
-        } else {
-            // 用户已登出，禁用在线模式
-            taskManager.setOnlineMode(false);
-            // 取消订阅
-            unsubscribeFromRealtimeUpdates();
-            // 重新加载任务
-            loadAndDisplayTasks();
-        }
-    });
-    
-    // 初始化日历
-    renderCalendar();
-    
-    // 加载并显示任务
-    await loadAndDisplayTasks();
-    
-    // 更新今日按钮状态
-    updateTodayButton();
-    
-    // 显示今日任务
-    displayTodayTasks();
-}
-
 // 获取 DOM 元素
 function getDOMElements() {
-    DOM.currentDate = document.querySelector('.current-date');
-    DOM.currentMonth = document.querySelector('.current-month');
-    DOM.prevMonthBtn = document.querySelector('.prev-month');
-    DOM.nextMonthBtn = document.querySelector('.next-month');
-    DOM.calendarContainer = document.querySelector('.calendar-container');
-    DOM.tasksList = document.querySelector('.tasks-list');
+    DOM.currentMonth = document.getElementById('currentMonth');
+    DOM.prevMonthBtn = document.getElementById('prevMonth');
+    DOM.nextMonthBtn = document.getElementById('nextMonth');
+    DOM.calendarContainer = document.getElementById('calendarContainer');
+    DOM.tasksList = document.getElementById('tasksList');
     DOM.taskForm = document.getElementById('taskForm');
-    DOM.addTaskBtn = document.querySelector('.add-task-btn');
-    DOM.categorySelect = document.getElementById('taskCategory');
-    DOM.workTimeSection = document.getElementById('workTimeSection');
-    DOM.normalTimeGroup = document.getElementById('normalTimeGroup');
-    DOM.todayBtn = document.querySelector('.btn-today');
-    DOM.todayTasksList = document.querySelector('.today-tasks-list');  // 获取今日任务列表元素
+    DOM.addTaskBtn = document.getElementById('addTaskBtn');
+    DOM.todayBtn = document.getElementById('todayBtn');
+    DOM.selectedDate = document.getElementById('selectedDate');
 }
 
 // 绑定事件监听器
@@ -127,68 +68,92 @@ function bindEventListeners() {
     });
     
     // 今日按钮
-    DOM.todayBtn?.addEventListener('click', goToToday);
+    DOM.todayBtn?.addEventListener('click', () => {
+        state.currentMonth = new Date();
+        state.selectedDate = formatDateToLocal(new Date());
+        renderCalendar();
+        loadAndDisplayTasks();
+        updateTodayButton();
+    });
     
     // 添加任务按钮
     DOM.addTaskBtn?.addEventListener('click', () => {
-        // 清空表单
-        resetTaskForm();
-        // 设置默认日期为选中日期
-        document.getElementById('taskDate').value = state.selectedDate;
-        // 设置默认分类为生活
-        document.getElementById('taskCategory').value = 'life';
-        // 触发分类变化事件以正确显示时间设置
-        handleCategoryChange();
-        // 更新模态框标题
-        document.getElementById('modalTitle').textContent = '添加任务';
-        
-        document.getElementById('taskModal').classList.add('active');
+        openTaskModal();
     });
     
     // 任务表单提交
-    DOM.taskForm?.addEventListener('submit', handleTaskSubmit);
-    
-    // 分类选择变化
-    DOM.categorySelect?.addEventListener('change', handleCategoryChange);
+    DOM.taskForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await saveTask();
+    });
     
     // 模态框关闭按钮
-    document.getElementById('closeModal')?.addEventListener('click', () => {
-        document.getElementById('taskModal').classList.remove('active');
-    });
-    
-    // 取消按钮
-    document.getElementById('cancelBtn')?.addEventListener('click', () => {
-        document.getElementById('taskModal').classList.remove('active');
-    });
+    document.getElementById('closeModal')?.addEventListener('click', closeTaskModal);
+    document.getElementById('cancelBtn')?.addEventListener('click', closeTaskModal);
     
     // 点击模态框外部关闭
     document.getElementById('taskModal')?.addEventListener('click', (e) => {
         if (e.target.id === 'taskModal') {
-            document.getElementById('taskModal').classList.remove('active');
+            closeTaskModal();
         }
     });
     
-    // ESC 键关闭模态框
+    // ESC键关闭模态框
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            document.getElementById('taskModal').classList.remove('active');
-            document.getElementById('authModal')?.classList.remove('active');
+            closeTaskModal();
+        }
+    });
+    
+    // 工作类别选择事件
+    document.getElementById('taskCategory')?.addEventListener('change', function() {
+        const workTimeSection = document.getElementById('workTimeSection');
+        const normalTimeGroup = document.getElementById('normalTimeGroup');
+        if (this.value === 'work') {
+            workTimeSection.style.display = 'block';
+            normalTimeGroup.style.display = 'none';
+        } else {
+            workTimeSection.style.display = 'none';
+            normalTimeGroup.style.display = 'block';
         }
     });
 }
 
-// 重置任务表单
-function resetTaskForm() {
-    document.getElementById('taskId').value = '';
-    document.getElementById('taskTitle').value = '';
-    document.getElementById('taskDate').value = '';
-    document.getElementById('taskCategory').value = 'life';
-    document.getElementById('taskTime').value = '';
-    document.getElementById('workStartTime').value = '';
-    document.getElementById('workEndTime').value = '';
-    // 默认显示生活分类的时间设置
-    document.getElementById('workTimeSection').style.display = 'none';
-    document.getElementById('normalTimeGroup').style.display = 'block';
+// 初始化应用
+async function init() {
+    // 获取 DOM 元素
+    getDOMElements();
+    
+    // 绑定事件监听器
+    bindEventListeners();
+    
+    // 检查是否从首页登录
+    const loginStatus = sessionStorage.getItem('isLoggedIn');
+    if (loginStatus !== 'true') {
+        // 用户未在首页登录，重定向到首页
+        window.location.href = '/';
+        return;
+    }
+    
+    // 初始化 Supabase 认证
+    supabaseAuth = new SupabaseAuth();
+    
+    // 启用在线模式
+    taskManager.setOnlineMode(true);
+    // 订阅实时更新
+    subscribeToRealtimeUpdates();
+    
+    // 初始化日历
+    renderCalendar();
+    
+    // 加载并显示任务
+    await loadAndDisplayTasks();
+    
+    // 更新今日按钮状态
+    updateTodayButton();
+    
+    // 显示今日任务
+    displayTodayTasks();
 }
 
 // 订阅实时更新 - 改进版本
@@ -297,18 +262,6 @@ function renderCalendar() {
 // 选择日期
 function selectDate(dateStr) {
     state.selectedDate = dateStr;
-    renderCalendar();
-    updateTasksForSelectedDate();
-    updateTodayButton();
-}
-
-// 跳转到今天
-function goToToday() {
-    const today = new Date();
-    state.currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    // 使用本地日期格式而不是toISOString
-    const todayStr = formatDateToLocal(today);
-    state.selectedDate = todayStr;
     renderCalendar();
     updateTasksForSelectedDate();
     updateTodayButton();
@@ -598,11 +551,8 @@ async function deleteTask(taskId) {
     }
 }
 
-// 处理任务提交
-async function handleTaskSubmit(e) {
-    e.preventDefault();
-    
-    // 获取表单数据
+// 保存任务
+async function saveTask() {
     const taskId = document.getElementById('taskId').value;
     const taskData = {
         title: document.getElementById('taskTitle').value,
@@ -653,24 +603,39 @@ async function handleTaskSubmit(e) {
     }
 }
 
-// 处理分类变化
-function handleCategoryChange() {
-    const category = document.getElementById('taskCategory').value;
-    const workTimeSection = document.getElementById('workTimeSection');
-    const normalTimeGroup = document.getElementById('normalTimeGroup');
+// 打开任务模态框
+function openTaskModal() {
+    // 清空表单
+    resetTaskForm();
+    // 设置默认日期为选中日期
+    document.getElementById('taskDate').value = state.selectedDate;
+    // 设置默认分类为生活
+    document.getElementById('taskCategory').value = 'life';
+    // 触发分类变化事件以正确显示时间设置
+    document.getElementById('taskCategory').dispatchEvent(new Event('change'));
+    // 更新模态框标题
+    document.getElementById('modalTitle').textContent = '添加任务';
     
-    if (category === 'work') {
-        workTimeSection.style.display = 'block';
-        normalTimeGroup.style.display = 'none';
-        // 清空普通时间字段
-        document.getElementById('taskTime').value = '';
-    } else {
-        workTimeSection.style.display = 'none';
-        normalTimeGroup.style.display = 'block';
-        // 清空工作时间字段
-        document.getElementById('workStartTime').value = '';
-        document.getElementById('workEndTime').value = '';
-    }
+    document.getElementById('taskModal').classList.add('active');
+}
+
+// 关闭任务模态框
+function closeTaskModal() {
+    document.getElementById('taskModal').classList.remove('active');
+}
+
+// 重置任务表单
+function resetTaskForm() {
+    document.getElementById('taskId').value = '';
+    document.getElementById('taskTitle').value = '';
+    document.getElementById('taskDate').value = '';
+    document.getElementById('taskCategory').value = 'life';
+    document.getElementById('taskTime').value = '';
+    document.getElementById('workStartTime').value = '';
+    document.getElementById('workEndTime').value = '';
+    // 默认显示生活分类的时间设置
+    document.getElementById('workTimeSection').style.display = 'none';
+    document.getElementById('normalTimeGroup').style.display = 'block';
 }
 
 // 更新日历中每天的任务数量

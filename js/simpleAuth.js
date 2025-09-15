@@ -14,6 +14,19 @@ function initAuth() {
     // 初始化 Supabase 认证
     supabaseAuth = new SupabaseAuth();
     
+    // 检查是否为首页
+    const isHomePage = window.location.pathname === '/' || window.location.pathname === '/index.html';
+    
+    // 如果不是首页，检查 sessionStorage 中的登录状态
+    if (!isHomePage) {
+        const loginStatus = sessionStorage.getItem('isLoggedIn');
+        if (loginStatus !== 'true') {
+            // 用户未在首页登录，重定向到首页
+            window.location.href = '/';
+            return;
+        }
+    }
+    
     // 延迟一点时间确保DOM完全加载
     setTimeout(() => {
         bindAuthEvents();
@@ -70,8 +83,14 @@ function bindAuthEvents() {
             console.log('认证状态变化:', event, session?.user?.id);
             if (event === 'SIGNED_IN') {
                 updateLoginButton(session.user);
+                // 在首页登录时，设置 sessionStorage
+                if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                }
             } else if (event === 'SIGNED_OUT') {
                 updateLoginButton(null);
+                // 登出时，清除 sessionStorage
+                sessionStorage.removeItem('isLoggedIn');
             }
         });
     } else {

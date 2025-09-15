@@ -14,6 +14,14 @@ class FoodStorage {
     // 从数据库加载数据
     async loadFromDatabase() {
         try {
+            // 检查是否从首页登录
+            const loginStatus = sessionStorage.getItem('isLoggedIn');
+            if (loginStatus !== 'true') {
+                // 用户未在首页登录，重定向到首页
+                window.location.href = '/';
+                return;
+            }
+            
             // 检查用户是否已登录
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
@@ -94,6 +102,14 @@ class StatsUI {
     }
 
     async init() {
+        // 检查是否从首页登录
+        const loginStatus = sessionStorage.getItem('isLoggedIn');
+        if (loginStatus !== 'true') {
+            // 用户未在首页登录，重定向到首页
+            window.location.href = '/';
+            return;
+        }
+        
         // 确保认证模块已初始化
         await this.initAuth();
         await this.renderStats();
@@ -225,7 +241,7 @@ class StatsUI {
         
         container.innerHTML = monthlySummary.map((month, index) => `
             <div class="monthly-summary">
-                <div class="monthly-amount">${month.month}: ¥${month.total.toFixed(2)}</div>
+                <div class="monthly-amount">${month.month}: ${month.total.toFixed(2)} 日元</div>
                 ${index > 0 ? `
                     <div class="monthly-change ${month.change >= 0 ? 'change-positive' : 'change-negative'}">
                         ${month.change >= 0 ? '↑' : '↓'} ${Math.abs(month.change).toFixed(2)}% 
@@ -247,7 +263,7 @@ class StatsUI {
         
         container.innerHTML = weeklySummary.map((week, index) => `
             <div class="weekly-summary">
-                <div class="weekly-amount">${week.week}: ¥${week.total.toFixed(2)}</div>
+                <div class="weekly-amount">${week.week}: ${week.total.toFixed(2)} 日元</div>
                 ${index > 0 ? `
                     <div class="weekly-change ${week.change >= 0 ? 'change-positive' : 'change-negative'}">
                         ${week.change >= 0 ? '↑' : '↓'} ${Math.abs(week.change).toFixed(2)}% 
@@ -272,14 +288,10 @@ class StatsUI {
                 ${orders.map(order => {
                     // 简化订单号显示，只显示前8位
                     const shortOrderId = order.id ? order.id.substring(0, 8) : '未知';
-                    // 格式化订单时间，不显示秒
-                    const orderDate = new Date(order.date);
-                    const formattedDate = `${orderDate.getFullYear()}年${(orderDate.getMonth() + 1).toString().padStart(2, '0')}月${orderDate.getDate().toString().padStart(2, '0')}日 ${orderDate.getHours().toString().padStart(2, '0')}:${orderDate.getMinutes().toString().padStart(2, '0')}`;
                     return `
                     <div class="order-item-summary" data-order-id="${order.id}">
                         <div class="order-id">订单号: ${shortOrderId}</div>
-                        <div class="order-date">${formattedDate}</div>
-                        <div class="order-price">¥${order.total.toFixed(2)}</div>
+                        <div class="order-price">${order.total.toFixed(2)} 日元</div>
                     </div>
                 `;}).join('')}
             </div>
@@ -309,7 +321,7 @@ class StatsUI {
                     <div class="price-change-item">
                         <div class="food-name">${change.name}</div>
                         <div class="price-diff ${change.diff >= 0 ? 'diff-positive' : 'diff-negative'}">
-                            ${change.diff > 0 ? `涨了 ${change.diff.toFixed(2)} 元` : `降了 ${Math.abs(change.diff).toFixed(2)} 元`}
+                            ${change.diff > 0 ? `涨了 ${change.diff.toFixed(2)} 日元` : `降了 ${Math.abs(change.diff).toFixed(2)} 日元`}
                         </div>
                     </div>
                 `).join('')}
@@ -554,16 +566,12 @@ class StatsUI {
             
             // 简化订单号显示，只显示前8位
             const shortOrderId = order.id ? order.id.substring(0, 8) : '未知';
-            // 格式化订单时间，不显示秒
-            const orderDate = new Date(order.date);
-            const formattedDate = `${orderDate.getFullYear()}年${(orderDate.getMonth() + 1).toString().padStart(2, '0')}月${orderDate.getDate().toString().padStart(2, '0')}日 ${orderDate.getHours().toString().padStart(2, '0')}:${orderDate.getMinutes().toString().padStart(2, '0')}`;
             
             let html = `
                 <div class="order-detail-header">
                     <div class="order-detail-info">
                         <div class="order-detail-id">订单号: ${shortOrderId}</div>
-                        <div class="order-detail-date">下单时间: ${formattedDate}</div>
-                        <div class="order-detail-total">总价: ¥${orderTotal.toFixed(2)}</div>
+                        <div class="order-detail-total">总价: ${orderTotal.toFixed(2)} 日元</div>
                     </div>
                 </div>
                 <div class="order-detail-items">
@@ -603,10 +611,10 @@ class StatsUI {
                         <div class="order-item">
                             <div class="order-item-info">
                                 <div class="order-item-name">${item.name}</div>
-                                <div class="order-item-price">¥${item.price.toFixed(2)} × ${item.quantity}</div>
+                                <div class="order-item-price">${item.price.toFixed(2)} 日元 × ${item.quantity}</div>
                             </div>
                             <div class="order-item-quantity">
-                                ¥${(item.price * item.quantity).toFixed(2)}
+                                ${(item.price * item.quantity).toFixed(2)} 日元
                             </div>
                         </div>
                     `;

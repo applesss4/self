@@ -40,6 +40,72 @@ const state = {
     tasks: []
 };
 
+// 获取 DOM 元素
+function getDOMElements() {
+    DOM.currentWeek = document.getElementById('currentWeek');
+    DOM.prevWeekBtn = document.getElementById('prevWeek');
+    DOM.nextWeekBtn = document.getElementById('nextWeek');
+    DOM.scheduleContainer = document.getElementById('scheduleContainer');
+    DOM.tasksList = document.getElementById('tasksList');
+    DOM.scheduleForm = document.getElementById('scheduleForm');
+    DOM.addTaskBtn = document.getElementById('addTaskBtn');
+    DOM.todayBtn = document.getElementById('todayBtn');
+}
+
+// 绑定事件监听器
+function bindEventListeners() {
+    // 周导航
+    DOM.prevWeekBtn?.addEventListener('click', () => {
+        state.currentDate.setDate(state.currentDate.getDate() - 7);
+        renderSchedule();
+    });
+    
+    DOM.nextWeekBtn?.addEventListener('click', () => {
+        state.currentDate.setDate(state.currentDate.getDate() + 7);
+        renderSchedule();
+    });
+    
+    // 本周按钮
+    DOM.todayBtn?.addEventListener('click', () => {
+        state.currentDate = new Date();
+        state.selectedDate = formatDateToLocal(new Date());
+        renderSchedule();
+        loadAndDisplayTasks();
+    });
+    
+    // 添加排班按钮
+    DOM.addTaskBtn?.addEventListener('click', () => {
+        openScheduleModal();
+    });
+    
+    // 排班表单提交
+    DOM.scheduleForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await saveSchedule();
+    });
+    
+    // 模态框关闭按钮
+    document.getElementById('closeModal')?.addEventListener('click', closeScheduleModal);
+    document.getElementById('cancelBtn')?.addEventListener('click', closeScheduleModal);
+    
+    // 点击模态框外部关闭
+    document.getElementById('scheduleModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'scheduleModal') {
+            closeScheduleModal();
+        }
+    });
+    
+    // ESC键关闭模态框
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeScheduleModal();
+        }
+    });
+    
+    // 导出图片按钮
+    document.getElementById('exportBtn')?.addEventListener('click', exportScheduleAsImage);
+}
+
 // 初始化应用
 async function init() {
     // 获取 DOM 元素
@@ -48,127 +114,27 @@ async function init() {
     // 绑定事件监听器
     bindEventListeners();
     
+    // 检查是否从首页登录
+    const loginStatus = sessionStorage.getItem('isLoggedIn');
+    if (loginStatus !== 'true') {
+        // 用户未在首页登录，重定向到首页
+        window.location.href = '/';
+        return;
+    }
+    
     // 初始化 Supabase 认证
     supabaseAuth = new SupabaseAuth();
     
-    // 设置当前日期为今天
-    state.currentDate = new Date();
-    state.selectedDate = formatDateToLocal(new Date());
-    
-    // 检查用户登录状态
-    const user = await supabaseAuth.getCurrentUser();
-    if (user) {
-        // 用户已登录，启用在线模式
-        taskManager.setOnlineMode(true);
-        // 订阅实时更新
-        subscribeToRealtimeUpdates();
-        // 加载任务
-        state.tasks = await taskManager.loadTasks();
-    } else {
-        // 用户未登录，加载本地任务
-        state.tasks = await taskManager.loadTasks();
-    }
-    
-    // 监听认证状态变化
-    supabaseAuth.onAuthStateChange((event, session) => {
-        if (session?.user) {
-            // 用户已登录，启用在线模式
-            taskManager.setOnlineMode(true);
-            // 订阅实时更新
-            subscribeToRealtimeUpdates();
-            // 重新加载任务
-            loadAndDisplayTasks();
-        } else {
-            // 用户已登出，禁用在线模式
-            taskManager.setOnlineMode(false);
-            // 取消订阅
-            unsubscribeFromRealtimeUpdates();
-            // 重新加载任务
-            loadAndDisplayTasks();
-        }
-    });
+    // 启用在线模式
+    taskManager.setOnlineMode(true);
+    // 订阅实时更新
+    subscribeToRealtimeUpdates();
     
     // 初始化排班表
     renderSchedule();
-}
-
-// 获取 DOM 元素
-function getDOMElements() {
-    DOM.currentWeek = document.querySelector('.current-month');
-    DOM.prevWeekBtn = document.getElementById('prevWeek');
-    DOM.nextWeekBtn = document.getElementById('nextWeek');
-    DOM.scheduleContainer = document.getElementById('scheduleContainer');
-    DOM.tasksList = document.getElementById('tasksList');
-    DOM.scheduleForm = document.getElementById('scheduleForm');
-    DOM.addTaskBtn = document.querySelector('.add-task-btn');
-    DOM.exportBtn = document.getElementById('exportBtn');
-    DOM.todayBtn = document.getElementById('todayBtn');
-}
-
-// 绑定事件监听器
-function bindEventListeners() {
-    // 周导航
-    DOM.prevWeekBtn?.addEventListener('click', () => {
-        // 移动到上周
-        state.currentDate.setDate(state.currentDate.getDate() - 7);
-        renderSchedule();
-        // 确保在切换周后更新排班显示
-        updateScheduleDisplay();
-    });
-
-    DOM.nextWeekBtn?.addEventListener('click', () => {
-        // 移动到下周
-        state.currentDate.setDate(state.currentDate.getDate() + 7);
-        renderSchedule();
-        // 确保在切换周后更新排班显示
-        updateScheduleDisplay();
-    });
     
-    // 今日按钮
-    DOM.todayBtn?.addEventListener('click', goToToday);
-    
-    // 添加排班按钮
-    DOM.addTaskBtn?.addEventListener('click', () => {
-        // 清空表单
-        resetScheduleForm();
-        // 设置默认日期为选中日期
-        document.getElementById('scheduleDate').value = state.selectedDate;
-        // 更新模态框标题
-        document.getElementById('modalTitle').textContent = '添加排班';
-        
-        document.getElementById('scheduleModal').classList.add('active');
-    });
-    
-    // 导出按钮
-    DOM.exportBtn?.addEventListener('click', exportScheduleAsImage);
-    
-    // 排班表单提交
-    DOM.scheduleForm?.addEventListener('submit', handleScheduleSubmit);
-    
-    // 模态框关闭按钮
-    document.getElementById('closeModal')?.addEventListener('click', () => {
-        document.getElementById('scheduleModal').classList.remove('active');
-    });
-    
-    // 取消按钮
-    document.getElementById('cancelBtn')?.addEventListener('click', () => {
-        document.getElementById('scheduleModal').classList.remove('active');
-    });
-    
-    // 点击模态框外部关闭
-    document.getElementById('scheduleModal')?.addEventListener('click', (e) => {
-        if (e.target.id === 'scheduleModal') {
-            document.getElementById('scheduleModal').classList.remove('active');
-        }
-    });
-    
-    // ESC 键关闭模态框
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            document.getElementById('scheduleModal').classList.remove('active');
-            document.getElementById('authModal')?.classList.remove('active');
-        }
-    });
+    // 加载任务
+    state.tasks = await taskManager.loadTasks();
 }
 
 // 重置排班表单
@@ -342,26 +308,6 @@ function selectDate(dateStr) {
     state.selectedDate = dateStr;
     renderSchedule();
     updateScheduleForSelectedDate();
-    updateTodayButton();
-}
-
-// 跳转到今天
-function goToToday() {
-    state.currentDate = new Date();
-    state.selectedDate = formatDateToLocal(new Date());
-    renderSchedule();
-    updateScheduleForSelectedDate();
-    updateScheduleDisplay();
-    updateTodayButton();
-}
-
-// 更新今日按钮状态
-function updateTodayButton() {
-    const isTodaySelected = state.selectedDate === formatDateToLocal(new Date());
-    if (DOM.todayBtn) {
-        DOM.todayBtn.textContent = isTodaySelected ? '今日' : '跳转到今日';
-        DOM.todayBtn.classList.toggle('active', isTodaySelected);
-    }
 }
 
 // 加载并显示任务
