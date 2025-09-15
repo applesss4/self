@@ -340,7 +340,9 @@ class StatsUI {
             const year = parseInt(dateParts[0]);
             const month = parseInt(dateParts[1]) - 1; // JavaScript月份从0开始
             
-            const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+            // 确保月份格式正确（两位数）
+            const monthStr = String(month + 1).padStart(2, '0');
+            const monthKey = `${year}-${monthStr}`;
             const monthLabel = `${year}年${month + 1}月`;
             
             if (!monthlyData[monthKey]) {
@@ -432,12 +434,13 @@ class StatsUI {
 
     // 计算每月总金额及变化趋势
     calculateMonthlySummary(monthlyData) {
-        const months = Object.keys(monthlyData)
-            .sort()
-            .map(key => ({
-                month: monthlyData[key].label,
-                total: monthlyData[key].total
-            }));
+        // 按月份键排序（时间顺序）
+        const sortedKeys = Object.keys(monthlyData).sort();
+        
+        const months = sortedKeys.map(key => ({
+            month: monthlyData[key].label,
+            total: monthlyData[key].total
+        }));
         
         // 计算变化率
         for (let i = 1; i < months.length; i++) {
@@ -451,7 +454,7 @@ class StatsUI {
             months[0].change = 0;
         }
         
-        // 按时间倒序排列
+        // 按时间倒序排列（最新的月份在前）
         return months.reverse();
     }
 
