@@ -58,7 +58,13 @@ function bindAuthEvents() {
     
     // 表单提交事件
     if (authForm) {
-        authForm.addEventListener('submit', function(e) {
+        // 先移除可能已存在的事件监听器，防止重复绑定
+        const newAuthForm = authForm.cloneNode(true);
+        authForm.parentNode.replaceChild(newAuthForm, authForm);
+        const updatedAuthForm = document.getElementById('authForm');
+        
+        updatedAuthForm.addEventListener('submit', function(e) {
+            console.log('表单提交事件触发');
             e.preventDefault();
             handleAuth();
         });
@@ -66,47 +72,66 @@ function bindAuthEvents() {
     
     // 切换到注册
     if (switchToRegister) {
-        switchToRegister.addEventListener('click', switchToRegisterForm);
+        // 先移除可能已存在的事件监听器，防止重复绑定
+        const newSwitchToRegister = switchToRegister.cloneNode(true);
+        switchToRegister.parentNode.replaceChild(newSwitchToRegister, switchToRegister);
+        const updatedSwitchToRegister = document.getElementById('switchToRegister');
+        
+        updatedSwitchToRegister.addEventListener('click', function(e) {
+            console.log('切换到注册按钮点击');
+            e.preventDefault();
+            switchToRegisterForm();
+        });
     }
     
     // 通过链接切换到注册
     if (switchToRegisterLink) {
-        switchToRegisterLink.addEventListener('click', function(e) {
+        // 先移除可能已存在的事件监听器，防止重复绑定
+        const newSwitchToRegisterLink = switchToRegisterLink.cloneNode(true);
+        switchToRegisterLink.parentNode.replaceChild(newSwitchToRegisterLink, switchToRegisterLink);
+        const updatedSwitchToRegisterLink = document.getElementById('switchToRegisterLink');
+        
+        updatedSwitchToRegisterLink.addEventListener('click', function(e) {
+            console.log('注册链接点击');
             e.preventDefault();
             switchToRegisterForm();
         });
     }
     
     // 监听认证状态变化
-    supabaseAuth.onAuthStateChange((event, session) => {
-        console.log('认证状态变化:', event);
-        
-        if (event === 'SIGNED_IN') {
-            // 登录成功，隐藏登录框
-            document.getElementById('authSection').style.display = 'none';
+    if (supabaseAuth) {
+        supabaseAuth.onAuthStateChange((event, session) => {
+            console.log('认证状态变化:', event, session);
             
-            // 设置登录状态标记
-            sessionStorage.setItem('isLoggedIn', 'true');
-            
-            // 显示登录成功的提示消息
-            showCustomToast('成功进入发财人生管理系统', 'success');
-            
-            // 3秒后跳转到任务计划页面
-            setTimeout(() => {
-                window.location.href = '/pages/tasks.html';
-            }, 3000);
-        } else if (event === 'SIGNED_OUT') {
-            // 登出，显示登录框
-            document.getElementById('authSection').style.display = 'block';
-            
-            // 清除登录状态标记
-            sessionStorage.removeItem('isLoggedIn');
-        }
-    });
+            if (event === 'SIGNED_IN') {
+                // 登录成功，隐藏登录框
+                document.getElementById('authSection').style.display = 'none';
+                
+                // 设置登录状态标记
+                sessionStorage.setItem('isLoggedIn', 'true');
+                
+                // 显示登录成功的提示消息
+                showCustomToast('成功进入发财人生管理系统', 'success');
+                
+                // 3秒后跳转到任务计划页面
+                setTimeout(() => {
+                    console.log('正在跳转到任务计划页面...');
+                    window.location.href = '/pages/tasks.html';
+                }, 3000);
+            } else if (event === 'SIGNED_OUT') {
+                // 登出，显示登录框
+                document.getElementById('authSection').style.display = 'block';
+                
+                // 清除登录状态标记
+                sessionStorage.removeItem('isLoggedIn');
+            }
+        });
+    }
 }
 
 // 切换到注册表单
 function switchToRegisterForm() {
+    console.log('切换到注册表单');
     const confirmPasswordGroup = document.getElementById('confirmPasswordGroup');
     const submitAuth = document.getElementById('submitAuth');
     const authTitle = document.querySelector('.auth-title');
@@ -123,6 +148,7 @@ function switchToRegisterForm() {
 
 // 切换到登录表单
 function switchToLoginForm() {
+    console.log('切换到登录表单');
     const confirmPasswordGroup = document.getElementById('confirmPasswordGroup');
     const submitAuth = document.getElementById('submitAuth');
     const authTitle = document.querySelector('.auth-title');
@@ -139,6 +165,7 @@ function switchToLoginForm() {
 
 // 处理认证（登录/注册）
 async function handleAuth() {
+    console.log('处理认证');
     const email = document.getElementById('authEmail').value;
     const password = document.getElementById('authPassword').value;
     const confirmPassword = document.getElementById('authConfirmPassword').value;
@@ -170,7 +197,9 @@ async function handleAuth() {
         
         // 调用Supabase注册功能
         try {
+            console.log('开始注册');
             const result = await supabaseAuth.signUp(email, password);
+            console.log('注册结果:', result);
             if (result.success) {
                 showCustomToast('注册成功！请登录。', 'success');
                 switchToLoginForm();
@@ -184,13 +213,16 @@ async function handleAuth() {
     } else {
         // 登录模式
         try {
+            console.log('开始登录');
             const result = await supabaseAuth.signIn(email, password);
+            console.log('登录结果:', result);
             if (result.success) {
                 // 登录成功，显示提示并跳转
                 showCustomToast('成功进入发财人生管理系统', 'success');
                 sessionStorage.setItem('isLoggedIn', 'true');
                 // 3秒后跳转到任务计划页面
                 setTimeout(() => {
+                    console.log('正在跳转到任务计划页面...');
                     window.location.href = '/pages/tasks.html';
                 }, 3000);
             } else {
@@ -204,6 +236,7 @@ async function handleAuth() {
 
 // 显示自定义提示消息
 function showCustomToast(message, type = 'info') {
+    console.log('显示提示消息:', message, type);
     // 创建或获取提示元素
     let toast = document.getElementById('customToast');
     if (!toast) {
