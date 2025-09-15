@@ -1,38 +1,186 @@
 // 主页面逻辑
 import SupabaseAuth from './supabaseAuth.js';
 
+let supabaseAuth = null;
+
 document.addEventListener('DOMContentLoaded', async () => {
-    // 为导航链接添加登录检查
-    addLoginCheckToNavLinks();
+    // 初始化 Supabase 认证
+    supabaseAuth = new SupabaseAuth();
     
-    // 其他主页逻辑...
+    // 检查用户是否已登录
+    checkUserStatus();
+    
+    // 绑定事件监听器
+    bindAuthEvents();
+    bindEventListeners();
+    
+    // 显示欢迎消息
+    showWelcomeMessage();
 });
 
-// 为导航链接添加登录检查
-function addLoginCheckToNavLinks() {
-    // 获取所有导航链接（除了首页）
-    const navLinks = document.querySelectorAll('.nav-link:not([href="/"])');
+// 检查用户登录状态
+async function checkUserStatus() {
+    try {
+        const user = await supabaseAuth.getCurrentUser();
+        if (user) {
+            // 用户已登录，显示功能区域，隐藏登录框
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('featuresSection').style.display = 'grid';
+            document.getElementById('featuresBtn').style.display = 'block';
+        } else {
+            // 用户未登录，显示登录框，隐藏功能区域
+            document.getElementById('authSection').style.display = 'block';
+            document.getElementById('featuresSection').style.display = 'none';
+            document.getElementById('featuresBtn').style.display = 'none';
+        }
+    } catch (error) {
+        console.error('检查用户状态时出错:', error);
+    }
+}
+
+// 绑定认证相关事件
+function bindAuthEvents() {
+    // 获取必要的DOM元素
+    const authForm = document.getElementById('authForm');
+    const switchToRegister = document.getElementById('switchToRegister');
+    const switchToRegisterLink = document.getElementById('switchToRegisterLink');
     
-    // 为每个链接添加点击事件监听器
-    navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            // 检查用户是否已登录
-            const loginStatus = sessionStorage.getItem('isLoggedIn');
-            if (loginStatus !== 'true') {
-                // 阻止默认跳转行为
-                e.preventDefault();
-                
-                // 显示提示消息
-                showToast('请先登录后再访问此功能', 'error');
-                
-                // 显示登录模态框
-                const authModal = document.getElementById('authModal');
-                if (authModal) {
-                    authModal.classList.add('active');
-                }
-            }
+    // 表单提交事件
+    if (authForm) {
+        authForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            handleAuth();
         });
+    }
+    
+    // 切换到注册
+    if (switchToRegister) {
+        switchToRegister.addEventListener('click', switchToRegisterForm);
+    }
+    
+    // 通过链接切换到注册
+    if (switchToRegisterLink) {
+        switchToRegisterLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            switchToRegisterForm();
+        });
+    }
+    
+    // 监听认证状态变化
+    supabaseAuth.onAuthStateChange((event, session) => {
+        console.log('认证状态变化:', event);
+        if (event === 'SIGNED_IN') {
+            // 登录成功，隐藏登录框，显示功能区域
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('featuresSection').style.display = 'grid';
+            document.getElementById('featuresBtn').style.display = 'block';
+            
+            // 显示欢迎消息
+            showToast('登录成功！', 'success');
+            
+            // 2秒后自动跳转到任务计划页面
+            setTimeout(() => {
+                window.location.href = '/pages/tasks.html';
+            }, 2000);
+        } else if (event === 'SIGNED_OUT') {
+            // 登出，显示登录框，隐藏功能区域
+            document.getElementById('authSection').style.display = 'block';
+            document.getElementById('featuresSection').style.display = 'none';
+            document.getElementById('featuresBtn').style.display = 'none';
+        }
     });
+}
+
+// 切换到注册表单
+function switchToRegisterForm() {
+    const confirmPasswordGroup = document.getElementById('confirmPasswordGroup');
+    const submitAuth = document.getElementById('submitAuth');
+    const authTitle = document.querySelector('.auth-title');
+    const switchToRegister = document.getElementById('switchToRegister');
+    
+    if (confirmPasswordGroup) confirmPasswordGroup.style.display = 'flex';
+    if (submitAuth) submitAuth.textContent = '注册';
+    if (authTitle) authTitle.textContent = '用户注册';
+    if (switchToRegister) switchToRegister.textContent = '返回登录';
+    
+    // 更新返回登录的事件
+    switchToRegister.onclick = switchToLoginForm;
+}
+
+// 切换到登录表单
+function switchToLoginForm() {
+    const confirmPasswordGroup = document.getElementById('confirmPasswordGroup');
+    const submitAuth = document.getElementById('submitAuth');
+    const authTitle = document.querySelector('.auth-title');
+    const switchToRegister = document.getElementById('switchToRegister');
+    
+    if (confirmPasswordGroup) confirmPasswordGroup.style.display = 'none';
+    if (submitAuth) submitAuth.textContent = '登录';
+    if (authTitle) authTitle.textContent = '用户登录';
+    if (switchToRegister) switchToRegister.textContent = '注册账户';
+    
+    // 更新注册事件
+    switchToRegister.onclick = switchToRegisterForm;
+}
+
+// 处理认证（登录/注册）
+async function handleAuth() {
+    const email = document.getElementById('authEmail').value;
+    const password = document.getElementById('authPassword').value;
+    const confirmPassword = document.getElementById('authConfirmPassword').value;
+    
+    // 简单验证
+    if (!email || !password) {
+        showToast('请输入邮箱和密码', 'error');
+        return;
+    }
+    
+    // 检查是否为注册模式
+    const isRegisterMode = document.getElementById('submitAuth').textContent === '注册';
+    
+    if (isRegisterMode) {
+        // 注册模式验证
+        if (password !== confirmPassword) {
+            showToast('两次输入的密码不一致', 'error');
+            return;
+        }
+        if (password.length < 6) {
+            showToast('密码至少需要6个字符', 'error');
+            return;
+        }
+        // 简单邮箱验证
+        if (!email.includes('@')) {
+            showToast('请输入有效的邮箱地址', 'error');
+            return;
+        }
+        
+        // 调用Supabase注册功能
+        try {
+            const result = await supabaseAuth.signUp(email, password);
+            if (result.success) {
+                showToast('注册成功！请登录。', 'success');
+                switchToLoginForm();
+                document.getElementById('authForm').reset();
+            } else {
+                showToast(`注册失败: ${result.error}`, 'error');
+            }
+        } catch (error) {
+            showToast(`注册异常: ${error.message}`, 'error');
+        }
+    } else {
+        // 登录模式
+        try {
+            const result = await supabaseAuth.signIn(email, password);
+            if (result.success) {
+                // 登录成功，将在认证状态变化监听器中处理页面跳转
+                sessionStorage.setItem('isLoggedIn', 'true');
+            } else {
+                showToast(`登录失败: ${result.error}`, 'error');
+            }
+        } catch (error) {
+            showToast(`登录异常: ${error.message}`, 'error');
+        }
+    }
 }
 
 // 显示提示消息
@@ -73,7 +221,7 @@ function showToast(message, type = 'info') {
         toast.style.transform = 'translateX(100%)';
         setTimeout(() => {
             toast.remove();
-        }, 300);
+        }, 3000);
     }, 3000);
 }
 
@@ -81,14 +229,8 @@ function init() {
     // 设置今天的日期
     updateCurrentDate();
     
-    // 绑定事件监听器
-    bindEventListeners();
-    
     // 显示欢迎消息
     showWelcomeMessage();
-    
-    // 检查用户登录状态并更新导航栏
-    checkUserStatus();
 }
 
 function updateCurrentDate() {
@@ -156,13 +298,6 @@ function handleFeatureNavigation(event) {
     const button = event.target;
     const page = button.getAttribute('data-page');
     
-    // 检查用户是否已登录
-    const loginStatus = sessionStorage.getItem('isLoggedIn');
-    if (loginStatus !== 'true') {
-        alert('请先登录后再访问此页面');
-        return;
-    }
-    
     // 根据页面跳转
     let pageUrl = '';
     switch(page) {
@@ -205,29 +340,6 @@ function closeFeaturesModalFunc() {
     }
 }
 
-// 检查用户登录状态并更新导航栏
-async function checkUserStatus() {
-    try {
-        // 从sessionStorage获取登录状态
-        const loginStatus = sessionStorage.getItem('isLoggedIn');
-        const featuresBtn = document.getElementById('featuresBtn');
-        
-        if (loginStatus === 'true') {
-            // 用户已登录，显示功能按钮
-            if (featuresBtn) {
-                featuresBtn.style.display = 'block';
-            }
-        } else {
-            // 用户未登录，隐藏功能按钮
-            if (featuresBtn) {
-                featuresBtn.style.display = 'none';
-            }
-        }
-    } catch (error) {
-        console.error('检查用户状态时出错:', error);
-    }
-}
-
 // 导航到任务页面
 function navigateToTasks() {
     window.location.href = 'pages/tasks.html';
@@ -237,13 +349,6 @@ function navigateToTasks() {
 function handleNavigation(event) {
     const link = event.target;
     const href = link.getAttribute('href');
-    
-    // 检查是否是功能页面链接且用户未登录
-    if (href && href.startsWith('/pages/') && sessionStorage.getItem('isLoggedIn') !== 'true') {
-        event.preventDefault();
-        alert('请先登录后再访问此页面');
-        return;
-    }
     
     // 添加页面切换动画
     document.body.style.opacity = '0.8';

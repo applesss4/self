@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>个人生活管家 - 首页</title>
-    <link rel="stylesheet" href="/css/main.css?v=1.0.25">
-    <link rel="stylesheet" href="/css/components.css?v=1.0.25">
+    <link rel="stylesheet" href="/css/main.css?v=1.0.26">
+    <link rel="stylesheet" href="/css/components.css?v=1.0.26">
 </head>
 <body>
     <header class="header">
@@ -15,9 +15,8 @@
                 <nav class="nav">
                     <a href="/" class="nav-link active">首页</a>
                     <!-- 功能按钮 -->
-                    <button class="nav-link" id="featuresBtn">功能菜单</button>
+                    <button class="nav-link" id="featuresBtn" style="display: none;">功能菜单</button>
                 </nav>
-                <button class="login-btn" id="loginBtn">登录</button>
             </div>
         </div>
     </header>
@@ -46,8 +45,37 @@
             <p class="hero-subtitle">一站式管理您的日常生活和工作任务</p>
         </section>
 
+        <!-- 登录框模块 -->
         <div class="container">
-            <div class="features">
+            <div class="auth-section" id="authSection">
+                <div class="auth-box">
+                    <h3 class="auth-title">用户登录</h3>
+                    <form class="auth-form" id="authForm">
+                        <div class="form-group">
+                            <label for="authEmail">邮箱</label>
+                            <input type="email" id="authEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="authPassword">密码</label>
+                            <input type="password" id="authPassword" required>
+                        </div>
+                        <div class="form-group" id="confirmPasswordGroup" style="display: none;">
+                            <label for="authConfirmPassword">确认密码</label>
+                            <input type="password" id="authConfirmPassword">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" id="switchToRegister">注册账户</button>
+                            <button type="submit" class="btn-submit" id="submitAuth">登录</button>
+                        </div>
+                    </form>
+                    <div class="auth-footer">
+                        <p id="authSwitchText">还没有账户？<a href="#" id="switchToRegisterLink">立即注册</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 功能卡片区域（登录后显示） -->
+            <div class="features" id="featuresSection" style="display: none;">
                 <div class="feature-card">
                     <div class="feature-icon">📝</div>
                     <h3 class="feature-title">任务管理</h3>
@@ -85,38 +113,7 @@
         </div>
     </footer>
 
-    <!-- 登录/注册弹窗 -->
-    <div class="modal" id="authModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title" id="authModalTitle">用户登录</h3>
-                <button class="modal-close" id="closeAuthModal">&times;</button>
-            </div>
-            <form class="auth-form" id="authForm">
-                <div class="form-group">
-                    <label for="authEmail">邮箱</label>
-                    <input type="email" id="authEmail" required>
-                </div>
-                <div class="form-group">
-                    <label for="authPassword">密码</label>
-                    <input type="password" id="authPassword" required>
-                </div>
-                <div class="form-group" id="confirmPasswordGroup" style="display: none;">
-                    <label for="authConfirmPassword">确认密码</label>
-                    <input type="password" id="authConfirmPassword">
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-cancel" id="cancelAuth">取消</button>
-                    <button type="submit" class="btn-submit" id="submitAuth">登录</button>
-                </div>
-            </form>
-            <div class="auth-footer">
-                <p id="authSwitchText">还没有账户？<a href="#" id="switchToRegister">立即注册</a></p>
-            </div>
-        </div>
-    </div>
-
-    <script type="module" src="/js/main.js?v=1.0.25"></script>
-    <script type="module" src="/js/simpleAuth.js?v=1.0.25"></script>
+    <script type="module" src="/js/main.js?v=1.0.26"></script>
+    <script type="module" src="/js/simpleAuth.js?v=1.0.26"></script>
 </body>
 </html>
