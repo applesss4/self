@@ -17,6 +17,11 @@ class FoodStorage extends SupabaseFoodStorage {
     async loadFromDatabase() {
         await super.loadFromDatabase();
     }
+    
+    // 重写initialize方法以确保正确初始化
+    async initialize() {
+        await super.initialize();
+    }
 }
 
 // 页面UI管理
@@ -25,10 +30,12 @@ class FoodUI {
         this.foodStorage = new FoodStorage();
         this.currentCategory = 'all';
         this.currentImage = ''; // 存储当前选择的图片
-        this.init();
+        // 注意：不要在这里调用init()，因为它可能是异步的
     }
 
-    init() {
+    async init() {
+        // 等待存储初始化完成
+        await this.foodStorage.initialize();
         this.bindEvents();
         this.renderFoods();
         this.updateCartUI();
@@ -45,12 +52,10 @@ class FoodUI {
             this.openOrder();
         });
 
-        // 移除了数据统计按钮相关的事件监听器
-
         // 菜品表单提交
-        document.getElementById('foodForm')?.addEventListener('submit', (e) => {
+        document.getElementById('foodForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
-            this.saveFood();
+            await this.saveFood();
         });
 
         // 图片上传预览
@@ -110,8 +115,8 @@ class FoodUI {
         });
 
         // 结算按钮
-        document.getElementById('checkoutBtn')?.addEventListener('click', () => {
-            this.checkout();
+        document.getElementById('checkoutBtn')?.addEventListener('click', async () => {
+            await this.checkout();
         });
 
         // ESC键关闭模态框
@@ -121,7 +126,6 @@ class FoodUI {
                 this.closeFoodDetailModal();
                 this.closeCart();
                 this.closeOrder();
-                // 移除了closeStats()调用
             }
         });
     }
@@ -149,6 +153,8 @@ class FoodUI {
         if (!foodGrid) return;
 
         foodGrid.innerHTML = '';
+        
+        console.log('渲染菜品，当前分类:', this.currentCategory, '菜品数量:', foods.length);
         
         if (foods.length === 0) {
             foodGrid.innerHTML = '<div class="empty-message">暂无菜品</div>';
@@ -456,7 +462,7 @@ class FoodUI {
     }
 
     // 保存菜品
-    saveFood() {
+    async saveFood() {
         const id = document.getElementById('foodId').value;
         const name = document.getElementById('foodName').value;
         const category = document.getElementById('foodCategory').value;
@@ -487,22 +493,27 @@ class FoodUI {
         if (imageInput.files && imageInput.files[0]) {
             // 如果有新上传的图片，使用新图片
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = async (e) => {
                 image = e.target.result;
                 const food = { name, category, price, unit, supermarkets, image };
                 
+                let result;
                 if (id) {
                     // 更新菜品
                     food.id = id;
-                    this.foodStorage.updateFood(food);
+                    result = await this.foodStorage.updateFood(food);
                 } else {
                     // 添加菜品
-                    this.foodStorage.addFood(food);
+                    result = await this.foodStorage.addFood(food);
                 }
                 
-                this.closeFoodModal();
-                this.renderFoods();
-                this.showToast('菜品保存成功', 'success');
+                if (result) {
+                    this.closeFoodModal();
+                    this.renderFoods();
+                    this.showToast('菜品保存成功', 'success');
+                } else {
+                    this.showToast('菜品保存失败', 'error');
+                }
             };
             reader.readAsDataURL(imageInput.files[0]);
             return;
@@ -517,18 +528,23 @@ class FoodUI {
             
             const food = { name, category, price, unit, supermarkets, image };
             
+            let result;
             if (id) {
                 // 更新菜品
                 food.id = id;
-                this.foodStorage.updateFood(food);
+                result = await this.foodStorage.updateFood(food);
             } else {
                 // 添加菜品
-                this.foodStorage.addFood(food);
+                result = await this.foodStorage.addFood(food);
             }
             
-            this.closeFoodModal();
-            this.renderFoods();
-            this.showToast('菜品保存成功', 'success');
+            if (result) {
+                this.closeFoodModal();
+                this.renderFoods();
+                this.showToast('菜品保存成功', 'success');
+            } else {
+                this.showToast('菜品保存失败', 'error');
+            }
         }
     }
 
@@ -798,10 +814,8 @@ class FoodUI {
         });
     }
 
-    // 移除了数据统计相关的方法
-
     // 结算
-    checkout() {
+    async checkout() {
         const items = this.foodStorage.getCartItems();
         if (items.length === 0) {
             this.showToast('购物车为空', 'error');
@@ -825,21 +839,25 @@ class FoodUI {
         };
         
         // 保存订单
-        this.foodStorage.addOrder(order);
+        const result = await this.foodStorage.addOrder(order);
         
-        // 显示成功消息
-        const message = `结算成功！总价: ¥${total.toFixed(2)}`;
-        this.showToast(message, 'success');
-        
-        // 清空购物车
-        this.foodStorage.clearCart();
-        this.updateCartUI();
-        this.closeCart();
-        
-        // 如果订单页面打开，则更新订单显示
-        const orderSidebar = document.getElementById('orderSidebar');
-        if (orderSidebar && orderSidebar.classList.contains('active')) {
-            this.renderOrders();
+        if (result) {
+            // 显示成功消息
+            const message = `结算成功！总价: ¥${total.toFixed(2)}`;
+            this.showToast(message, 'success');
+            
+            // 清空购物车
+            this.foodStorage.clearCart();
+            this.updateCartUI();
+            this.closeCart();
+            
+            // 如果订单页面打开，则更新订单显示
+            const orderSidebar = document.getElementById('orderSidebar');
+            if (orderSidebar && orderSidebar.classList.contains('active')) {
+                this.renderOrders();
+            }
+        } else {
+            this.showToast('结算失败，请重试', 'error');
         }
     }
 
@@ -887,6 +905,11 @@ class FoodUI {
 }
 
 // 页面加载完成后初始化
-document.addEventListener('DOMContentLoaded', () => {
-    new FoodUI();
+document.addEventListener('DOMContentLoaded', async () => {
+    const foodUI = new FoodUI();
+    // 等待存储初始化完成
+    await foodUI.foodStorage.initialize();
+    foodUI.bindEvents();
+    foodUI.renderFoods();
+    foodUI.updateCartUI();
 });
