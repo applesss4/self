@@ -4,6 +4,7 @@ import supabase from './supabase.js';
 class SupabaseAuth {
     constructor() {
         this.user = null;
+        this.session = null;
         this.authStateCallbacks = [];
     }
 
@@ -73,6 +74,7 @@ class SupabaseAuth {
             }
 
             this.user = data.user;
+            this.session = data.session;
             this.notifyAuthStateChange('signed_in', data);
             return { success: true, data };
         } catch (error) {
@@ -103,6 +105,7 @@ class SupabaseAuth {
             }
 
             this.user = data.user;
+            this.session = data.session;
             this.notifyAuthStateChange('signed_in', data);
             return { success: true, data };
         } catch (error) {
@@ -120,6 +123,7 @@ class SupabaseAuth {
             }
 
             this.user = null;
+            this.session = null;
             this.notifyAuthStateChange('signed_out', null);
             return { success: true };
         } catch (error) {
@@ -130,7 +134,11 @@ class SupabaseAuth {
     // 获取当前用户
     async getCurrentUser() {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
+            const { data: { user }, error } = await supabase.auth.getUser();
+            if (error) {
+                throw error;
+            }
+            
             this.user = user;
             
             // 确保用户在users表中存在
@@ -139,6 +147,33 @@ class SupabaseAuth {
             }
             
             return user;
+        } catch (error) {
+            // 检查是否是会话丢失错误
+            if (error.name === 'AuthSessionMissingError') {
+                // 尝试从本地存储恢复会话
+                const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+                if (sessionData?.session && !sessionError) {
+                    this.session = sessionData.session;
+                    this.user = sessionData.session.user;
+                    return this.user;
+                }
+            }
+            return null;
+        }
+    }
+
+    // 获取当前会话
+    async getCurrentSession() {
+        try {
+            const { data, error } = await supabase.auth.getSession();
+            if (error) {
+                throw error;
+            }
+            
+            this.session = data.session;
+            this.user = data.session?.user || null;
+            
+            return data.session;
         } catch (error) {
             return null;
         }
@@ -150,12 +185,13 @@ class SupabaseAuth {
         
         // 立即通知当前状态
         if (this.user) {
-            callback('signed_in', { user: this.user });
+            callback('signed_in', { user: this.user, session: this.session });
         }
         
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
                 this.user = session?.user || null;
+                this.session = session || null;
                 
                 // 确保用户在users表中存在
                 if (this.user) {

@@ -1,5 +1,5 @@
 // 主页面逻辑
-// 版本: 1.0.34
+// 版本: 1.0.35
 import SupabaseAuth from './supabaseAuth.js';
 
 let supabaseAuth = null;
@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     supabaseAuth = new SupabaseAuth();
     
     // 检查用户是否已登录
-    checkUserStatus();
+    await checkUserStatus();
     
     // 绑定事件监听器
     bindAuthEvents();
@@ -22,7 +22,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 // 检查用户登录状态
 async function checkUserStatus() {
     try {
-        const user = await supabaseAuth.getCurrentUser();
+        // 先尝试获取当前会话
+        const session = await supabaseAuth.getCurrentSession();
+        let user = null;
+        
+        if (session?.user) {
+            user = session.user;
+        } else {
+            // 如果会话中没有用户，尝试获取当前用户
+            user = await supabaseAuth.getCurrentUser();
+        }
+        
         const featuresBtn = document.getElementById('featuresBtn');
         
         if (user) {
