@@ -337,7 +337,7 @@ class SupabaseFoodStorage {
                 return sum + (item.price * item.quantity);
             }, 0);
 
-            // 准备要插入的数据
+            // 准备要插入的数据，只使用total字段
             const orderToInsert = {
                 user_id: user.id,
                 items: order.items || [],
