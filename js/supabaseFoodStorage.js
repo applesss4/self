@@ -490,11 +490,15 @@ class SupabaseFoodStorage {
             }, 0);
 
             // 准备要插入的数据
+            // 使用本地日期格式而不是ISO格式，以便在数据统计页面正确解析
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}年${(now.getMonth() + 1).toString().padStart(2, '0')}月${now.getDate().toString().padStart(2, '0')}日 ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
             const orderToInsert = {
                 user_id: user.id,
                 items: order.items || [],
                 total: total,
-                date: new Date().toISOString() // 确保使用标准格式
+                date: dateStr // 使用本地日期格式
             };
 
             console.log('准备插入订单数据:', orderToInsert);

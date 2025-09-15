@@ -336,9 +336,20 @@ class StatsUI {
         orders.forEach(order => {
             // 从订单日期提取年月
             // 使用更可靠的日期解析方法
-            const dateParts = order.date.split(/[\s年月日:/]+/);
-            const year = parseInt(dateParts[0]);
-            const month = parseInt(dateParts[1]) - 1; // JavaScript月份从0开始
+            // 支持两种日期格式：ISO格式和本地格式
+            let year, month;
+            
+            if (order.date.includes('T')) {
+                // ISO格式 (2025-09-15T10:30:45.123Z)
+                const dateObj = new Date(order.date);
+                year = dateObj.getFullYear();
+                month = dateObj.getMonth(); // JavaScript月份从0开始
+            } else {
+                // 本地格式 (2025年09月15日 10:30:45)
+                const dateParts = order.date.split(/[\s年月日:/]+/);
+                year = parseInt(dateParts[0]);
+                month = parseInt(dateParts[1]) - 1; // JavaScript月份从0开始
+            }
             
             // 确保月份格式正确（两位数）
             const monthStr = String(month + 1).padStart(2, '0');
@@ -367,14 +378,26 @@ class StatsUI {
         orders.forEach(order => {
             // 从订单日期提取年月日
             // 使用更可靠的日期解析方法
-            const dateParts = order.date.split(/[\s年月日:/]+/);
-            const year = parseInt(dateParts[0]);
-            const month = parseInt(dateParts[1]) - 1; // JavaScript月份从0开始
-            const day = parseInt(dateParts[2]);
-            const date = new Date(year, month, day);
+            // 支持两种日期格式：ISO格式和本地格式
+            let dateObj;
+            
+            if (order.date.includes('T')) {
+                // ISO格式 (2025-09-15T10:30:45.123Z)
+                dateObj = new Date(order.date);
+            } else {
+                // 本地格式 (2025年09月15日 10:30:45)
+                const dateParts = order.date.split(/[\s年月日:/]+/);
+                const year = parseInt(dateParts[0]);
+                const month = parseInt(dateParts[1]) - 1; // JavaScript月份从0开始
+                const day = parseInt(dateParts[2]);
+                const hour = parseInt(dateParts[3]) || 0;
+                const minute = parseInt(dateParts[4]) || 0;
+                const second = parseInt(dateParts[5]) || 0;
+                dateObj = new Date(year, month, day, hour, minute, second);
+            }
             
             // 获取该日期在当月是第几周
-            const weekOfMonth = this.getWeekOfMonth(date);
+            const weekOfMonth = this.getWeekOfMonth(dateObj);
             
             // 格式化周标识（只显示当月第几周，不显示年月）
             const weekKey = `W${weekOfMonth}`;
@@ -497,14 +520,23 @@ class StatsUI {
         // 遍历所有订单，记录每个菜品的价格历史
         orders.forEach(order => {
             // 使用更可靠的日期解析方法
-            const dateParts = order.date.split(/[\s年月日:/]+/);
-            const year = parseInt(dateParts[0]);
-            const month = parseInt(dateParts[1]) - 1; // JavaScript月份从0开始
-            const day = parseInt(dateParts[2]);
-            const hour = parseInt(dateParts[3]) || 0;
-            const minute = parseInt(dateParts[4]) || 0;
-            const second = parseInt(dateParts[5]) || 0;
-            const date = new Date(year, month, day, hour, minute, second);
+            // 支持两种日期格式：ISO格式和本地格式
+            let dateObj;
+            
+            if (order.date.includes('T')) {
+                // ISO格式 (2025-09-15T10:30:45.123Z)
+                dateObj = new Date(order.date);
+            } else {
+                // 本地格式 (2025年09月15日 10:30:45)
+                const dateParts = order.date.split(/[\s年月日:/]+/);
+                const year = parseInt(dateParts[0]);
+                const month = parseInt(dateParts[1]) - 1; // JavaScript月份从0开始
+                const day = parseInt(dateParts[2]);
+                const hour = parseInt(dateParts[3]) || 0;
+                const minute = parseInt(dateParts[4]) || 0;
+                const second = parseInt(dateParts[5]) || 0;
+                dateObj = new Date(year, month, day, hour, minute, second);
+            }
             
             order.items.forEach(item => {
                 if (!foodPrices[item.name]) {
@@ -512,7 +544,7 @@ class StatsUI {
                 }
                 foodPrices[item.name].push({
                     price: item.price,
-                    date: date
+                    date: dateObj
                 });
             });
         });
