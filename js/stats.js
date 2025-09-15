@@ -94,8 +94,32 @@ class StatsUI {
     }
 
     async init() {
+        // 确保认证模块已初始化
+        await this.initAuth();
         await this.renderStats();
         this.bindEvents();
+    }
+
+    // 初始化认证模块
+    async initAuth() {
+        // 等待DOM加载完成
+        if (document.readyState === 'loading') {
+            await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve));
+        }
+        
+        // 确保认证按钮事件已绑定
+        const loginBtn = document.getElementById('loginBtn');
+        if (loginBtn) {
+            console.log('数据统计页面找到登录按钮');
+            // 确保simpleAuth.js已加载并初始化
+            if (typeof window.supabaseAuth !== 'undefined') {
+                console.log('认证模块已加载');
+            } else {
+                console.log('等待认证模块加载');
+            }
+        } else {
+            console.log('数据统计页面未找到登录按钮');
+        }
     }
 
     bindEvents() {
@@ -117,6 +141,36 @@ class StatsUI {
                 this.closeOrderDetail();
             }
         });
+        
+        // 绑定登录按钮事件（作为后备方案）
+        const loginBtn = document.getElementById('loginBtn');
+        if (loginBtn) {
+            loginBtn.addEventListener('click', (e) => {
+                console.log('数据统计页面登录按钮被点击');
+                // 尝试触发simpleAuth.js中的登录逻辑
+                if (window.supabaseAuth) {
+                    window.supabaseAuth.getCurrentUser().then(user => {
+                        if (user) {
+                            // 用户已登录，执行登出操作
+                            window.supabaseAuth.signOut();
+                        } else {
+                            // 用户未登录，打开登录模态框
+                            const authModal = document.getElementById('authModal');
+                            if (authModal) {
+                                authModal.classList.add('active');
+                            }
+                        }
+                    });
+                } else {
+                    console.log('认证模块未初始化');
+                    // 作为后备方案，直接显示登录模态框
+                    const authModal = document.getElementById('authModal');
+                    if (authModal) {
+                        authModal.classList.add('active');
+                    }
+                }
+            });
+        }
     }
 
     // 渲染统计数据

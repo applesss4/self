@@ -743,31 +743,21 @@ class FoodUI {
 
         const orders = this.foodStorage.getOrders();
         
-        // 只显示当天的订单
-        const today = new Date();
-        const todayOrders = orders.filter(order => {
-            // 从订单日期提取年月日
-            const dateParts = order.date.split(/[\s年月日:/]+/);
-            const orderYear = parseInt(dateParts[0]);
-            const orderMonth = parseInt(dateParts[1]) - 1; // JavaScript月份从0开始
-            const orderDay = parseInt(dateParts[2]);
-            const orderDate = new Date(orderYear, orderMonth, orderDay);
-            
-            // 比较是否为同一天
-            return orderDate.getFullYear() === today.getFullYear() &&
-                   orderDate.getMonth() === today.getMonth() &&
-                   orderDate.getDate() === today.getDate();
-        });
+        // 显示所有订单，而不仅仅是当天的订单
+        const allOrders = orders;
 
         orderItems.innerHTML = '';
 
-        if (todayOrders.length === 0) {
-            orderItems.innerHTML = '<div class="order-empty">今日暂无订单记录</div>';
+        if (allOrders.length === 0) {
+            orderItems.innerHTML = '<div class="order-empty">暂无订单记录</div>';
             return;
         }
 
         // 按日期倒序排列订单
-        const sortedOrders = [...todayOrders].sort((a, b) => b.id - a.id);
+        const sortedOrders = [...allOrders].sort((a, b) => {
+            // 按创建时间排序
+            return new Date(b.created_at) - new Date(a.created_at);
+        });
         
         // 使用文档片段来减少DOM操作
         const fragment = document.createDocumentFragment();
