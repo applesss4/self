@@ -33,6 +33,12 @@ class FoodUI {
         this.renderFoods();
         this.updateCartUI();
         
+        // 绑定功能按钮事件
+        this.bindFeaturesButtonEvents();
+        
+        // 检查用户登录状态并更新功能按钮
+        this.checkUserStatusAndShowFeaturesButton();
+        
         // 监听订单实时更新事件
         window.addEventListener('ordersUpdated', () => {
             console.log('收到订单更新事件');
@@ -131,6 +137,77 @@ class FoodUI {
                 this.closeOrder();
             }
         });
+    }
+
+    // 绑定功能按钮事件
+    bindFeaturesButtonEvents() {
+        // 功能按钮点击事件
+        const featuresBtn = document.getElementById('featuresBtn');
+        if (featuresBtn) {
+            featuresBtn.addEventListener('click', this.openFeaturesModal);
+        }
+        
+        // 关闭功能菜单模态框
+        const closeFeaturesModal = document.getElementById('closeFeaturesModal');
+        if (closeFeaturesModal) {
+            closeFeaturesModal.addEventListener('click', this.closeFeaturesModalFunc);
+        }
+        
+        // 点击模态框外部关闭
+        const featuresModal = document.getElementById('featuresModal');
+        if (featuresModal) {
+            featuresModal.addEventListener('click', (e) => {
+                if (e.target.id === 'featuresModal') {
+                    this.closeFeaturesModalFunc();
+                }
+            });
+        }
+        
+        // ESC键关闭模态框
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.closeFeaturesModalFunc();
+            }
+        });
+    }
+
+    // 打开功能菜单模态框
+    openFeaturesModal() {
+        const featuresModal = document.getElementById('featuresModal');
+        if (featuresModal) {
+            featuresModal.classList.add('active');
+        }
+    }
+
+    // 关闭功能菜单模态框
+    closeFeaturesModalFunc() {
+        const featuresModal = document.getElementById('featuresModal');
+        if (featuresModal) {
+            featuresModal.classList.remove('active');
+        }
+    }
+
+    // 检查用户登录状态并更新功能按钮
+    checkUserStatusAndShowFeaturesButton() {
+        try {
+            // 从sessionStorage获取登录状态
+            const loginStatus = sessionStorage.getItem('isLoggedIn');
+            const featuresBtn = document.getElementById('featuresBtn');
+            
+            if (loginStatus === 'true') {
+                // 用户已登录，显示功能按钮
+                if (featuresBtn) {
+                    featuresBtn.style.display = 'block';
+                }
+            } else {
+                // 用户未登录，隐藏功能按钮
+                if (featuresBtn) {
+                    featuresBtn.style.display = 'none';
+                }
+            }
+        } catch (error) {
+            console.error('检查用户状态时出错:', error);
+        }
     }
 
     // 图片预览功能
