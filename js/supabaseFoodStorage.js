@@ -332,6 +332,12 @@ class SupabaseFoodStorage {
                 return { error: '用户未登录' };
             }
 
+            // 检查订单项目是否为空
+            if (!order.items || order.items.length === 0) {
+                console.error('订单项目为空');
+                return { error: '订单项目为空' };
+            }
+
             // 计算订单总价（如果未提供）
             const total = order.total || order.items.reduce((sum, item) => {
                 return sum + (item.price * item.quantity);
@@ -367,7 +373,7 @@ class SupabaseFoodStorage {
             return data || { error: '无返回数据' };
         } catch (error) {
             console.error('添加订单时发生异常:', error);
-            return { error: error.message };
+            return { error: error.message || '未知错误' };
         }
     }
 

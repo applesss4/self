@@ -871,6 +871,13 @@ class FoodUI {
             return;
         }
         
+        // 检查用户是否已登录
+        const user = await this.foodStorage.supabaseAuth.getCurrentUser();
+        if (!user) {
+            this.showToast('请先登录再进行结算', 'error');
+            return;
+        }
+        
         const total = this.foodStorage.getCartTotal();
         
         // 创建订单对象，包含更多商品信息
@@ -894,7 +901,8 @@ class FoodUI {
             const result = await this.foodStorage.addOrder(order);
             console.log('订单保存结果:', result);
             
-            if (result && result.id) {
+            // 检查结果是否成功
+            if (result && !result.error && result.id) {
                 // 显示成功消息
                 const message = `结算成功！订单号: ${result.id} 总价: ¥${total.toFixed(2)}`;
                 this.showToast(message, 'success');
@@ -910,8 +918,10 @@ class FoodUI {
                     this.renderOrders();
                 }
             } else {
+                // 处理错误情况
+                const errorMessage = result && result.error ? result.error : '结算失败，请重试';
                 console.error('订单保存失败，返回结果:', result);
-                this.showToast('结算失败，请重试', 'error');
+                this.showToast('结算失败: ' + errorMessage, 'error');
             }
         } catch (error) {
             console.error('结算过程中发生错误:', error);
@@ -970,4 +980,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     foodUI.bindEvents();
     foodUI.renderFoods();
     foodUI.updateCartUI();
+    
+    // 确保购物车按钮事件正确绑定
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    if (checkoutBtn) {
+        checkoutBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            console.log('结算按钮被点击');
+            await foodUI.checkout();
+        });
+    } else {
+        console.error('未找到结算按钮元素');
+    }
 });
