@@ -208,74 +208,54 @@ class FoodUI {
 
     // 绑定功能按钮事件
     bindFeaturesButtonEvents() {
-        // 确保在DOM加载完成后再绑定事件
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                this.bindFeaturesButtonEvents();
-            });
-            return;
-        }
-        
-        // 使用更安全的方式绑定功能按钮事件
-        const bindEventSafely = (elementId, eventType, handler) => {
-            const element = document.getElementById(elementId);
-            if (element) {
-                // 检查是否已经绑定了事件
-                const boundAttribute = `data-${eventType}-bound`;
-                if (element.hasAttribute(boundAttribute)) {
-                    return true; // 已经绑定过，无需重复绑定
-                }
-                
-                // 绑定事件并标记已绑定
-                element.addEventListener(eventType, handler);
-                element.setAttribute(boundAttribute, 'true');
-                return true;
-            }
-            return false;
-        };
-        
         // 功能按钮点击事件
-        const isFeaturesBtnBound = bindEventSafely('featuresBtn', 'click', () => {
-            this.openFeaturesModal();
-        });
-        
-        // 如果功能按钮绑定失败，尝试延迟绑定
-        if (!isFeaturesBtnBound) {
-            setTimeout(() => {
-                const tryBind = bindEventSafely('featuresBtn', 'click', () => {
+        const featuresBtn = document.getElementById('featuresBtn');
+        if (featuresBtn) {
+            // 移除已有的事件监听器，防止重复绑定
+            const newFeaturesBtn = featuresBtn.cloneNode(true);
+            featuresBtn.parentNode.replaceChild(newFeaturesBtn, featuresBtn);
+            
+            // 重新获取引用并绑定事件
+            const updatedFeaturesBtn = document.getElementById('featuresBtn');
+            if (updatedFeaturesBtn) {
+                updatedFeaturesBtn.addEventListener('click', () => {
                     this.openFeaturesModal();
                 });
-                if (!tryBind) {
-                    console.warn('功能按钮绑定失败，元素未找到');
-                }
-            }, 100);
+            }
         }
         
         // 关闭功能菜单模态框
-        bindEventSafely('closeFeaturesModal', 'click', () => {
-            this.closeFeaturesModalFunc();
-        });
+        const closeFeaturesModal = document.getElementById('closeFeaturesModal');
+        if (closeFeaturesModal) {
+            // 移除已有的事件监听器，防止重复绑定
+            const newCloseFeaturesModal = closeFeaturesModal.cloneNode(true);
+            closeFeaturesModal.parentNode.replaceChild(newCloseFeaturesModal, closeFeaturesModal);
+            
+            // 重新获取引用并绑定事件
+            const updatedCloseFeaturesModal = document.getElementById('closeFeaturesModal');
+            if (updatedCloseFeaturesModal) {
+                updatedCloseFeaturesModal.addEventListener('click', () => {
+                    this.closeFeaturesModalFunc();
+                });
+            }
+        }
         
         // 点击模态框外部关闭
         const featuresModal = document.getElementById('featuresModal');
-        if (featuresModal && !featuresModal.hasAttribute('data-click-bound')) {
+        if (featuresModal) {
             featuresModal.addEventListener('click', (e) => {
                 if (e.target.id === 'featuresModal') {
                     this.closeFeaturesModalFunc();
                 }
             });
-            featuresModal.setAttribute('data-click-bound', 'true');
         }
         
-        // ESC键关闭模态框（只绑定一次）
-        if (!document.body.hasAttribute('data-esc-bound')) {
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    this.closeFeaturesModalFunc();
-                }
-            });
-            document.body.setAttribute('data-esc-bound', 'true');
-        }
+        // ESC键关闭模态框
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.closeFeaturesModalFunc();
+            }
+        });
     }
 
     // 打开功能菜单模态框
