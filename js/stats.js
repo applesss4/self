@@ -269,13 +269,19 @@ class StatsUI {
         
         container.innerHTML = `
             <div class="order-list">
-                ${orders.map(order => `
+                ${orders.map(order => {
+                    // 简化订单号显示，只显示前8位
+                    const shortOrderId = order.id ? order.id.substring(0, 8) : '未知';
+                    // 格式化订单时间，不显示秒
+                    const orderDate = new Date(order.date);
+                    const formattedDate = `${orderDate.getFullYear()}年${(orderDate.getMonth() + 1).toString().padStart(2, '0')}月${orderDate.getDate().toString().padStart(2, '0')}日 ${orderDate.getHours().toString().padStart(2, '0')}:${orderDate.getMinutes().toString().padStart(2, '0')}`;
+                    return `
                     <div class="order-item-summary" data-order-id="${order.id}">
-                        <div class="order-id">订单号: ${order.id}</div>
-                        <div class="order-date">${order.date}</div>
+                        <div class="order-id">订单号: ${shortOrderId}</div>
+                        <div class="order-date">${formattedDate}</div>
                         <div class="order-price">¥${order.total.toFixed(2)}</div>
                     </div>
-                `).join('')}
+                `;}).join('')}
             </div>
         `;
         
@@ -546,11 +552,17 @@ class StatsUI {
                 return total + (item.price * item.quantity);
             }, 0);
             
+            // 简化订单号显示，只显示前8位
+            const shortOrderId = order.id ? order.id.substring(0, 8) : '未知';
+            // 格式化订单时间，不显示秒
+            const orderDate = new Date(order.date);
+            const formattedDate = `${orderDate.getFullYear()}年${(orderDate.getMonth() + 1).toString().padStart(2, '0')}月${orderDate.getDate().toString().padStart(2, '0')}日 ${orderDate.getHours().toString().padStart(2, '0')}:${orderDate.getMinutes().toString().padStart(2, '0')}`;
+            
             let html = `
                 <div class="order-detail-header">
                     <div class="order-detail-info">
-                        <div class="order-detail-id">订单号: ${order.id}</div>
-                        <div class="order-detail-date">下单时间: ${order.date}</div>
+                        <div class="order-detail-id">订单号: ${shortOrderId}</div>
+                        <div class="order-detail-date">下单时间: ${formattedDate}</div>
                         <div class="order-detail-total">总价: ¥${orderTotal.toFixed(2)}</div>
                     </div>
                 </div>

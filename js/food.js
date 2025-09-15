@@ -775,9 +775,14 @@ class FoodUI {
             // 创建订单头部信息
             const orderHeader = document.createElement('div');
             orderHeader.className = 'order-item-info';
+            // 简化订单号显示，只显示前8位
+            const shortOrderId = order.id ? order.id.substring(0, 8) : '未知';
+            // 格式化订单时间，不显示秒
+            const orderDate = new Date(order.date);
+            const formattedDate = `${orderDate.getFullYear()}年${(orderDate.getMonth() + 1).toString().padStart(2, '0')}月${orderDate.getDate().toString().padStart(2, '0')}日 ${orderDate.getHours().toString().padStart(2, '0')}:${orderDate.getMinutes().toString().padStart(2, '0')}`;
             orderHeader.innerHTML = `
-                <div class="order-item-name">订单号: ${order.id}</div>
-                <div class="order-item-date">${order.date}</div>
+                <div class="order-item-name">订单号: ${shortOrderId}</div>
+                <div class="order-item-date">${formattedDate}</div>
                 <div class="order-item-total">总价: ¥${orderTotal.toFixed(2)}</div>
             `;
             
