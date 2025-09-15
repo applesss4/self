@@ -1,5 +1,5 @@
 // 菜品管理模块
-// 版本: 1.0.32
+// 版本: 1.0.33
 import SupabaseAuth from './supabaseAuth.js';
 import SupabaseFoodStorage from './supabaseFoodStorage.js';
 
@@ -222,27 +222,38 @@ class FoodUI {
         }
     }
 
-    // 检查用户登录状态并更新功能按钮
+    // 检查用户登录状态并更新功能按钮和菜单项
     checkUserStatusAndShowFeaturesButton() {
         try {
             // 从sessionStorage获取登录状态
             const loginStatus = sessionStorage.getItem('isLoggedIn');
             const featuresBtn = document.getElementById('featuresBtn');
             
+            // 获取所有功能菜单项
+            const menuItems = document.querySelectorAll('.feature-menu-item');
+            
             if (loginStatus === 'true') {
-                // 用户已登录，显示功能按钮
+                // 用户已登录，显示功能按钮并更新菜单项样式
                 if (featuresBtn) {
                     featuresBtn.style.display = 'block';
-                    // 添加登录样式类
-                    featuresBtn.classList.add('loggedIn');
                 }
+                
+                // 为所有菜单项添加登录样式类
+                menuItems.forEach(item => {
+                    item.classList.add('logged-in');
+                    item.classList.remove('not-logged-in');
+                });
             } else {
-                // 用户未登录，隐藏功能按钮
+                // 用户未登录，仍然显示功能按钮但更新菜单项样式
                 if (featuresBtn) {
-                    featuresBtn.style.display = 'none';
-                    // 移除登录样式类
-                    featuresBtn.classList.remove('loggedIn');
+                    featuresBtn.style.display = 'block';
                 }
+                
+                // 为所有菜单项添加未登录样式类
+                menuItems.forEach(item => {
+                    item.classList.add('not-logged-in');
+                    item.classList.remove('logged-in');
+                });
             }
         } catch (error) {
             console.error('检查用户状态时出错:', error);

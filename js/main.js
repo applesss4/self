@@ -1,5 +1,5 @@
 // 主页面逻辑
-// 版本: 1.0.32
+// 版本: 1.0.33
 import SupabaseAuth from './supabaseAuth.js';
 
 let supabaseAuth = null;
