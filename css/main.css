@@ -23,6 +23,29 @@
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* 功能菜单模态框样式 */
+.features-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.feature-menu-item {
+    padding: 1rem;
+    text-decoration: none;
+    color: var(--text-primary);
+    background: var(--cream-secondary);
+    border-radius: var(--border-radius-small);
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+    text-align: center;
+}
+
+.feature-menu-item:hover {
+    background: var(--cream-accent);
+    transform: translateX(5px);
+}
+
 /* 下拉菜单样式 */
 .dropdown {
     position: relative;

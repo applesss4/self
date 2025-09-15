@@ -38,17 +38,100 @@ function updateCurrentDate() {
 }
 
 function bindEventListeners() {
-    // 任务计划按钮点击事件
-    const tasksFeature = document.getElementById('tasks-feature');
-    if (tasksFeature) {
-        tasksFeature.addEventListener('click', navigateToTasks);
-    }
+    // 功能卡片按钮点击事件
+    const featureButtons = document.querySelectorAll('.feature-button');
+    featureButtons.forEach(button => {
+        button.addEventListener('click', handleFeatureNavigation);
+    });
     
     // 导航链接点击事件
-    const navLinks = document.querySelectorAll('.nav-link');
+    const navLinks = document.querySelectorAll('.nav-link:not(#featuresBtn)');
     navLinks.forEach(link => {
         link.addEventListener('click', handleNavigation);
     });
+    
+    // 功能按钮点击事件
+    const featuresBtn = document.getElementById('featuresBtn');
+    if (featuresBtn) {
+        featuresBtn.addEventListener('click', openFeaturesModal);
+    }
+    
+    // 关闭功能菜单模态框
+    const closeFeaturesModal = document.getElementById('closeFeaturesModal');
+    if (closeFeaturesModal) {
+        closeFeaturesModal.addEventListener('click', closeFeaturesModalFunc);
+    }
+    
+    // 点击模态框外部关闭
+    const featuresModal = document.getElementById('featuresModal');
+    if (featuresModal) {
+        featuresModal.addEventListener('click', (e) => {
+            if (e.target.id === 'featuresModal') {
+                closeFeaturesModalFunc();
+            }
+        });
+    }
+    
+    // ESC键关闭模态框
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeFeaturesModalFunc();
+        }
+    });
+}
+
+// 处理功能卡片导航
+function handleFeatureNavigation(event) {
+    const button = event.target;
+    const page = button.getAttribute('data-page');
+    
+    // 检查用户是否已登录
+    const loginStatus = sessionStorage.getItem('isLoggedIn');
+    if (loginStatus !== 'true') {
+        alert('请先登录后再访问此页面');
+        return;
+    }
+    
+    // 根据页面跳转
+    let pageUrl = '';
+    switch(page) {
+        case 'tasks':
+            pageUrl = '/pages/tasks.html';
+            break;
+        case 'schedule':
+            pageUrl = '/pages/schedule.html';
+            break;
+        case 'food':
+            pageUrl = '/pages/food.html';
+            break;
+        case 'stats':
+            pageUrl = '/pages/stats.html';
+            break;
+        default:
+            return;
+    }
+    
+    // 添加页面切换动画
+    document.body.style.opacity = '0.8';
+    setTimeout(() => {
+        window.location.href = pageUrl;
+    }, 150);
+}
+
+// 打开功能菜单模态框
+function openFeaturesModal() {
+    const featuresModal = document.getElementById('featuresModal');
+    if (featuresModal) {
+        featuresModal.classList.add('active');
+    }
+}
+
+// 关闭功能菜单模态框
+function closeFeaturesModalFunc() {
+    const featuresModal = document.getElementById('featuresModal');
+    if (featuresModal) {
+        featuresModal.classList.remove('active');
+    }
 }
 
 // 检查用户登录状态并更新导航栏
@@ -56,17 +139,17 @@ async function checkUserStatus() {
     try {
         // 从sessionStorage获取登录状态
         const loginStatus = sessionStorage.getItem('isLoggedIn');
-        const pagesDropdown = document.getElementById('pagesDropdown');
+        const featuresBtn = document.getElementById('featuresBtn');
         
         if (loginStatus === 'true') {
-            // 用户已登录，显示下拉菜单
-            if (pagesDropdown) {
-                pagesDropdown.style.display = 'block';
+            // 用户已登录，显示功能按钮
+            if (featuresBtn) {
+                featuresBtn.style.display = 'block';
             }
         } else {
-            // 用户未登录，隐藏下拉菜单
-            if (pagesDropdown) {
-                pagesDropdown.style.display = 'none';
+            // 用户未登录，隐藏功能按钮
+            if (featuresBtn) {
+                featuresBtn.style.display = 'none';
             }
         }
     } catch (error) {

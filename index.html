@@ -14,21 +14,31 @@
             <div class="header-right">
                 <nav class="nav">
                     <a href="/" class="nav-link active">首页</a>
-                    <!-- 下拉菜单容器 -->
-                    <div class="dropdown" id="pagesDropdown" style="display: none;">
-                        <button class="dropdown-btn nav-link">功能菜单 ▼</button>
-                        <div class="dropdown-content">
-                            <a href="/pages/tasks.html" class="nav-link">任务计划</a>
-                            <a href="/pages/schedule.html" class="nav-link">工作排班表</a>
-                            <a href="/pages/food.html" class="nav-link">买菜</a>
-                            <a href="/pages/stats.html" class="nav-link">数据统计</a>
-                        </div>
-                    </div>
+                    <!-- 功能按钮 -->
+                    <button class="nav-link" id="featuresBtn" style="display: none;">功能菜单</button>
                 </nav>
                 <button class="login-btn" id="loginBtn">登录</button>
             </div>
         </div>
     </header>
+
+    <!-- 功能菜单模态框 -->
+    <div class="modal" id="featuresModal">
+        <div class="modal-content" style="max-width: 300px;">
+            <div class="modal-header">
+                <h3 class="modal-title">功能菜单</h3>
+                <button class="modal-close" id="closeFeaturesModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="features-menu">
+                    <a href="/pages/tasks.html" class="feature-menu-item">📝 任务计划</a>
+                    <a href="/pages/schedule.html" class="feature-menu-item">📅 工作排班表</a>
+                    <a href="/pages/food.html" class="feature-menu-item">🛒 买菜</a>
+                    <a href="/pages/stats.html" class="feature-menu-item">📊 数据统计</a>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <main class="main">
         <section class="hero">
@@ -42,28 +52,28 @@
                     <div class="feature-icon">📝</div>
                     <h3 class="feature-title">任务管理</h3>
                     <p class="feature-description">创建、编辑和跟踪您的日常任务，支持分类和优先级设置</p>
-                    <a href="/pages/tasks.html" class="feature-button">开始使用</a>
+                    <button class="feature-button" data-page="tasks">开始使用</button>
                 </div>
                     
                 <div class="feature-card">
                     <div class="feature-icon">📅</div>
                     <h3 class="feature-title">日程安排</h3>
                     <p class="feature-description">可视化日历视图，轻松安排和管理工作时间</p>
-                    <a href="/pages/schedule.html" class="feature-button">查看日程</a>
+                    <button class="feature-button" data-page="schedule">查看日程</button>
                 </div>
                     
                 <div class="feature-card">
                     <div class="feature-icon">🛒</div>
                     <h3 class="feature-title">买菜</h3>
                     <p class="feature-description">在线选购新鲜食材，支持购物车功能</p>
-                    <a href="/pages/food.html" class="feature-button">开始买菜</a>
+                    <button class="feature-button" data-page="food">开始买菜</button>
                 </div>
                 
                 <div class="feature-card">
                     <div class="feature-icon">📊</div>
                     <h3 class="feature-title">数据统计</h3>
                     <p class="feature-description">查看采购数据统计，分析消费趋势</p>
-                    <a href="/pages/stats.html" class="feature-button">查看统计</a>
+                    <button class="feature-button" data-page="stats">查看统计</button>
                 </div>
             </div>
         </div>
