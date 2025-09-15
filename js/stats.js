@@ -1,5 +1,5 @@
 // 数据统计模块
-// 版本: 1.0.33
+// 版本: 1.0.34
 import SupabaseAuth from './supabaseAuth.js';
 import supabase from './supabase.js';
 
