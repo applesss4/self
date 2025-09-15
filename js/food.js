@@ -174,13 +174,17 @@ class FoodUI {
         // 功能按钮点击事件
         const featuresBtn = document.getElementById('featuresBtn');
         if (featuresBtn) {
-            featuresBtn.addEventListener('click', () => this.openFeaturesModal());
+            featuresBtn.addEventListener('click', () => {
+                this.openFeaturesModal();
+            });
         }
         
         // 关闭功能菜单模态框
         const closeFeaturesModal = document.getElementById('closeFeaturesModal');
         if (closeFeaturesModal) {
-            closeFeaturesModal.addEventListener('click', () => this.closeFeaturesModalFunc());
+            closeFeaturesModal.addEventListener('click', () => {
+                this.closeFeaturesModalFunc();
+            });
         }
         
         // 点击模态框外部关闭

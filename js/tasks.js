@@ -160,6 +160,9 @@ async function init() {
     
     // 绑定功能按钮事件
     bindFeaturesButtonEvents();
+    
+    // 检查用户登录状态并更新功能按钮
+    checkUserStatusAndShowFeaturesButton();
 }
 
 // 为导航链接添加登录检查
@@ -769,13 +772,17 @@ function bindFeaturesButtonEvents() {
     // 功能按钮点击事件
     const featuresBtn = document.getElementById('featuresBtn');
     if (featuresBtn) {
-        featuresBtn.addEventListener('click', openFeaturesModal);
+        featuresBtn.addEventListener('click', function() {
+            openFeaturesModal();
+        });
     }
     
     // 关闭功能菜单模态框
     const closeFeaturesModal = document.getElementById('closeFeaturesModal');
     if (closeFeaturesModal) {
-        closeFeaturesModal.addEventListener('click', closeFeaturesModalFunc);
+        closeFeaturesModal.addEventListener('click', function() {
+            closeFeaturesModalFunc();
+        });
     }
     
     // 点击模态框外部关闭

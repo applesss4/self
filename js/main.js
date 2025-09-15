@@ -91,6 +91,9 @@ function bindAuthEvents() {
                 featuresBtn.classList.add('loggedIn');
             }
             
+            // 设置登录状态标记
+            sessionStorage.setItem('isLoggedIn', 'true');
+            
             // 显示自定义提示消息
             showCustomToast('成功进入发财人生管理系统', 'success');
             
@@ -107,6 +110,9 @@ function bindAuthEvents() {
                 // 移除登录样式类
                 featuresBtn.classList.remove('loggedIn');
             }
+            
+            // 清除登录状态标记
+            sessionStorage.removeItem('isLoggedIn');
         }
     });
 }
@@ -288,13 +294,17 @@ function bindEventListeners() {
     // 功能按钮点击事件
     const featuresBtn = document.getElementById('featuresBtn');
     if (featuresBtn) {
-        featuresBtn.addEventListener('click', openFeaturesModal);
+        featuresBtn.addEventListener('click', function() {
+            openFeaturesModal();
+        });
     }
     
     // 关闭功能菜单模态框
     const closeFeaturesModal = document.getElementById('closeFeaturesModal');
     if (closeFeaturesModal) {
-        closeFeaturesModal.addEventListener('click', closeFeaturesModalFunc);
+        closeFeaturesModal.addEventListener('click', function() {
+            closeFeaturesModalFunc();
+        });
     }
     
     // 点击模态框外部关闭
