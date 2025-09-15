@@ -27,9 +27,9 @@ function bindAuthEvents() {
     
     // 如果找到了必要的元素，绑定事件
     if (loginBtn && authModal) {
-        // 移除可能已存在的事件监听器，防止重复绑定
-        const newLoginBtn = loginBtn.cloneNode(true);
-        loginBtn.parentNode.replaceChild(newLoginBtn, loginBtn);
+        // 使用更安全的方式移除可能已存在的事件监听器，防止重复绑定
+        const existingClone = loginBtn.cloneNode(true);
+        loginBtn.parentNode.replaceChild(existingClone, loginBtn);
         
         // 重新获取引用
         const updatedLoginBtn = document.getElementById('loginBtn');
@@ -58,8 +58,16 @@ function bindAuthEvents() {
         
         // 检查用户登录状态并监听变化
         checkUserStatus();
+        
         // 监听认证状态变化
+        // 先取消之前的订阅（如果有的话）
+        if (authSubscription) {
+            authSubscription.unsubscribe();
+        }
+        
+        // 重新订阅认证状态变化
         authSubscription = supabaseAuth.onAuthStateChange((event, session) => {
+            console.log('认证状态变化:', event, session?.user?.id);
             if (event === 'SIGNED_IN') {
                 updateLoginButton(session.user);
             } else if (event === 'SIGNED_OUT') {
@@ -173,9 +181,10 @@ function switchToRegister() {
 async function checkUserStatus() {
     try {
         const user = await supabaseAuth.getCurrentUser();
+        console.log('检查用户状态:', user?.id);
         updateLoginButton(user);
     } catch (error) {
-        // 静默处理错误
+        console.error('检查用户状态时出错:', error);
     }
 }
 
@@ -183,6 +192,7 @@ async function checkUserStatus() {
 function updateLoginButton(user) {
     const loginBtn = document.getElementById('loginBtn');
     if (loginBtn) {
+        console.log('更新登录按钮状态:', user?.id);
         if (user) {
             // 用户已登录，只显示"退出"，不显示用户名
             loginBtn.textContent = '退出';
@@ -190,6 +200,8 @@ function updateLoginButton(user) {
             // 用户未登录，显示"登录"
             loginBtn.textContent = '登录';
         }
+    } else {
+        console.log('未找到登录按钮元素');
     }
 }
 

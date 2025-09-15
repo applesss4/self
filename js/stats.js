@@ -1,5 +1,6 @@
 // 数据统计模块
 import SupabaseAuth from './supabaseAuth.js';
+import supabase from './supabase.js';
 
 // 菜品数据存储
 class FoodStorage {
@@ -7,30 +8,80 @@ class FoodStorage {
         this.foods = [];
         this.cart = [];
         this.orders = [];
-        this.loadFromLocalStorage();
+        this.isOnline = true; // 始终使用在线模式
     }
 
-    // 从localStorage加载数据
-    loadFromLocalStorage() {
-        const foodsData = localStorage.getItem('food_manager_foods');
-        const cartData = localStorage.getItem('food_manager_cart');
-        const ordersData = localStorage.getItem('food_manager_orders');
-        
-        if (foodsData) {
-            this.foods = JSON.parse(foodsData);
-        }
-        
-        if (cartData) {
-            this.cart = JSON.parse(cartData);
-        }
-        
-        if (ordersData) {
-            this.orders = JSON.parse(ordersData);
+    // 从数据库加载数据
+    async loadFromDatabase() {
+        try {
+            // 检查用户是否已登录
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                console.log('用户未登录，无法从数据库加载数据');
+                this.foods = [];
+                this.orders = [];
+                return;
+            }
+
+            // 并行加载菜品和订单数据以提高性能
+            const [foodsResult, ordersResult] = await Promise.allSettled([
+                supabase
+                    .from('foods')
+                    .select('id,user_id,name,category,price,unit,image,supermarkets,created_at')
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false }),
+                supabase
+                    .from('orders')
+                    .select('id,user_id,items,total,date,created_at')
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false })
+            ]);
+
+            // 处理菜品数据
+            if (foodsResult.status === 'fulfilled') {
+                const { data: foodsData, error: foodsError } = foodsResult.value;
+                if (foodsError) {
+                    console.error('获取菜品数据失败:', foodsError);
+                    this.foods = [];
+                } else {
+                    this.foods = foodsData || [];
+                    console.log(`从数据库加载了 ${this.foods.length} 个菜品`);
+                }
+            } else {
+                console.error('获取菜品数据失败:', foodsResult.reason);
+                this.foods = [];
+            }
+
+            // 处理订单数据
+            if (ordersResult.status === 'fulfilled') {
+                const { data: ordersData, error: ordersError } = ordersResult.value;
+                if (ordersError) {
+                    console.error('获取订单数据失败:', ordersError);
+                    this.orders = [];
+                } else {
+                    this.orders = ordersData || [];
+                    console.log(`从数据库加载了 ${this.orders.length} 个订单`);
+                }
+            } else {
+                console.error('获取订单数据失败:', ordersResult.reason);
+                this.orders = [];
+            }
+
+            // 购物车数据仍然使用localStorage（因为购物车通常是临时的）
+            const cartData = localStorage.getItem('food_manager_cart');
+            if (cartData) {
+                this.cart = JSON.parse(cartData);
+            }
+        } catch (error) {
+            console.error('从数据库加载数据失败:', error);
+            this.foods = [];
+            this.orders = [];
         }
     }
 
     // 获取所有订单
-    getOrders() {
+    async getOrders() {
+        await this.loadFromDatabase();
         return this.orders;
     }
 }
@@ -42,8 +93,8 @@ class StatsUI {
         this.init();
     }
 
-    init() {
-        this.renderStats();
+    async init() {
+        await this.renderStats();
         this.bindEvents();
     }
 
@@ -69,9 +120,9 @@ class StatsUI {
     }
 
     // 渲染统计数据
-    renderStats() {
+    async renderStats() {
         // 获取订单数据
-        const orders = this.foodStorage.getOrders();
+        const orders = await this.foodStorage.getOrders();
         
         if (orders.length === 0) {
             document.getElementById('monthlySummary').innerHTML = '<div class="empty-stats">暂无订单数据</div>';
@@ -559,6 +610,7 @@ class StatsUI {
 }
 
 // 页面加载完成后初始化
-document.addEventListener('DOMContentLoaded', () => {
-    new StatsUI();
+document.addEventListener('DOMContentLoaded', async () => {
+    const statsUI = new StatsUI();
+    await statsUI.init();
 });
