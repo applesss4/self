@@ -157,6 +157,9 @@ async function init() {
     
     // 为导航链接添加登录检查
     addLoginCheckToNavLinks();
+    
+    // 绑定功能按钮事件
+    bindFeaturesButtonEvents();
 }
 
 // 为导航链接添加登录检查
