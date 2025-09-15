@@ -1,6 +1,5 @@
 // 任务页面主逻辑
 import TaskManager from './taskManager.js';
-import SupabaseAuth from './supabaseAuth.js';  // 导入 SupabaseAuth 类
 
 // 辅助函数：将Date对象格式化为本地日期字符串 (YYYY-MM-DD)
 function formatDateToLocal(date) {
@@ -344,6 +343,43 @@ async function displayTodayTasks() {
         todayTasks = taskManager.getTasksByDate(todayStr);
     }
     
+    // 对任务进行排序：
+    // 1. 工作任务按上班时间排序
+    // 2. 生活任务按时间排序
+    // 3. 工作任务排在生活任务前面
+    todayTasks.sort((a, b) => {
+        // 如果两个任务都是工作分类
+        if (a.category === 'work' && b.category === 'work') {
+            // 按上班时间排序
+            if (a.workStartTime && b.workStartTime) {
+                return a.workStartTime.localeCompare(b.workStartTime);
+            }
+            // 如果其中一个没有上班时间，则有时间的排在前面
+            return a.workStartTime ? -1 : (b.workStartTime ? 1 : 0);
+        }
+        
+        // 如果两个任务都是生活分类
+        if (a.category === 'life' && b.category === 'life') {
+            // 按时间排序
+            if (a.time && b.time) {
+                return a.time.localeCompare(b.time);
+            }
+            // 如果其中一个没有时间，则有时间的排在前面
+            return a.time ? -1 : (b.time ? 1 : 0);
+        }
+        
+        // 工作任务排在生活任务前面
+        if (a.category === 'work' && b.category === 'life') {
+            return -1;
+        }
+        if (a.category === 'life' && b.category === 'work') {
+            return 1;
+        }
+        
+        // 默认情况
+        return 0;
+    });
+    
     // 如果有今日任务列表元素，则更新显示
     if (DOM.todayTasksList) {
         DOM.todayTasksList.innerHTML = '';
@@ -370,6 +406,43 @@ async function updateTasksForSelectedDate() {
     } else {
         tasks = taskManager.getTasksByDate(state.selectedDate);
     }
+    
+    // 对任务进行排序：
+    // 1. 工作任务按上班时间排序
+    // 2. 生活任务按时间排序
+    // 3. 工作任务排在生活任务前面
+    tasks.sort((a, b) => {
+        // 如果两个任务都是工作分类
+        if (a.category === 'work' && b.category === 'work') {
+            // 按上班时间排序
+            if (a.workStartTime && b.workStartTime) {
+                return a.workStartTime.localeCompare(b.workStartTime);
+            }
+            // 如果其中一个没有上班时间，则有时间的排在前面
+            return a.workStartTime ? -1 : (b.workStartTime ? 1 : 0);
+        }
+        
+        // 如果两个任务都是生活分类
+        if (a.category === 'life' && b.category === 'life') {
+            // 按时间排序
+            if (a.time && b.time) {
+                return a.time.localeCompare(b.time);
+            }
+            // 如果其中一个没有时间，则有时间的排在前面
+            return a.time ? -1 : (b.time ? 1 : 0);
+        }
+        
+        // 工作任务排在生活任务前面
+        if (a.category === 'work' && b.category === 'life') {
+            return -1;
+        }
+        if (a.category === 'life' && b.category === 'work') {
+            return 1;
+        }
+        
+        // 默认情况
+        return 0;
+    });
     
     // 清空任务列表
     DOM.tasksList.innerHTML = '';

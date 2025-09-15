@@ -1,6 +1,5 @@
 // 工作排班表主逻辑
 import TaskManager from './taskManager.js';
-import SupabaseAuth from './supabaseAuth.js';  // 导入 SupabaseAuth 类
 
 // 辅助函数：将Date对象格式化为本地日期字符串 (YYYY-MM-DD)
 function formatDateToLocal(date) {
@@ -392,6 +391,16 @@ async function updateScheduleForSelectedDate() {
     // 过滤出工作分类的任务
     const workTasks = tasks.filter(task => task.category === 'work');
     
+    // 按照上班时间早到晚排序
+    workTasks.sort((a, b) => {
+        // 如果上班时间相同，则按下班时间排序
+        if (a.workStartTime === b.workStartTime) {
+            return a.workEndTime.localeCompare(b.workEndTime);
+        }
+        // 按上班时间排序
+        return a.workStartTime.localeCompare(b.workStartTime);
+    });
+    
     // 清空任务列表
     DOM.tasksList.innerHTML = '';
     
@@ -576,6 +585,16 @@ function updateScheduleDisplay() {
             const dayTasks = state.tasks.filter(task => 
                 task.date === dateStr && task.category === 'work'
             );
+            
+            // 按照上班时间早到晚排序
+            dayTasks.sort((a, b) => {
+                // 如果上班时间相同，则按下班时间排序
+                if (a.workStartTime === b.workStartTime) {
+                    return a.workEndTime.localeCompare(b.workEndTime);
+                }
+                // 按上班时间排序
+                return a.workStartTime.localeCompare(b.workStartTime);
+            });
             
             // 清空内容
             scheduleElement.innerHTML = '';
