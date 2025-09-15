@@ -1,6 +1,5 @@
 // 工作排班表主逻辑
 import TaskManager from './taskManager.js';
-import SupabaseAuth from './supabaseAuth.js';  // 导入 SupabaseAuth 类
 
 // 辅助函数：将Date对象格式化为本地日期字符串 (YYYY-MM-DD)
 function formatDateToLocal(date) {
@@ -135,6 +134,64 @@ async function init() {
     
     // 加载任务
     state.tasks = await taskManager.loadTasks();
+}
+
+// 保存排班
+async function saveSchedule() {
+    const scheduleId = document.getElementById('scheduleId').value;
+    const scheduleData = {
+        title: document.getElementById('scheduleTitle').value,
+        date: document.getElementById('scheduleDate').value,
+        category: 'work', // 强制设置为工作分类
+        workStartTime: document.getElementById('workStartTime').value,
+        workEndTime: document.getElementById('workEndTime').value
+    };
+    
+    // 验证数据
+    if (!scheduleData.title || !scheduleData.date || !scheduleData.workStartTime || !scheduleData.workEndTime) {
+        showToast('请填写排班标题、日期、上班时间和下班时间', 'error');
+        return;
+    }
+    
+    let success;
+    if (scheduleId) {
+        // 更新排班
+        success = await taskManager.updateTask(scheduleId, scheduleData);
+    } else {
+        // 创建新排班
+        success = await taskManager.createTask(scheduleData);
+    }
+    
+    if (success) {
+        showToast(scheduleId ? '排班已更新' : '排班已创建', 'success');
+        // 关闭模态框
+        closeScheduleModal();
+        // 重置表单
+        resetScheduleForm();
+        // 更新模态框标题
+        document.getElementById('modalTitle').textContent = '添加排班';
+        // 重新加载任务
+        await loadAndDisplayTasks();
+    } else {
+        showToast(scheduleId ? '更新排班失败' : '创建排班失败', 'error');
+    }
+}
+
+// 打开排班模态框
+function openScheduleModal() {
+    // 清空表单
+    resetScheduleForm();
+    // 设置默认日期为选中日期
+    document.getElementById('scheduleDate').value = state.selectedDate;
+    // 更新模态框标题
+    document.getElementById('modalTitle').textContent = '添加排班';
+    
+    document.getElementById('scheduleModal').classList.add('active');
+}
+
+// 关闭排班模态框
+function closeScheduleModal() {
+    document.getElementById('scheduleModal').classList.remove('active');
 }
 
 // 重置排班表单
