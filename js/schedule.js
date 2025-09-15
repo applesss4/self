@@ -1,7 +1,6 @@
 // 工作排班表主逻辑
 // 版本: 1.0.34
 import TaskManager from './taskManager.js';
-import SupabaseAuth from './supabaseAuth.js';  // 导入 SupabaseAuth 类
 
 // 辅助函数：将Date对象格式化为本地日期字符串 (YYYY-MM-DD)
 function formatDateToLocal(date) {
@@ -15,6 +14,138 @@ function formatDateToLocal(date) {
 function parseLocalDate(dateString) {
     const [year, month, day] = dateString.split('-').map(Number);
     return new Date(year, month - 1, day);
+}
+
+// 渲染日历
+function renderCalendar() {
+    // 更新周显示
+    const weekInfo = getWeekInfo(state.currentDate);
+    DOM.currentWeek.textContent = weekInfo.display;
+    
+    // 清空排班容器
+    DOM.scheduleContainer.innerHTML = `
+        <div class="schedule-weekdays">
+            <div class="schedule-weekday">日</div>
+            <div class="schedule-weekday">一</div>
+            <div class="schedule-weekday">二</div>
+            <div class="schedule-weekday">三</div>
+            <div class="schedule-weekday">四</div>
+            <div class="schedule-weekday">五</div>
+            <div class="schedule-weekday">六</div>
+        </div>
+        <div class="schedule-days" id="scheduleGrid"></div>
+    `;
+    
+    const scheduleGrid = document.getElementById('scheduleGrid');
+    
+    // 获取当前周的开始日期和结束日期
+    const weekDates = getWeekDates(state.currentDate);
+    
+    // 渲染日期
+    weekDates.forEach((dateObj, index) => {
+        const dateStr = formatDateToLocal(dateObj.date);
+        const isToday = dateStr === formatDateToLocal(new Date());
+        const isSelected = dateStr === state.selectedDate;
+        
+        const dayElement = document.createElement('div');
+        dayElement.className = `schedule-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}`;
+        dayElement.dataset.date = dateStr;
+        
+        // 日期标题
+        const dayHeader = document.createElement('div');
+        dayHeader.className = 'schedule-day-header';
+        dayHeader.innerHTML = `
+            <div class="day-name">${dateObj.dayName}</div>
+            <div class="day-date">${dateObj.date.getDate()}</div>
+        `;
+        
+        // 排班内容容器
+        const dayContent = document.createElement('div');
+        dayContent.className = 'schedule-day-content';
+        dayContent.id = `schedule-${dateStr}`;
+        
+        dayElement.appendChild(dayHeader);
+        dayElement.appendChild(dayContent);
+        
+        // 添加点击事件
+        dayElement.addEventListener('click', () => {
+            selectDate(dateStr);
+        });
+        
+        scheduleGrid.appendChild(dayElement);
+    });
+    
+    // 更新排班显示
+    updateScheduleForSelectedDate();
+    // 更新排班表显示
+    updateScheduleDisplay();
+}
+
+// 获取周信息
+function getWeekInfo(date) {
+    const startDate = getWeekStartDate(date);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 6);
+    
+    const year = startDate.getFullYear();
+    const month = startDate.getMonth() + 1;
+    
+    // 计算这是该月的第几周（正确的方法）
+    // 找到该月的第一天
+    const firstDayOfMonth = new Date(year, month - 1, 1);
+    
+    // 找到该月第一个星期日（一周的开始）
+    const firstDayOfWeek = firstDayOfMonth.getDay();
+    const firstWeekStart = new Date(firstDayOfMonth);
+    firstWeekStart.setDate(firstDayOfMonth.getDate() - firstDayOfWeek);
+    
+    // 计算当前周的开始日期与该月第一周开始日期之间的周数差异
+    const weekNumber = Math.floor((startDate - firstWeekStart) / (7 * 24 * 60 * 60 * 1000)) + 1;
+    
+    // 显示格式：几月第几周
+    const display = `${month}月第${weekNumber}周`;
+    
+    return {
+        startDate,
+        endDate,
+        display
+    };
+}
+
+// 获取周开始日期
+function getWeekStartDate(date) {
+    const startDate = new Date(date);
+    const day = startDate.getDay();
+    startDate.setDate(startDate.getDate() - day);
+    return startDate;
+}
+
+// 获取一周的日期
+function getWeekDates(date) {
+    const weekStartDate = getWeekStartDate(date);
+    const dates = [];
+    
+    for (let i = 0; i < 7; i++) {
+        const currentDate = new Date(weekStartDate);
+        currentDate.setDate(weekStartDate.getDate() + i);
+        
+        const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+        
+        dates.push({
+            date: currentDate,
+            dateStr: formatDateToLocal(currentDate),
+            dayName: dayNames[i]
+        });
+    }
+    
+    return dates;
+}
+
+// 选择日期
+function selectDate(dateStr) {
+    state.selectedDate = dateStr;
+    renderCalendar();
+    updateScheduleForSelectedDate();
 }
 
 // 初始化任务管理器
@@ -51,26 +182,33 @@ function getDOMElements() {
     DOM.scheduleForm = document.getElementById('scheduleForm');
     DOM.addTaskBtn = document.getElementById('addTaskBtn');
     DOM.todayBtn = document.getElementById('todayBtn');
+    DOM.exportBtn = document.getElementById('exportBtn');
 }
 
 // 绑定事件监听器
 function bindEventListeners() {
+    // 确保DOM元素已获取
+    if (!DOM.prevWeekBtn || !DOM.nextWeekBtn) {
+        console.error('无法找到周导航按钮');
+        return;
+    }
+    
     // 周导航
     DOM.prevWeekBtn?.addEventListener('click', () => {
         state.currentDate.setDate(state.currentDate.getDate() - 7);
-        renderSchedule();
+        renderCalendar();
     });
     
     DOM.nextWeekBtn?.addEventListener('click', () => {
         state.currentDate.setDate(state.currentDate.getDate() + 7);
-        renderSchedule();
+        renderCalendar();
     });
     
     // 本周按钮
     DOM.todayBtn?.addEventListener('click', () => {
         state.currentDate = new Date();
         state.selectedDate = formatDateToLocal(new Date());
-        renderSchedule();
+        renderCalendar();
         loadAndDisplayTasks();
     });
     
@@ -104,7 +242,7 @@ function bindEventListeners() {
     });
     
     // 导出图片按钮
-    document.getElementById('exportBtn')?.addEventListener('click', exportScheduleAsImage);
+    DOM.exportBtn?.addEventListener('click', exportScheduleAsImage);
 }
 
 // 初始化应用
@@ -122,6 +260,9 @@ async function init() {
     
     // 启用在线模式
     taskManager.setOnlineMode(true);
+    
+    // 获取 DOM 元素
+    getDOMElements();
     
     // 初始化日历
     renderCalendar();

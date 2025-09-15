@@ -242,9 +242,12 @@ class FoodUI {
         // 如果功能按钮绑定失败，尝试延迟绑定
         if (!isFeaturesBtnBound) {
             setTimeout(() => {
-                bindEventSafely('featuresBtn', 'click', () => {
+                const tryBind = bindEventSafely('featuresBtn', 'click', () => {
                     this.openFeaturesModal();
                 });
+                if (!tryBind) {
+                    console.warn('功能按钮绑定失败，元素未找到');
+                }
             }, 100);
         }
         
@@ -293,14 +296,6 @@ class FoodUI {
 
     // 检查用户登录状态并更新功能按钮和菜单项
     checkUserStatusAndShowFeaturesButton() {
-        // 确保在DOM加载完成后再处理
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                this.checkUserStatusAndShowFeaturesButton();
-            });
-            return;
-        }
-        
         try {
             // 从sessionStorage获取登录状态
             const loginStatus = sessionStorage.getItem('isLoggedIn');
