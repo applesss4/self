@@ -2,28 +2,6 @@
 import SupabaseAuth from './supabaseAuth.js';
 import SupabaseFoodStorage from './supabaseFoodStorage.js';
 
-// 菜品数据存储
-class FoodStorage extends SupabaseFoodStorage {
-    constructor() {
-        super();
-    }
-
-    // 从localStorage加载数据 - 重写父类方法
-    loadFromLocalStorage() {
-        super.loadFromLocalStorage();
-    }
-
-    // 从数据库加载数据 - 重写父类方法
-    async loadFromDatabase() {
-        await super.loadFromDatabase();
-    }
-    
-    // 重写initialize方法以确保正确初始化
-    async initialize() {
-        await super.initialize();
-    }
-}
-
 // 页面UI管理
 class FoodUI {
     constructor() {
@@ -46,6 +24,16 @@ class FoodUI {
         this.bindEvents();
         this.renderFoods();
         this.updateCartUI();
+        
+        // 监听订单实时更新事件
+        window.addEventListener('ordersUpdated', () => {
+            console.log('收到订单更新事件');
+            // 如果订单侧边栏是打开的，则重新渲染订单
+            const orderSidebar = document.getElementById('orderSidebar');
+            if (orderSidebar && orderSidebar.classList.contains('active')) {
+                this.renderOrders();
+            }
+        });
     }
 
     bindEvents() {
@@ -730,11 +718,13 @@ class FoodUI {
     }
 
     // 打开订单
-    openOrder() {
+    async openOrder() {
         const orderSidebar = document.getElementById('orderSidebar');
         if (orderSidebar) {
             orderSidebar.classList.add('active');
-            this.renderOrders(); // 渲染订单内容
+            // 重新加载订单数据并渲染
+            await this.foodStorage.loadFromDatabase();
+            this.renderOrders();
         }
     }
 
@@ -915,6 +905,8 @@ class FoodUI {
                 // 如果订单页面打开，则更新订单显示
                 const orderSidebar = document.getElementById('orderSidebar');
                 if (orderSidebar && orderSidebar.classList.contains('active')) {
+                    // 重新加载订单数据并渲染
+                    await this.foodStorage.loadFromDatabase();
                     this.renderOrders();
                 }
             } else {
@@ -972,6 +964,28 @@ class FoodUI {
     }
 }
 
+// 菜品数据存储
+class FoodStorage extends SupabaseFoodStorage {
+    constructor() {
+        super();
+    }
+
+    // 从localStorage加载数据 - 重写父类方法
+    loadFromLocalStorage() {
+        super.loadFromLocalStorage();
+    }
+
+    // 从数据库加载数据 - 重写父类方法
+    async loadFromDatabase() {
+        await super.loadFromDatabase();
+    }
+    
+    // 重写initialize方法以确保正确初始化
+    async initialize() {
+        await super.initialize();
+    }
+}
+
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', async () => {
     const foodUI = new FoodUI();
@@ -981,15 +995,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     foodUI.renderFoods();
     foodUI.updateCartUI();
     
-    // 确保购物车按钮事件正确绑定
-    const checkoutBtn = document.getElementById('checkoutBtn');
-    if (checkoutBtn) {
-        checkoutBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            console.log('结算按钮被点击');
-            await foodUI.checkout();
-        });
-    } else {
-        console.error('未找到结算按钮元素');
-    }
+    // 监听订单实时更新事件
+    window.addEventListener('ordersUpdated', () => {
+        console.log('收到订单更新事件');
+        // 如果订单侧边栏是打开的，则重新渲染订单
+        const orderSidebar = document.getElementById('orderSidebar');
+        if (orderSidebar && orderSidebar.classList.contains('active')) {
+            foodUI.renderOrders();
+        }
+    });
 });

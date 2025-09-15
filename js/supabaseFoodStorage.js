@@ -12,6 +12,9 @@ class SupabaseFoodStorage {
         // 添加缓存时间戳
         this.cacheTimestamp = 0;
         this.cacheExpiry = 5 * 60 * 1000; // 5分钟缓存过期时间
+        // 添加实时订阅引用
+        this.ordersSubscription = null;
+        this.foodsSubscription = null;
         this.initialize();
     }
 
@@ -24,6 +27,8 @@ class SupabaseFoodStorage {
                 this.isOnline = true;
                 // 从数据库加载数据
                 await this.loadFromDatabase();
+                // 订阅实时更新
+                await this.subscribeToRealtimeUpdates();
             } else {
                 // 即使没有用户也保持在线模式
                 this.isOnline = true;
@@ -34,6 +39,153 @@ class SupabaseFoodStorage {
             // 出错时仍然保持在线模式
             this.isOnline = true;
         }
+    }
+
+    // 订阅实时更新
+    async subscribeToRealtimeUpdates() {
+        try {
+            const user = await this.supabaseAuth.getCurrentUser();
+            if (!user) {
+                console.log('用户未登录，无法订阅实时更新');
+                return;
+            }
+
+            // 取消现有的订阅（如果有的话）
+            this.unsubscribeFromRealtimeUpdates();
+
+            // 订阅订单表的实时更新
+            this.ordersSubscription = supabase
+                .channel('orders_changes')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: '*',
+                        schema: 'public',
+                        table: 'orders',
+                        filter: `user_id=eq.${user.id}`
+                    },
+                    (payload) => {
+                        console.log('订单数据变更:', payload);
+                        // 处理实时更新
+                        this.handleOrderChange(payload);
+                    }
+                )
+                .subscribe();
+
+            // 订阅菜品表的实时更新
+            this.foodsSubscription = supabase
+                .channel('foods_changes')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: '*',
+                        schema: 'public',
+                        table: 'foods',
+                        filter: `user_id=eq.${user.id}`
+                    },
+                    (payload) => {
+                        console.log('菜品数据变更:', payload);
+                        // 处理实时更新
+                        this.handleFoodChange(payload);
+                    }
+                )
+                .subscribe();
+
+            console.log('已订阅实时更新');
+        } catch (error) {
+            console.error('订阅实时更新失败:', error);
+        }
+    }
+
+    // 处理订单变更
+    handleOrderChange(payload) {
+        try {
+            const { eventType, new: newRecord, old: oldRecord } = payload;
+
+            switch (eventType) {
+                case 'INSERT':
+                    // 添加新订单
+                    this.orders.unshift(newRecord);
+                    console.log('新增订单:', newRecord);
+                    break;
+                case 'UPDATE':
+                    // 更新订单
+                    const updateIndex = this.orders.findIndex(order => order.id === newRecord.id);
+                    if (updateIndex !== -1) {
+                        this.orders[updateIndex] = newRecord;
+                        console.log('更新订单:', newRecord);
+                    }
+                    break;
+                case 'DELETE':
+                    // 删除订单
+                    const deleteIndex = this.orders.findIndex(order => order.id === oldRecord.id);
+                    if (deleteIndex !== -1) {
+                        this.orders.splice(deleteIndex, 1);
+                        console.log('删除订单:', oldRecord);
+                    }
+                    break;
+            }
+
+            // 触发UI更新事件
+            this.notifyOrderUpdate();
+        } catch (error) {
+            console.error('处理订单变更失败:', error);
+        }
+    }
+
+    // 处理菜品变更
+    handleFoodChange(payload) {
+        try {
+            const { eventType, new: newRecord, old: oldRecord } = payload;
+
+            switch (eventType) {
+                case 'INSERT':
+                    // 添加新菜品
+                    this.foods.unshift(newRecord);
+                    console.log('新增菜品:', newRecord);
+                    break;
+                case 'UPDATE':
+                    // 更新菜品
+                    const updateIndex = this.foods.findIndex(food => food.id === newRecord.id);
+                    if (updateIndex !== -1) {
+                        this.foods[updateIndex] = newRecord;
+                        console.log('更新菜品:', newRecord);
+                    }
+                    break;
+                case 'DELETE':
+                    // 删除菜品
+                    const deleteIndex = this.foods.findIndex(food => food.id === oldRecord.id);
+                    if (deleteIndex !== -1) {
+                        this.foods.splice(deleteIndex, 1);
+                        console.log('删除菜品:', oldRecord);
+                    }
+                    break;
+            }
+        } catch (error) {
+            console.error('处理菜品变更失败:', error);
+        }
+    }
+
+    // 通知订单更新
+    notifyOrderUpdate() {
+        // 创建自定义事件来通知UI更新
+        const event = new CustomEvent('ordersUpdated', {
+            detail: { orders: this.orders }
+        });
+        window.dispatchEvent(event);
+    }
+
+    // 取消订阅实时更新
+    unsubscribeFromRealtimeUpdates() {
+        if (this.ordersSubscription) {
+            this.ordersSubscription.unsubscribe();
+            this.ordersSubscription = null;
+        }
+        if (this.foodsSubscription) {
+            this.foodsSubscription.unsubscribe();
+            this.foodsSubscription = null;
+        }
+        console.log('已取消订阅实时更新');
     }
 
     // 检查缓存是否有效
@@ -343,7 +495,7 @@ class SupabaseFoodStorage {
                 return sum + (item.price * item.quantity);
             }, 0);
 
-            // 准备要插入的数据，只使用total字段
+            // 准备要插入的数据
             const orderToInsert = {
                 user_id: user.id,
                 items: order.items || [],
@@ -369,6 +521,8 @@ class SupabaseFoodStorage {
             // 更新本地缓存
             if (data) {
                 this.orders.unshift(data);
+                // 通知UI更新
+                this.notifyOrderUpdate();
             }
             return data || { error: '无返回数据' };
         } catch (error) {
@@ -388,6 +542,8 @@ class SupabaseFoodStorage {
         this.isOnline = true;
         // 从数据库加载数据
         await this.loadFromDatabase();
+        // 重新订阅实时更新
+        await this.subscribeToRealtimeUpdates();
     }
 
     // 保存购物车到localStorage
