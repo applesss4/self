@@ -88,8 +88,7 @@ function bindAuthEvents() {
             // 设置登录状态标记
             sessionStorage.setItem('isLoggedIn', 'true');
             
-            // 显示自定义提示消息
-            showCustomToast('成功进入发财人生管理系统', 'success');
+            // 不再显示登录成功的弹窗提示
             
             // 3秒后自动跳转到任务计划页面
             setTimeout(() => {
@@ -199,46 +198,9 @@ async function handleAuth() {
 
 // 显示自定义提示消息
 function showCustomToast(message, type = 'info') {
-    // 移除现有的提示
-    const existingToast = document.querySelector('.toast');
-    if (existingToast) {
-        existingToast.remove();
-    }
-    
-    // 创建新提示
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.textContent = message;
-    toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1'};
-        color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460'};
-        padding: 1rem 1.5rem;
-        border-radius: var(--border-radius);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 1000;
-        transform: translateX(100%);
-        transition: transform 0.3s ease;
-        max-width: 300px;
-        text-align: center;
-    `;
-    
-    document.body.appendChild(toast);
-    
-    // 显示动画
-    setTimeout(() => {
-        toast.style.transform = 'translateX(0)';
-    }, 100);
-    
-    // 自动隐藏
-    setTimeout(() => {
-        toast.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-            toast.remove();
-        }, 300);
-    }, 3000);
+    // 取消登录成功后的弹窗提示
+    // 不再显示任何提示
+    return;
 }
 
 function init() {

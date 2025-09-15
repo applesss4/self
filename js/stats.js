@@ -418,10 +418,10 @@ class StatsUI {
         
         container.innerHTML = monthlySummary.map((month, index) => `
             <div class="monthly-summary">
-                <div class="monthly-amount">${month.month}: ${month.total.toFixed(2)} 日元</div>
+                <div class="monthly-amount">${month.month}: ${Math.round(month.total)} 日元</div>
                 ${index > 0 ? `
                     <div class="monthly-change ${month.change >= 0 ? 'change-positive' : 'change-negative'}">
-                        ${month.change >= 0 ? '↑' : '↓'} ${Math.abs(month.change).toFixed(2)}% 
+                        ${month.change >= 0 ? '↑' : '↓'} ${Math.abs(month.change).toFixed(0)}% 
                         ${month.change >= 0 ? '增加' : '减少'}
                     </div>
                 ` : ''}
@@ -440,11 +440,11 @@ class StatsUI {
         
         container.innerHTML = weeklySummary.map((week, index) => `
             <div class="weekly-summary">
-                <div class="weekly-amount">${week.week}: ${week.total.toFixed(2)} 日元</div>
+                <div class="weekly-amount">${week.week}: ${Math.round(week.total)} 日元</div>
                 ${index > 0 ? `
                     <div class="weekly-change ${week.change >= 0 ? 'change-positive' : 'change-negative'}">
-                        ${week.change >= 0 ? '↑' : '↓'} ${Math.abs(week.change).toFixed(2)}% 
-                        ${week.change >= 0 ? '增加' : '减少'}
+                        ${week.change >= 0 ? '↑' : '↓'} ${Math.abs(week.change).toFixed(0)}% 
+                        ${week.change >= 0 ? '增加' : 'uble'}
                     </div>
                 ` : ''}
             </div>
@@ -468,7 +468,7 @@ class StatsUI {
                     return `
                     <div class="order-item-summary" data-order-id="${order.id}">
                         <div class="order-id">订单号: ${shortOrderId}</div>
-                        <div class="order-price">${order.total.toFixed(2)} 日元</div>
+                        <div class="order-price">${Math.round(order.total)} 日元</div>
                     </div>
                 `;}).join('')}
             </div>
@@ -498,7 +498,7 @@ class StatsUI {
                     <div class="price-change-item">
                         <div class="food-name">${change.name}</div>
                         <div class="price-diff ${change.diff >= 0 ? 'diff-positive' : 'diff-negative'}">
-                            ${change.diff > 0 ? `涨了 ${change.diff.toFixed(2)} 日元` : `降了 ${Math.abs(change.diff).toFixed(2)} 日元`}
+                            ${change.diff > 0 ? `涨了 ${Math.round(change.diff)} 日元` : `降了 ${Math.round(Math.abs(change.diff))} 日元`}
                         </div>
                     </div>
                 `).join('')}
@@ -782,7 +782,7 @@ class StatsUI {
                 <div class="order-detail-header">
                     <div class="order-detail-info">
                         <div class="order-detail-id">订单号: ${shortOrderId}</div>
-                        <div class="order-detail-total">总价: ${orderTotal.toFixed(2)} 日元</div>
+                        <div class="order-detail-total">总价: ${Math.round(orderTotal)} 日元</div>
                     </div>
                 </div>
                 <div class="order-detail-items">
@@ -822,16 +822,16 @@ class StatsUI {
                         <div class="order-item">
                             <div class="order-item-info">
                                 <div class="order-item-name">${item.name}</div>
-                                <div class="order-item-price">${item.price.toFixed(2)} 日元 × ${item.quantity}</div>
+                                <div class="order-item-price">${Math.round(item.price)} 日元 × ${item.quantity}</div>
                             </div>
                             <div class="order-item-quantity">
-                                ${(item.price * item.quantity).toFixed(2)} 日元
+                                ${Math.round(item.price * item.quantity)} 日元
                             </div>
                         </div>
                     `;
                 });
             });
-            
+
             html += `
                 </div>
             `;

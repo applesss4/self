@@ -359,7 +359,7 @@
     }
     
     .schedule-container {
-        min-width: 600px; /* 确保在小屏幕上也能正确显示 */
+        min-width: 100%; /* 确保在小屏幕上也能正确显示 */
     }
 }
 
@@ -417,6 +417,6 @@
     
     /* 在极小屏幕上进一步优化 */
     .schedule-container {
-        min-width: 500px;
+        min-width: 100%;
     }
 }

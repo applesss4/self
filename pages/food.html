@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="/css/main.css?v=1.0.33">
     <link rel="stylesheet" href="/css/components.css?v=1.0.33">
     <link rel="stylesheet" href="/css/food.css?v=1.0.31">
+    <link rel="preload" href="/js/food.js?v=1.0.33" as="script">
+    <link rel="preload" href="/js/simpleAuth.js?v=1.0.33" as="script">
 </head>
 <body>
     <header class="header">
@@ -30,7 +32,6 @@
             </div>
             <div class="modal-body">
                 <div class="features-menu">
-                    <a href="/" class="feature-menu-item">🏠 首页</a>
                     <a href="/pages/tasks.html" class="feature-menu-item">📝 任务计划</a>
                     <a href="/pages/schedule.html" class="feature-menu-item">📅 工作排班表</a>
                     <a href="/pages/food.html" class="feature-menu-item">🛒 买菜</a>
@@ -141,7 +142,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="supermarketPrice">价格 (日元)</label>
-                                <input type="number" id="supermarketPrice" step="0.01" min="0" placeholder="价格" required>
+                                <input type="number" id="supermarketPrice" step="1" min="0" placeholder="价格" required>
                             </div>
                         </div>
                     </div>
@@ -198,8 +199,8 @@
         </div>
     </div>
 
-    <script type="module" src="/js/food.js?v=1.0.33"></script>
-    <script type="module" src="/js/simpleAuth.js?v=1.0.33"></script>
+    <script type="module" src="/js/food.js?v=1.0.33" async></script>
+    <script type="module" src="/js/simpleAuth.js?v=1.0.33" async></script>
 
 </body>
 </html>

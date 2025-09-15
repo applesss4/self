@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="/css/main.css?v=1.0.33">
     <link rel="stylesheet" href="/css/components.css?v=1.0.33">
     <link rel="stylesheet" href="/css/food.css?v=1.0.31">
+    <link rel="preload" href="/js/stats.js?v=1.0.33" as="script">
+    <link rel="preload" href="/js/simpleAuth.js?v=1.0.33" as="script">
     <style>
         .main {
             padding: 1rem 0;
@@ -26,7 +28,7 @@
         }
         
         .stats-container {
-            max-width: 1200px;
+            max-width: 100%;
             margin: 0 auto;
             padding: 0 1rem;
         }
@@ -252,7 +254,6 @@
             </div>
             <div class="modal-body">
                 <div class="features-menu">
-                    <a href="/" class="feature-menu-item">🏠 首页</a>
                     <a href="/pages/tasks.html" class="feature-menu-item">📝 任务计划</a>
                     <a href="/pages/schedule.html" class="feature-menu-item">📅 工作排班表</a>
                     <a href="/pages/food.html" class="feature-menu-item">🛒 买菜</a>
@@ -313,7 +314,7 @@
         </div>
     </div>
 
-    <script type="module" src="/js/stats.js?v=1.0.33"></script>
-    <script type="module" src="/js/simpleAuth.js?v=1.0.33"></script>
+    <script type="module" src="/js/stats.js?v=1.0.33" async></script>
+    <script type="module" src="/js/simpleAuth.js?v=1.0.33" async></script>
 </body>
 </html>

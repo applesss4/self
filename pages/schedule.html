@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="/css/main.css?v=1.0.33">
     <link rel="stylesheet" href="/css/components.css?v=1.0.33">
     <link rel="stylesheet" href="/css/calendar.css?v=1.0.31">
+    <link rel="preload" href="/js/schedule.js?v=1.0.34" as="script">
+    <link rel="preload" href="/js/simpleAuth.js?v=1.0.34" as="script">
 </head>
 <body>
     <header class="header">
@@ -30,7 +32,6 @@
             </div>
             <div class="modal-body">
                 <div class="features-menu">
-                    <a href="/" class="feature-menu-item">🏠 首页</a>
                     <a href="/pages/tasks.html" class="feature-menu-item">📝 任务计划</a>
                     <a href="/pages/schedule.html" class="feature-menu-item">📅 工作排班表</a>
                     <a href="/pages/food.html" class="feature-menu-item">🛒 买菜</a>
@@ -134,7 +135,7 @@
         </div>
     </div>
 
-    <script type="module" src="/js/schedule.js?v=1.0.34"></script>
-    <script type="module" src="/js/simpleAuth.js?v=1.0.34"></script>
+    <script type="module" src="/js/schedule.js?v=1.0.34" async></script>
+    <script type="module" src="/js/simpleAuth.js?v=1.0.34" async></script>
 </body>
 </html>

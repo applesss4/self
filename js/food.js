@@ -422,7 +422,7 @@ class FoodUI {
         container.innerHTML = `
             ${imageHtml}
             <div class="food-name">${food.name}</div>
-            <div class="food-price">${cheapestPrice.toFixed(2)} 日元</div>
+            <div class="food-price">${Math.round(cheapestPrice)} 日元</div>
             ${supermarketHtml}
             <div class="food-actions">
                 <button class="add-to-cart" data-id="${food.id}">加入购物车</button>
@@ -514,7 +514,7 @@ class FoodUI {
                 ${imageHtml}
                 <div class="food-detail-info">
                     <h3>${food.name}</h3>
-                    <div class="food-detail-price">${food.price.toFixed(2)} 日元</div>
+                    <div class="food-detail-price">${Math.round(food.price)} 日元</div>
                     <div class="food-detail-unit">${food.unit}</div>
                 </div>
             </div>
@@ -533,7 +533,7 @@ class FoodUI {
                                 ${isLowest ? '<span class="lowest-price-tag">最低价</span>' : ''}
                             </div>
                             <div class="supermarket-price-container">
-                                <div class="supermarket-price">${parseFloat(supermarket.price).toFixed(2)} 日元</div>
+                                <div class="supermarket-price">${Math.round(parseFloat(supermarket.price))} 日元</div>
                                 <button class="edit-price-btn" data-supermarket="${supermarket.name}" data-food-id="${foodId}">修改</button>
                             </div>
                         </div>
@@ -550,7 +550,7 @@ class FoodUI {
                         </div>
                         <div class="form-group">
                             <label for="newSupermarketPrice">价格 (日元)</label>
-                            <input type="number" id="newSupermarketPrice" step="0.01" min="0" placeholder="价格" class="supermarket-input">
+                            <input type="number" id="newSupermarketPrice" step="1" min="0" placeholder="价格" class="supermarket-input">
                         </div>
                     </div>
                     <button class="btn-submit" id="addSupermarketBtn" data-food-id="${foodId}">添加超市</button>
@@ -582,7 +582,7 @@ class FoodUI {
     // 添加新超市
     addNewSupermarket(foodId) {
         const supermarketName = document.getElementById('newSupermarketName').value.trim();
-        const supermarketPrice = parseFloat(document.getElementById('newSupermarketPrice').value);
+        const supermarketPrice = Math.round(parseFloat(document.getElementById('newSupermarketPrice').value));
 
         // 验证输入
         if (!supermarketName) {
@@ -658,7 +658,7 @@ class FoodUI {
 
         // 替换价格显示为输入框
         priceContainer.innerHTML = `
-            <input type="number" step="0.01" min="0" value="${currentPrice}" class="price-input" id="priceInput${supermarketName}">
+            <input type="number" step="1" min="0" value="${Math.round(currentPrice)}" class="price-input" id="priceInput${supermarketName}">
             <button class="save-price-btn" data-supermarket="${supermarketName}" data-food-id="${foodId}">保存</button>
             <button class="cancel-price-btn" data-supermarket="${supermarketName}" data-food-id="${foodId}">取消</button>
         `;
@@ -685,7 +685,9 @@ class FoodUI {
 
     // 保存超市价格
     saveSupermarketPrice(foodId, supermarketName, newPrice) {
-        if (isNaN(newPrice) || newPrice < 0) {
+        const roundedPrice = Math.round(newPrice);
+        
+        if (isNaN(roundedPrice) || roundedPrice < 0) {
             this.showToast('请输入有效的价格', 'error');
             return;
         }
@@ -696,7 +698,7 @@ class FoodUI {
         // 更新超市价格
         const supermarket = food.supermarkets.find(s => s.name === supermarketName);
         if (supermarket) {
-            supermarket.price = newPrice;
+            supermarket.price = roundedPrice;
             
             // 重新计算商品默认价格（最低价）
             if (food.supermarkets.length > 0) {
@@ -790,7 +792,7 @@ class FoodUI {
         
         // 获取超市信息（只有一个超市）
         const supermarketName = document.getElementById('supermarketName').value;
-        const supermarketPrice = parseFloat(document.getElementById('supermarketPrice').value);
+        const supermarketPrice = Math.round(parseFloat(document.getElementById('supermarketPrice').value));
         
         if (!name || !category || !unit) {
             alert('请填写所有必填字段');
@@ -899,7 +901,7 @@ class FoodUI {
         
         // 使用文档片段来减少DOM操作
         const fragment = document.createDocumentFragment();
-        
+
         // 按超市分组商品
         const supermarketGroups = {};
         
@@ -942,7 +944,7 @@ class FoodUI {
                 cartItemElement.innerHTML = `
                     <div class="cart-item-info">
                         <div class="cart-item-name">${item.food.name}</div>
-                        <div class="cart-item-price">${item.food.price.toFixed(2)} 日元 × ${item.quantity}</div>
+                        <div class="cart-item-price">${Math.round(item.food.price)} 日元 × ${item.quantity}</div>
                     </div>
                     <div class="cart-item-controls">
                         <button class="quantity-btn decrease" data-id="${item.food.id}">-</button>
@@ -993,7 +995,7 @@ class FoodUI {
         });
         
         // 更新总价
-        cartTotal.textContent = `${total.toFixed(2)} 日元`;
+        cartTotal.textContent = `${Math.round(total)} 日元`;
     }
 
     // 打开购物车
@@ -1078,7 +1080,7 @@ class FoodUI {
             orderHeader.innerHTML = `
                 <div class="order-item-name">订单号: ${shortOrderId}</div>
                 <div class="order-item-date">${formattedDate}</div>
-                <div class="order-item-total">总价: ${orderTotal.toFixed(2)} 日元</div>
+                <div class="order-item-total">总价: ${Math.round(orderTotal)} 日元</div>
             `;
             
             orderElement.appendChild(orderHeader);
@@ -1122,21 +1124,16 @@ class FoodUI {
                     itemElement.innerHTML = `
                         <div class="order-item-info">
                             <div class="order-item-name">${item.name}</div>
-                            <div class="order-item-price">${item.price.toFixed(2)} 日元 × ${item.quantity}</div>
+                            <div class="order-item-price">${Math.round(item.price)} 日元 × ${item.quantity}</div>
                         </div>
                         <div class="order-item-quantity">
-                            ${(item.price * item.quantity).toFixed(2)} 日元
+                            ${Math.round(item.price * item.quantity)} 日元
                         </div>
                     `;
                     fragment.appendChild(itemElement);
                 });
             });
-            
-            // 添加分隔线
-            const divider = document.createElement('div');
-            divider.style.borderBottom = '1px solid var(--border-color)';
-            divider.style.margin = '0.5rem 0';
-            fragment.appendChild(divider);
+
         });
         
         // 一次性添加所有元素到DOM
@@ -1184,7 +1181,7 @@ class FoodUI {
             // 检查结果是否成功
             if (result && !result.error && result.id) {
                 // 显示成功消息
-                const message = `结算成功！订单号: ${result.id} 总价: ${total.toFixed(2)} 日元`;
+                const message = `结算成功！订单号: ${result.id} 总价: ${Math.round(total)} 日元`;
                 this.showToast(message, 'success');
                 
                 // 清空购物车

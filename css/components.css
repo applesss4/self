@@ -149,50 +149,7 @@
     text-decoration: underline;
 }
 
-/* 登录表单 */
-.login-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
 
-.login-form .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.login-form .form-group label {
-    font-weight: 600;
-    color: var(--text-primary);
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-}
-
-.login-form .form-group input {
-    padding: 0.75rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    background: var(--cream-light);
-    color: var(--text-primary);
-    font-size: 1rem;
-    transition: var(--transition);
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.login-form .form-group input:focus {
-    outline: none;
-    border-color: var(--cream-warm);
-    box-shadow: 0 0 0 3px rgba(240, 230, 140, 0.2);
-}
-
-.login-form .form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 1rem;
-}
 
 /* 页面头部 */
 .page-header {
