@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试登录页面</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .login-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .login-title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+        
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        button {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .login-btn {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .login-btn:hover {
+            background: #45a049;
+        }
+        
+        .register-btn {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .register-btn:hover {
+            background: #1976D2;
+        }
+        
+        .message {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 5px;
+            text-align: center;
+            display: none;
+        }
+        
+        .success {
+            background: #dff0d8;
+            color: #3c763d;
+            border: 1px solid #d6e9c6;
+        }
+        
+        .error {
+            background: #f2dede;
+            color: #a94442;
+            border: 1px solid #ebccd1;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2 class="login-title">测试登录</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">邮箱:</label>
+                <input type="email" id="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">密码:</label>
+                <input type="password" id="password" required>
+            </div>
+            <div class="button-group">
+                <button type="submit" class="login-btn">登录</button>
+                <button type="button" class="register-btn" id="registerBtn">注册</button>
+            </div>
+        </form>
+        <div id="message" class="message"></div>
+    </div>
+
+    <script type="module">
+        // 从 CDN 导入 Supabase 客户端
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+        
+        // Supabase 配置
+        const SUPABASE_URL = 'https://ncgjyulrxlavejpgriju.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jZ2p5dWxyeGxhdmVqcGdyaWp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc4MDc2MzIsImV4cCI6MjA3MzM4MzYzMn0.yM0nV0WUOO1UdUuRWCKjs4k3-W3FkflrpzK1cD3ULkk';
+        
+        // 创建 Supabase 客户端
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // 获取 DOM 元素
+        const loginForm = document.getElementById('loginForm');
+        const registerBtn = document.getElementById('registerBtn');
+        const messageDiv = document.getElementById('message');
+        
+        // 显示消息函数
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            
+            // 3秒后隐藏消息
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        // 登录函数
+        async function login(email, password) {
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) {
+                    showMessage(`登录失败: ${error.message}`, 'error');
+                    return;
+                }
+                
+                showMessage('登录成功！3秒后跳转到任务页面...', 'success');
+                
+                // 3秒后跳转
+                setTimeout(() => {
+                    window.location.href = '/pages/tasks.html';
+                }, 3000);
+            } catch (error) {
+                showMessage(`登录异常: ${error.message}`, 'error');
+            }
+        }
+        
+        // 注册函数
+        async function register(email, password) {
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) {
+                    showMessage(`注册失败: ${error.message}`, 'error');
+                    return;
+                }
+                
+                showMessage('注册成功！请检查邮箱验证链接。', 'success');
+            } catch (error) {
+                showMessage(`注册异常: ${error.message}`, 'error');
+            }
+        }
+        
+        // 登录表单提交事件
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showMessage('请输入邮箱和密码', 'error');
+                return;
+            }
+            
+            await login(email, password);
+        });
+        
+        // 注册按钮点击事件
+        registerBtn.addEventListener('click', async function() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showMessage('请输入邮箱和密码', 'error');
+                return;
+            }
+            
+            // 简单验证
+            if (password.length < 6) {
+                showMessage('密码至少需要6个字符', 'error');
+                return;
+            }
+            
+            await register(email, password);
+        });
+    </script>
+</body>
+</html>
