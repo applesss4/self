@@ -889,26 +889,33 @@ class FoodUI {
         
         console.log('准备创建订单:', order);
         
-        // 保存订单
-        const result = await this.foodStorage.addOrder(order);
-        
-        if (result) {
-            // 显示成功消息
-            const message = `结算成功！总价: ¥${total.toFixed(2)}`;
-            this.showToast(message, 'success');
+        try {
+            // 保存订单
+            const result = await this.foodStorage.addOrder(order);
+            console.log('订单保存结果:', result);
             
-            // 清空购物车
-            this.foodStorage.clearCart();
-            this.updateCartUI();
-            this.closeCart();
-            
-            // 如果订单页面打开，则更新订单显示
-            const orderSidebar = document.getElementById('orderSidebar');
-            if (orderSidebar && orderSidebar.classList.contains('active')) {
-                this.renderOrders();
+            if (result && result.id) {
+                // 显示成功消息
+                const message = `结算成功！订单号: ${result.id} 总价: ¥${total.toFixed(2)}`;
+                this.showToast(message, 'success');
+                
+                // 清空购物车
+                this.foodStorage.clearCart();
+                this.updateCartUI();
+                this.closeCart();
+                
+                // 如果订单页面打开，则更新订单显示
+                const orderSidebar = document.getElementById('orderSidebar');
+                if (orderSidebar && orderSidebar.classList.contains('active')) {
+                    this.renderOrders();
+                }
+            } else {
+                console.error('订单保存失败，返回结果:', result);
+                this.showToast('结算失败，请重试', 'error');
             }
-        } else {
-            this.showToast('结算失败，请重试', 'error');
+        } catch (error) {
+            console.error('结算过程中发生错误:', error);
+            this.showToast('结算失败: ' + error.message, 'error');
         }
     }
 

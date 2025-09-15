@@ -324,42 +324,51 @@ class SupabaseFoodStorage {
 
     // 添加订单
     async addOrder(order) {
-        // 始终使用在线模式保存到数据库
-        const user = await this.supabaseAuth.getCurrentUser();
-        if (!user) {
-            console.error('用户未登录，无法添加订单');
-            return null;
+        try {
+            // 始终使用在线模式保存到数据库
+            const user = await this.supabaseAuth.getCurrentUser();
+            if (!user) {
+                console.error('用户未登录，无法添加订单');
+                return { error: '用户未登录' };
+            }
+
+            // 计算订单总价（如果未提供）
+            const total = order.total || order.items.reduce((sum, item) => {
+                return sum + (item.price * item.quantity);
+            }, 0);
+
+            // 准备要插入的数据
+            const orderToInsert = {
+                user_id: user.id,
+                items: order.items || [],
+                total: total,
+                date: new Date().toISOString() // 确保使用标准格式
+            };
+
+            console.log('准备插入订单数据:', orderToInsert);
+
+            const { data, error } = await supabase
+                .from('orders')
+                .insert(orderToInsert)
+                .select()
+                .single();
+
+            if (error) {
+                console.error('添加订单失败:', error);
+                return { error: error.message };
+            }
+
+            console.log('订单插入成功:', data);
+
+            // 更新本地缓存
+            if (data) {
+                this.orders.unshift(data);
+            }
+            return data || { error: '无返回数据' };
+        } catch (error) {
+            console.error('添加订单时发生异常:', error);
+            return { error: error.message };
         }
-
-        // 计算订单总价（如果未提供）
-        const total = order.total || order.items.reduce((sum, item) => {
-            return sum + (item.price * item.quantity);
-        }, 0);
-
-        // 准备要插入的数据
-        const orderToInsert = {
-            user_id: user.id,
-            items: order.items || [],
-            total: total,
-            date: new Date()
-        };
-
-        console.log('准备插入订单数据:', orderToInsert);
-
-        const { data, error } = await supabase
-            .from('orders')
-            .insert(orderToInsert)
-            .select()
-            .single();
-
-        if (error) {
-            console.error('添加订单失败:', error);
-            return null;
-        }
-
-        // 更新本地缓存
-        this.orders.unshift(data);
-        return data;
     }
 
     // 获取所有订单
