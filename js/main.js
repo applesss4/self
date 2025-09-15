@@ -88,10 +88,13 @@ function bindAuthEvents() {
             // 设置登录状态标记
             sessionStorage.setItem('isLoggedIn', 'true');
             
-            // 不再显示登录成功的弹窗提示
+            // 显示登录成功的提示消息
+            showCustomToast('成功进入发财人生管理系统', 'success');
             
-            // 立即跳转到任务计划页面
-            window.location.href = '/pages/tasks.html';
+            // 3秒后跳转到任务计划页面
+            setTimeout(() => {
+                window.location.href = '/pages/tasks.html';
+            }, 3000);
         } else if (event === 'SIGNED_OUT') {
             // 登出，显示登录框
             document.getElementById('authSection').style.display = 'block';
@@ -183,9 +186,13 @@ async function handleAuth() {
         try {
             const result = await supabaseAuth.signIn(email, password);
             if (result.success) {
-                // 登录成功，立即跳转到任务计划页面
+                // 登录成功，显示提示并跳转
+                showCustomToast('成功进入发财人生管理系统', 'success');
                 sessionStorage.setItem('isLoggedIn', 'true');
-                window.location.href = '/pages/tasks.html';
+                // 3秒后跳转到任务计划页面
+                setTimeout(() => {
+                    window.location.href = '/pages/tasks.html';
+                }, 3000);
             } else {
                 showCustomToast(`登录失败: ${result.error}`, 'error');
             }
@@ -197,9 +204,54 @@ async function handleAuth() {
 
 // 显示自定义提示消息
 function showCustomToast(message, type = 'info') {
-    // 取消登录成功后的弹窗提示
-    // 不再显示任何提示
-    return;
+    // 创建或获取提示元素
+    let toast = document.getElementById('customToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'customToast';
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            max-width: 300px;
+        `;
+        document.body.appendChild(toast);
+    }
+    
+    // 设置消息内容和样式
+    toast.textContent = message;
+    
+    // 根据类型设置背景色
+    switch(type) {
+        case 'success':
+            toast.style.backgroundColor = '#4CAF50';
+            break;
+        case 'error':
+            toast.style.backgroundColor = '#F44336';
+            break;
+        case 'warning':
+            toast.style.backgroundColor = '#FF9800';
+            break;
+        default:
+            toast.style.backgroundColor = '#2196F3';
+    }
+    
+    // 显示提示
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(0)';
+    
+    // 3秒后自动隐藏
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+    }, 3000);
 }
 
 function init() {
