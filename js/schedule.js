@@ -609,6 +609,15 @@ function selectDate(dateStr) {
     updateScheduleForSelectedDate();
 }
 
+// 更新今日按钮状态
+function updateTodayButton() {
+    const isTodaySelected = state.selectedDate === formatDateToLocal(new Date());
+    if (DOM.todayBtn) {
+        DOM.todayBtn.textContent = isTodaySelected ? '今日' : '跳转到今日';
+        DOM.todayBtn.classList.toggle('active', isTodaySelected);
+    }
+}
+
 // 加载并显示任务
 async function loadAndDisplayTasks() {
     try {
