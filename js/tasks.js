@@ -239,11 +239,37 @@ async function init() {
         console.log('检查用户登录状态并更新功能按钮');
         checkUserStatusAndShowFeaturesButton();
         
+        // 监听认证状态变化
+        console.log('监听认证状态变化');
+        supabaseAuth.onAuthStateChange(handleAuthStateChange);
+        
         console.log('任务页面初始化完成');
     } catch (error) {
         console.error('任务页面初始化失败:', error);
         console.error('错误堆栈:', error.stack);
         showToast('页面初始化失败: ' + error.message, 'error');
+    }
+}
+
+// 处理认证状态变化
+async function handleAuthStateChange(event, session) {
+    console.log('认证状态变化:', event, session);
+    
+    if (event === 'SIGNED_OUT') {
+        // 用户登出，重定向到登录页面
+        console.log('用户已登出，重定向到登录页面');
+        window.location.href = '/';
+    } else if (event === 'SIGNED_IN') {
+        // 用户登录，重新加载数据
+        console.log('用户已登录，重新加载数据');
+        // 设置登录状态标记
+        sessionStorage.setItem('isLoggedIn', 'true');
+        // 启用在线模式
+        taskManager.setOnlineMode(true);
+        // 重新加载并显示任务
+        await loadAndDisplayTasks();
+        // 重新渲染日历
+        renderCalendar();
     }
 }
 
