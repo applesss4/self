@@ -4,7 +4,6 @@ import supabase from './supabase.js';
 import SupabaseAuth from './supabaseAuth.js';
 
 let supabaseAuth = null;
-let authSubscription = null; // 用于存储认证状态订阅
 
 // 等待DOM加载完成
 document.addEventListener('DOMContentLoaded', function() {
@@ -15,19 +14,6 @@ function initAuth() {
     // 初始化 Supabase 认证
     supabaseAuth = new SupabaseAuth();
     
-    // 检查是否为首页
-    const isHomePage = window.location.pathname === '/' || window.location.pathname === '/index.html';
-    
-    // 如果不是首页，检查 sessionStorage 中的登录状态
-    if (!isHomePage) {
-        const loginStatus = sessionStorage.getItem('isLoggedIn');
-        if (loginStatus !== 'true') {
-            // 用户未在首页登录，重定向到首页
-            window.location.href = '/';
-            return;
-        }
-    }
-    
     // 延迟一点时间确保DOM完全加载
     setTimeout(() => {
         bindAuthEvents();
@@ -36,181 +22,39 @@ function initAuth() {
 
 function bindAuthEvents() {
     // 获取必要的DOM元素
-    const loginBtn = document.getElementById('loginBtn');
-    const authModal = document.getElementById('authModal');
+    const authForm = document.getElementById('authForm');
     
     // 如果找到了必要的元素，绑定事件
-    if (loginBtn && authModal) {
-        // 使用更安全的方式移除可能已存在的事件监听器，防止重复绑定
-        const existingClone = loginBtn.cloneNode(true);
-        loginBtn.parentNode.replaceChild(existingClone, loginBtn);
-        
-        // 重新获取引用
-        const updatedLoginBtn = document.getElementById('loginBtn');
-        
-        // 绑定登录按钮点击事件
-        updatedLoginBtn.addEventListener('click', function(e) {
+    if (authForm) {
+        // 表单提交事件
+        authForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // 检查当前用户状态
-            supabaseAuth.getCurrentUser().then(user => {
-                if (user) {
-                    // 用户已登录，执行登出操作
-                    handleSignOut();
-                } else {
-                    // 用户未登录，打开登录模态框
-                    openAuthModal();
-                }
-            }).catch(error => {
-                // 出错时默认打开登录模态框
-                openAuthModal();
-            });
+            handleAuth();
         });
         
-        // 绑定模态框相关事件
-        bindModalEvents();
-        
-        // 检查用户登录状态并监听变化
-        checkUserStatus();
-        
-        // 在首页不需要监听认证状态变化，避免与main.js冲突
-        // 认证状态变化由main.js统一处理
+        // 动态链接事件委托
+        document.addEventListener('click', function(e) {
+            if (e.target.id === 'switchToRegisterLink') {
+                e.preventDefault();
+                // 跳转到注册页面（如果有的话）或者显示注册表单
+                switchToRegister();
+            }
+        });
     } else {
         // 如果元素还没加载完成，稍后再试
         setTimeout(bindAuthEvents, 500);
     }
 }
 
-function bindModalEvents() {
-    const authModal = document.getElementById('authModal');
-    const closeAuthModal = document.getElementById('closeAuthModal');
-    const cancelAuth = document.getElementById('cancelAuth');
-    const authForm = document.getElementById('authForm');
-    
-    // 关闭按钮事件
-    if (closeAuthModal) {
-        closeAuthModal.addEventListener('click', function(e) {
-            e.preventDefault();
-            closeAuthModalFunc();
-        });
-    }
-    
-    // 取消按钮事件
-    if (cancelAuth) {
-        cancelAuth.addEventListener('click', function(e) {
-            e.preventDefault();
-            closeAuthModalFunc();
-        });
-    }
-    
-    // 点击模态框外部关闭
-    if (authModal) {
-        authModal.addEventListener('click', function(e) {
-            if (e.target === authModal) {
-                closeAuthModalFunc();
-            }
-        });
-    }
-    
-    // ESC键关闭
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && authModal && authModal.classList.contains('active')) {
-            closeAuthModalFunc();
-        }
-    });
-    
-    // 表单提交事件
-    if (authForm) {
-        authForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            handleAuth();
-        });
-    }
-    
-    // 动态链接事件委托
-    document.addEventListener('click', function(e) {
-        if (e.target.id === 'switchToRegister') {
-            e.preventDefault();
-            switchToRegister();
-        } else if (e.target.id === 'switchToLogin') {
-            e.preventDefault();
-            switchToLogin();
-        }
-    });
-}
-
-function openAuthModal() {
-    const authModal = document.getElementById('authModal');
-    if (authModal) {
-        authModal.classList.add('active');
-        switchToLogin(); // 默认显示登录界面
-    }
-}
-
-function closeAuthModalFunc() {
-    const authModal = document.getElementById('authModal');
-    if (authModal) {
-        authModal.classList.remove('active');
-    }
-}
-
-function switchToLogin() {
-    const confirmPasswordGroup = document.getElementById('confirmPasswordGroup');
-    const submitAuth = document.getElementById('submitAuth');
-    const authModalTitle = document.getElementById('authModalTitle');
-    const authSwitchText = document.getElementById('authSwitchText');
-    
-    if (confirmPasswordGroup) confirmPasswordGroup.style.display = 'none';
-    if (submitAuth) submitAuth.textContent = '登录';
-    if (authModalTitle) authModalTitle.textContent = '用户登录';
-    if (authSwitchText) authSwitchText.innerHTML = '还没有账户？<a href="#" id="switchToRegister">立即注册</a>';
-}
-
 function switchToRegister() {
-    const confirmPasswordGroup = document.getElementById('confirmPasswordGroup');
-    const submitAuth = document.getElementById('submitAuth');
-    const authModalTitle = document.getElementById('authModalTitle');
-    const authSwitchText = document.getElementById('authSwitchText');
-    
-    if (confirmPasswordGroup) confirmPasswordGroup.style.display = 'flex';
-    if (submitAuth) submitAuth.textContent = '注册';
-    if (authModalTitle) authModalTitle.textContent = '用户注册';
-    if (authSwitchText) authSwitchText.innerHTML = '已有账户？<a href="#" id="switchToLogin">立即登录</a>';
+    // 简单提示用户需要注册账户
+    alert('请使用测试账户登录：123@123.com / 123');
 }
 
-// 检查用户登录状态
-async function checkUserStatus() {
-    try {
-        const user = await supabaseAuth.getCurrentUser();
-        console.log('检查用户状态:', user?.id);
-        updateLoginButton(user);
-    } catch (error) {
-        console.error('检查用户状态时出错:', error);
-    }
-}
-
-// 更新登录按钮显示
-function updateLoginButton(user) {
-    const loginBtn = document.getElementById('loginBtn');
-    if (loginBtn) {
-        console.log('更新登录按钮状态:', user?.id);
-        if (user) {
-            // 用户已登录，只显示"退出"，不显示用户名
-            loginBtn.textContent = '退出';
-        } else {
-            // 用户未登录，显示"登录"
-            loginBtn.textContent = '登录';
-        }
-    } else {
-        console.log('未找到登录按钮元素');
-    }
-}
-
-// 处理认证（登录/注册）
+// 处理认证（登录）
 async function handleAuth() {
     const email = document.getElementById('authEmail').value;
     const password = document.getElementById('authPassword').value;
-    const confirmPassword = document.getElementById('authConfirmPassword').value;
     
     // 简单验证
     if (!email || !password) {
@@ -218,78 +62,75 @@ async function handleAuth() {
         return;
     }
     
-    // 检查是否为注册模式
-    const isRegisterMode = document.getElementById('submitAuth').textContent === '注册';
-    
-    if (isRegisterMode) {
-        // 注册模式验证
-        if (password !== confirmPassword) {
-            showToast('两次输入的密码不一致', 'error');
-            return;
-        }
-        if (password.length < 6) {
-            showToast('密码至少需要6个字符', 'error');
-            return;
-        }
-        // 简单邮箱验证
-        if (!email.includes('@')) {
-            showToast('请输入有效的邮箱地址', 'error');
-            return;
-        }
-        
-        // 调用Supabase注册功能
-        try {
-            const result = await supabaseAuth.signUp(email, password);
-            if (result.success) {
-                showToast('注册成功！请登录。', 'success');
-                switchToLogin();
-                document.getElementById('authForm').reset();
-            } else {
-                showToast(`注册失败: ${result.error}`, 'error');
-            }
-        } catch (error) {
-            showToast(`注册异常: ${error.message}`, 'error');
-        }
-    } else {
-        // 登录模式
-        try {
-            const result = await supabaseAuth.signIn(email, password);
-            if (result.success) {
-                // 不再显示登录成功的弹窗提示
-                closeAuthModalFunc();
-                document.getElementById('authForm').reset();
-                
-                // 更新登录按钮文本
-                updateLoginButton(result.data.user);
-            } else {
-                showToast(`登录失败: ${result.error}`, 'error');
-            }
-        } catch (error) {
-            showToast(`登录异常: ${error.message}`, 'error');
-        }
-    }
-}
-
-// 处理登出
-async function handleSignOut() {
+    // 登录模式
     try {
-        const result = await supabaseAuth.signOut();
+        const result = await supabaseAuth.signIn(email, password);
         if (result.success) {
-            // 清除登录状态标记
-            sessionStorage.removeItem('isLoggedIn');
+            // 登录成功，显示成功消息并跳转到任务计划页面
+            showToast('登录成功！正在跳转...', 'success');
             
-            // 立即跳转到首页
-            window.location.href = '/';
+            // 保存登录状态标记
+            sessionStorage.setItem('isLoggedIn', 'true');
+            
+            // 2秒后跳转到任务计划页面
+            setTimeout(() => {
+                window.location.href = '/pages/tasks.html';
+            }, 2000);
         } else {
-            showToast(`退出失败: ${result.error}`, 'error');
+            showToast(`登录失败: ${result.error}`, 'error');
         }
     } catch (error) {
-        showToast(`退出异常: ${error.message}`, 'error');
+        showToast(`登录异常: ${error.message}`, 'error');
     }
 }
 
 function showToast(message, type) {
-    // 取消登录成功后的弹窗提示
-    // 不再显示任何提示
-    return;
+    // 创建或获取提示元素
+    let toast = document.getElementById('customToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'customToast';
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            max-width: 300px;
+        `;
+        document.body.appendChild(toast);
+    }
+    
+    // 设置消息内容和样式
+    toast.textContent = message;
+    
+    // 根据类型设置背景色
+    switch(type) {
+        case 'success':
+            toast.style.backgroundColor = '#4CAF50';
+            break;
+        case 'error':
+            toast.style.backgroundColor = '#F44336';
+            break;
+        case 'warning':
+            toast.style.backgroundColor = '#FF9800';
+            break;
+        default:
+            toast.style.backgroundColor = '#2196F3';
+    }
+    
+    // 显示提示
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(0)';
+    
+    // 3秒后自动隐藏
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+    }, 3000);
 }

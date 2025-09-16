@@ -6,17 +6,11 @@
     <title>个人生活管家 - 登录</title>
     <link rel="stylesheet" href="/css/main.css?v=1.0.36">
     <link rel="stylesheet" href="/css/components.css?v=1.0.36">
-    <!-- 移除了不必要的预加载声明 -->
 </head>
 <body>
     <header class="header">
         <div class="container">
             <h1 class="logo">🏠 个人生活管家</h1>
-            <div class="header-right">
-                <nav class="nav">
-                    <!-- 首页不需要功能菜单按钮 -->
-                </nav>
-            </div>
         </div>
     </header>
 
@@ -34,23 +28,18 @@
                     <form class="auth-form" id="authForm">
                         <div class="form-group">
                             <label for="authEmail">邮箱</label>
-                            <input type="email" id="authEmail" required>
+                            <input type="email" id="authEmail" required autocomplete="username">
                         </div>
                         <div class="form-group">
                             <label for="authPassword">密码</label>
-                            <input type="password" id="authPassword" required>
-                        </div>
-                        <div class="form-group" id="confirmPasswordGroup" style="display: none;">
-                            <label for="authConfirmPassword">确认密码</label>
-                            <input type="password" id="authConfirmPassword">
+                            <input type="password" id="authPassword" required autocomplete="current-password">
                         </div>
                         <div class="form-actions">
-                            <button type="button" class="btn-secondary" id="switchToRegister">注册账户</button>
                             <button type="submit" class="btn-submit" id="submitAuth">登录</button>
                         </div>
                     </form>
                     <div class="auth-footer">
-                        <p id="authSwitchText">还没有账户？<a href="#" id="switchToRegisterLink">立即注册</a></p>
+                        <p>还没有账户？<a href="#" id="switchToRegisterLink">立即注册</a></p>
                     </div>
                 </div>
             </div>
@@ -63,6 +52,6 @@
         </div>
     </footer>
 
-    <script type="module" src="/js/main.js?v=1.0.36" async></script>
+    <script type="module" src="/js/simpleAuth.js?v=1.0.36"></script>
 </body>
 </html>

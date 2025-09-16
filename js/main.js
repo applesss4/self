@@ -244,16 +244,14 @@ async function handleAuth() {
             const result = await supabaseAuth.signIn(email, password);
             console.log('登录结果:', result);
             if (result.success) {
-                // 登录成功，显示提示并跳转
-                showCustomToast('成功进入发财人生管理系统', 'success');
-                sessionStorage.setItem('isLoggedIn', 'true');
-                // 3秒后跳转到任务计划页面
-                setTimeout(() => {
-                    console.log('正在跳转到任务计划页面...');
-                    window.location.href = '/pages/tasks.html';
-                }, 3000);
+                console.log('登录成功，准备跳转');
             } else {
-                showCustomToast(`登录失败: ${result.error}`, 'error');
+                console.error('登录失败详情:', result.error);
+            }
+            if (result.success) {
+                console.log('登录成功，准备跳转');
+            } else {
+                console.error('登录失败详情:', result.error);
             }
         } catch (error) {
             showCustomToast(`登录异常: ${error.message}`, 'error');
