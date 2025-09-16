@@ -1,5 +1,5 @@
 // 工作任务主逻辑
-// 版本: 1.0.39
+// 版本: 1.0.40
 import TaskManager from './taskManager.js';
 import authGuard from './authGuard.js';
 import SupabaseAuth from './supabaseAuth.js';
@@ -163,73 +163,84 @@ async function handleLogout() {
     }
 }
 
-// 初始化应用
+// 初始化应用（增强版本）
 async function init() {
     console.log('任务页面初始化开始');
     
-    // 检查用户认证状态
-    console.log('开始检查用户认证状态');
-    const authStatus = await supabaseAuth.checkAuthStatus();
-    console.log('认证状态检查结果:', authStatus);
-    
-    if (!authStatus.isAuthenticated) {
-        console.log('用户未认证，重定向到登录页面');
-        // 清除认证信息
-        authGuard.clearAuth();
-        // 重定向到登录页面
-        window.location.href = '/';
-        return;
-    } else {
-        console.log('用户已认证，设置登录状态标记');
-        // 用户已认证，设置登录状态标记
-        sessionStorage.setItem('isLoggedIn', 'true');
+    try {
+        // 确保TaskManager初始化完成
+        console.log('等待TaskManager初始化...');
+        await taskManager.init();
+        console.log('TaskManager初始化完成');
+        
+        // 检查用户认证状态
+        console.log('开始检查用户认证状态');
+        const authStatus = await supabaseAuth.checkAuthStatus();
+        console.log('认证状态检查结果:', authStatus);
+        
+        if (!authStatus.isAuthenticated) {
+            console.log('用户未认证，重定向到登录页面');
+            // 清除认证信息
+            authGuard.clearAuth();
+            // 重定向到登录页面
+            window.location.href = '/';
+            return;
+        } else {
+            console.log('用户已认证，设置登录状态标记');
+            // 用户已认证，设置登录状态标记
+            sessionStorage.setItem('isLoggedIn', 'true');
+        }
+        
+        console.log('用户已认证:', authStatus.user);
+        
+        // 获取 DOM 元素
+        getDOMElements();
+        
+        // 绑定事件监听器
+        bindEventListeners();
+        
+        // 启用在线模式（在认证检查之后）
+        console.log('启用在线模式');
+        taskManager.setOnlineMode(true);
+        
+        // 订阅实时更新
+        console.log('订阅实时更新');
+        subscribeToRealtimeUpdates();
+        
+        // 初始化日历
+        console.log('初始化日历');
+        renderCalendar();
+        
+        // 加载并显示任务
+        console.log('加载并显示任务');
+        await loadAndDisplayTasks();
+        
+        // 更新今日按钮状态
+        console.log('更新今日按钮状态');
+        updateTodayButton();
+        
+        // 显示今日任务
+        console.log('显示今日任务');
+        displayTodayTasks();
+        
+        // 为导航链接添加登录检查
+        console.log('为导航链接添加登录检查');
+        addLoginCheckToNavLinks();
+        
+        // 绑定功能按钮事件
+        console.log('绑定功能按钮事件');
+        bindFeaturesButtonEvents();
+        
+        // 检查用户登录状态并更新功能按钮
+        console.log('检查用户登录状态并更新功能按钮');
+        checkUserStatusAndShowFeaturesButton();
+        
+        console.log('任务页面初始化完成');
+    } catch (error) {
+        console.error('任务页面初始化失败:', error);
+        console.error('错误堆栈:', error.stack);
+        showToast('页面初始化失败: ' + error.message, 'error');
     }
-    
-    console.log('用户已认证:', authStatus.user);
-    
-    // 获取 DOM 元素
-    getDOMElements();
-    
-    // 绑定事件监听器
-    bindEventListeners();
-    
-    // 启用在线模式（在认证检查之后）
-    console.log('启用在线模式');
-    taskManager.setOnlineMode(true);
-    
-    // 订阅实时更新
-    console.log('订阅实时更新');
-    subscribeToRealtimeUpdates();
-    
-    // 初始化日历
-    console.log('初始化日历');
-    renderCalendar();
-    
-    // 加载并显示任务
-    console.log('加载并显示任务');
-    await loadAndDisplayTasks();
-    
-    // 更新今日按钮状态
-    console.log('更新今日按钮状态');
-    updateTodayButton();
-    
-    // 显示今日任务
-    console.log('显示今日任务');
-    displayTodayTasks();
-    
-    // 为导航链接添加登录检查
-    console.log('为导航链接添加登录检查');
-    addLoginCheckToNavLinks();
-    
-    // 绑定功能按钮事件
-    console.log('绑定功能按钮事件');
-    bindFeaturesButtonEvents();
-    
-    // 检查用户登录状态并更新功能按钮
-    console.log('检查用户登录状态并更新功能按钮');
-    checkUserStatusAndShowFeaturesButton();
-    
-    console.log('任务页面初始化完成');
 }
 
 // 为导航链接添加登录检查

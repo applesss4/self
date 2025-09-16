@@ -18,13 +18,24 @@ class SupabaseAuth {
         this.session = null;
         this.authStateCallbacks = [];
         this.initialized = false;
-        // 初始化时尝试恢复会话
-        this.init();
+        this.initPromise = null; // 用于跟踪初始化Promise
         return this;
     }
 
     // 初始化，尝试恢复会话
     async init() {
+        // 如果已经在初始化中，返回该Promise
+        if (this.initPromise) {
+            return this.initPromise;
+        }
+        
+        // 创建初始化Promise
+        this.initPromise = this._performInit();
+        return this.initPromise;
+    }
+    
+    // 实际的初始化逻辑
+    async _performInit() {
         try {
             console.log('SupabaseAuth: 开始初始化会话');
             // 获取当前会话

@@ -17,11 +17,42 @@ class TaskManager {
         console.log('TaskManager: 初始化完成');
         this.errorCallbacks = [];
         this.realtimeSubscription = null;
+        this.initPromise = null; // 用于跟踪初始化Promise
         
         // 注册错误处理
         this.supabaseStorage.onError((error, operation) => {
             this.notifyError(error, operation);
         });
+    }
+
+    // 初始化TaskManager（确保认证完成后再初始化）
+    async init() {
+        // 如果已经在初始化中，返回该Promise
+        if (this.initPromise) {
+            return this.initPromise;
+        }
+        
+        // 创建初始化Promise
+        this.initPromise = this._performInit();
+        return this.initPromise;
+    }
+    
+    // 实际的初始化逻辑
+    async _performInit() {
+        try {
+            console.log('TaskManager: 开始初始化');
+            // 等待认证初始化完成
+            await this.supabaseAuth.init();
+            console.log('TaskManager: 认证初始化完成');
+            
+            // 检查默认在线模式
+            this.isOnline = this.checkDefaultOnlineMode();
+            console.log('TaskManager: 默认在线模式设置为', this.isOnline);
+            
+            console.log('TaskManager: 初始化完成');
+        } catch (error) {
+            console.error('TaskManager: 初始化失败', error);
+        }
     }
 
     // 添加错误回调
@@ -79,12 +110,29 @@ class TaskManager {
         return Date.now().toString(36) + Math.random().toString(36).substr(2);
     }
 
-    // 加载所有任务
+    // 加载所有任务（增强版本）
     async loadTasks() {
         console.log('TaskManager: 开始加载任务，当前在线模式:', this.isOnline);
+        
+        // 确保TaskManager已初始化
+        if (!this.initPromise) {
+            await this.init();
+        }
+        await this.initPromise;
+        
         if (this.isOnline) {
             try {
                 console.log('TaskManager: 尝试从Supabase加载任务');
+                // 确保用户已认证
+                const authStatus = await this.supabaseAuth.checkAuthStatus();
+                console.log('TaskManager: 当前认证状态:', authStatus);
+                
+                if (!authStatus.isAuthenticated) {
+                    console.log('TaskManager: 用户未认证，返回空任务列表');
+                    this.tasks = [];
+                    return [];
+                }
+                
                 const result = await this.supabaseStorage.getAllTasks();
                 console.log('TaskManager: Supabase返回结果:', result);
                 if (result.success) {

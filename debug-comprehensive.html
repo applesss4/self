@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全面诊断工具</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #60a5fa;
+            --dark: #1f2937;
+            --darker: #111827;
+            --light: #f9fafb;
+            --gray: #9ca3af;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--darker), var(--dark));
+            color: var(--light);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--info), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: rgba(31, 41, 55, 0.7);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card-title {
+            font-size: 1rem;
+            color: var(--gray);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .card-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .card-value.success { color: var(--success); }
+        .card-value.warning { color: var(--warning); }
+        .card-value.error { color: var(--error); }
+        .card-value.info { color: var(--info); }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, var(--primary), #1d4ed8);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button.success { background: linear-gradient(135deg, var(--success), #059669); }
+        button.warning { background: linear-gradient(135deg, var(--warning), #d97706); }
+        button.error { background: linear-gradient(135deg, var(--error), #dc2626); }
+        
+        .logs-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .logs-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .log-panel {
+            background: rgba(17, 24, 39, 0.8);
+            border-radius: 12px;
+            padding: 20px;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .log-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .log-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .log-content {
+            flex: 1;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .log-entry {
+            margin: 8px 0;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: rgba(31, 41, 55, 0.5);
+            border-left: 3px solid var(--info);
+        }
+        
+        .log-entry.success {
+            border-left-color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        .log-entry.warning {
+            border-left-color: var(--warning);
+            background: rgba(245, 158, 11, 0.1);
+        }
+        
+        .log-entry.error {
+            border-left-color: var(--error);
+            background: rgba(239, 68, 68, 0.1);
+        }
+        
+        .timestamp {
+            color: var(--gray);
+            font-size: 0.8rem;
+            margin-right: 10px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-indicator.online {
+            background: var(--success);
+            box-shadow: 0 0 10px var(--success);
+        }
+        
+        .status-indicator.offline {
+            background: var(--error);
+        }
+        
+        .status-indicator.loading {
+            background: var(--warning);
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+        
+        .instance-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .instance-badge {
+            background: rgba(37, 99, 235, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔬 全面诊断工具</h1>
+            <p class="subtitle">用于深度诊断和解决Supabase认证与数据同步问题</p>
+        </header>
+
+        <div class="dashboard">
+            <div class="card">
+                <div class="card-title">🔐 认证状态</div>
+                <div id="authStatus" class="card-value">检查中...</div>
+                <div id="authDetails" class="instance-info"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">🌐 在线模式</div>
+                <div id="onlineMode" class="card-value">检查中...</div>
+                <div id="modeDetails" class="instance-info"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">📊 任务数据</div>
+                <div id="taskCount" class="card-value">-</div>
+                <div id="taskDetails" class="instance-info"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">🔧 实例状态</div>
+                <div id="instanceStatus" class="card-value">-</div>
+                <div id="instanceDetails" class="instance-info"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="fullDiagnostics">
+                <span>🔍</span> 全面诊断
+            </button>
+            <button id="authCheck">
+                <span>🔐</span> 认证检查
+            </button>
+            <button id="dataLoad" class="success">
+                <span>📊</span> 数据加载
+            </button>
+            <button id="directQuery" class="warning">
+                <span>⚡</span> 直接查询
+            </button>
+            <button id="resetAuth" class="error">
+                <span>🔄</span> 重置认证
+            </button>
+            <button id="clearLogs">
+                <span>🗑️</span> 清空日志
+            </button>
+        </div>
+
+        <div class="logs-container">
+            <div class="log-panel">
+                <div class="log-header">
+                    <div class="log-title">📋 执行日志</div>
+                    <div class="log-actions">
+                        <button id="copyExecutionLogs" style="padding: 5px 10px; font-size: 0.8rem;">复制</button>
+                    </div>
+                </div>
+                <div id="executionLog" class="log-content"></div>
+            </div>
+            <div class="log-panel">
+                <div class="log-header">
+                    <div class="log-title">🔧 技术日志</div>
+                    <div class="log-actions">
+                        <button id="copyTechnicalLogs" style="padding: 5px 10px; font-size: 0.8rem;">复制</button>
+                    </div>
+                </div>
+                <div id="technicalLog" class="log-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import TaskManager from './js/taskManager.js';
+        import SupabaseAuth from './js/supabaseAuth.js';
+        import supabase from './js/supabase.js';
+        
+        // 全局变量
+        let taskManager, supabaseAuth;
+        let instanceCounter = 0;
+        let executionLogs = [];
+        let technicalLogs = [];
+        
+        // 初始化
+        function init() {
+            logExecution('🔧 初始化全面诊断工具...');
+            logTechnical('创建TaskManager实例');
+            taskManager = new TaskManager();
+            
+            logTechnical('获取SupabaseAuth单例');
+            supabaseAuth = taskManager.supabaseAuth;
+            
+            instanceCounter++;
+            updateInstanceCount();
+            
+            logExecution('✅ 诊断工具初始化完成');
+            updateStatus();
+            
+            // 绑定事件
+            bindEvents();
+        }
+        
+        // 绑定事件
+        function bindEvents() {
+            document.getElementById('fullDiagnostics').addEventListener('click', runFullDiagnostics);
+            document.getElementById('authCheck').addEventListener('click', runAuthCheck);
+            document.getElementById('dataLoad').addEventListener('click', runDataLoad);
+            document.getElementById('directQuery').addEventListener('click', runDirectQuery);
+            document.getElementById('resetAuth').addEventListener('click', resetAuth);
+            document.getElementById('clearLogs').addEventListener('click', clearLogs);
+            document.getElementById('copyExecutionLogs').addEventListener('click', () => copyLogs('execution'));
+            document.getElementById('copyTechnicalLogs').addEventListener('click', () => copyLogs('technical'));
+        }
+        
+        // 更新状态面板
+        function updateStatus() {
+            if (supabaseAuth) {
+                const isAuthenticated = supabaseAuth.user ? '✅ 已认证' : '❌ 未认证';
+                document.getElementById('authStatus').textContent = supabaseAuth.user ? '已认证' : '未认证';
+                document.getElementById('authStatus').className = `card-value ${supabaseAuth.user ? 'success' : 'error'}`;
+                document.getElementById('authDetails').innerHTML = `
+                    <span class="instance-info">
+                        <span class="status-indicator ${supabaseAuth.user ? 'online' : 'offline'}"></span>
+                        ${isAuthenticated}
+                    </span>
+                `;
+            }
+            if (taskManager) {
+                document.getElementById('onlineMode').textContent = taskManager.isOnline ? '在线' : '离线';
+                document.getElementById('onlineMode').className = `card-value ${taskManager.isOnline ? 'success' : 'warning'}`;
+                document.getElementById('modeDetails').innerHTML = `
+                    <span class="instance-info">
+                        <span class="status-indicator ${taskManager.isOnline ? 'online' : 'offline'}"></span>
+                        ${taskManager.isOnline ? '🌐 在线模式' : '🔒 离线模式'}
+                    </span>
+                `;
+                document.getElementById('taskCount').textContent = taskManager.tasks ? taskManager.tasks.length : '-';
+                document.getElementById('taskCount').className = `card-value ${taskManager.tasks && taskManager.tasks.length > 0 ? 'success' : 'warning'}`;
+                document.getElementById('taskDetails').innerHTML = `
+                    <span class="instance-info">
+                        <span class="status-indicator ${taskManager.tasks && taskManager.tasks.length > 0 ? 'online' : 'offline'}"></span>
+                        ${taskManager.tasks ? taskManager.tasks.length + ' 个任务' : '无任务数据'}
+                    </span>
+                `;
+            }
+        }
+        
+        function updateInstanceCount() {
+            document.getElementById('instanceStatus').textContent = instanceCounter;
+            document.getElementById('instanceStatus').className = 'card-value info';
+            document.getElementById('instanceDetails').innerHTML = `
+                <span class="instance-info">
+                    <span class="status-indicator online"></span>
+                    ${instanceCounter} 个实例
+                </span>
+            `;
+        }
+        
+        // 全面诊断
+        async function runFullDiagnostics() {
+            logExecution('=== 🔍 开始全面诊断 ===');
+            
+            try {
+                // 1. 检查实例状态
+                logExecution('1️⃣ 检查实例状态');
+                logTechnical(`TaskManager实例: ${!!taskManager}`);
+                logTechnical(`SupabaseAuth实例: ${!!supabaseAuth}`);
+                logTechnical(`实例ID: ${supabaseAuth ? supabaseAuth.constructor.name : 'N/A'}`);
+                
+                // 2. 等待TaskManager初始化
+                logExecution('2️⃣ 等待TaskManager初始化');
+                await taskManager.init();
+                logExecution('✅ TaskManager初始化完成');
+                
+                // 3. 认证状态检查
+                logExecution('3️⃣ 检查认证状态');
+                const authStatus = await supabaseAuth.checkAuthStatus();
+                logTechnical(`认证状态: ${JSON.stringify(authStatus)}`);
+                
+                // 4. 在线模式检查
+                logExecution('4️⃣ 检查在线模式');
+                const onlineMode = taskManager.checkDefaultOnlineMode();
+                logTechnical(`默认在线模式: ${onlineMode}`);
+                
+                // 5. 数据加载测试
+                logExecution('5️⃣ 数据加载测试');
+                taskManager.setOnlineMode(true);
+                const tasks = await taskManager.loadTasks();
+                logTechnical(`加载任务数量: ${tasks.length}`);
+                
+                logExecution('=== ✅ 全面诊断完成 ===');
+                updateStatus();
+            } catch (error) {
+                logError(`❌ 诊断出错: ${error.message}`);
+                logTechnical(`错误堆栈: ${error.stack}`);
+            }
+        }
+        
+        // 认证检查
+        async function runAuthCheck() {
+            logExecution('=== 🔐 认证检查 ===');
+            
+            try {
+                logExecution('🔍 检查认证状态...');
+                const authStatus = await supabaseAuth.checkAuthStatus();
+                logTechnical(`认证状态: ${JSON.stringify(authStatus, null, 2)}`);
+                
+                if (authStatus.isAuthenticated) {
+                    logExecution('✅ 用户已认证', 'success');
+                    logTechnical(`用户邮箱: ${authStatus.user.email}`);
+                    logTechnical(`用户ID: ${authStatus.user.id}`);
+                } else {
+                    logExecution('❌ 用户未认证', 'error');
+                }
+                
+                updateStatus();
+            } catch (error) {
+                logError(`❌ 认证检查出错: ${error.message}`);
+            }
+        }
+        
+        // 数据加载测试
+        async function runDataLoad() {
+            logExecution('=== 📊 数据加载测试 ===');
+            
+            try {
+                logExecution('🔧 设置在线模式...');
+                taskManager.setOnlineMode(true);
+                logTechnical(`在线模式: ${taskManager.isOnline}`);
+                
+                logExecution('📥 加载任务数据...');
+                const tasks = await taskManager.loadTasks();
+                logTechnical(`返回任务数量: ${tasks.length}`);
+                
+                if (tasks.length > 0) {
+                    logExecution(`✅ 成功加载 ${tasks.length} 个任务`, 'success');
+                    logTechnical(`前3个任务: ${JSON.stringify(tasks.slice(0, 3), null, 2)}`);
+                } else {
+                    logExecution('⚠️ 未加载到任务数据', 'warning');
+                }
+                
+                updateStatus();
+            } catch (error) {
+                logError(`❌ 数据加载出错: ${error.message}`);
+            }
+        }
+        
+        // 直接查询
+        async function runDirectQuery() {
+            logExecution('=== ⚡ 直接查询测试 ===');
+            
+            try {
+                logExecution('👤 获取当前用户...');
+                const { data: { user }, error: authError } = await supabase.auth.getUser();
+                logTechnical(`当前用户: ${JSON.stringify(user, null, 2)}`);
+                
+                if (authError) {
+                    logError(`❌ 认证错误: ${authError.message}`);
+                    return;
+                }
+                
+                if (!user) {
+                    logExecution('❌ 未获取到用户信息', 'error');
+                    return;
+                }
+                
+                logExecution('🔍 查询tasks表...');
+                const { data, error, count } = await supabase
+                    .from('tasks')
+                    .select('*', { count: 'exact' })
+                    .eq('user_id', user.id)
+                    .limit(5);
+                
+                if (error) {
+                    logError(`❌ 查询错误: ${error.message}`);
+                } else {
+                    logExecution(`✅ 查询成功，找到 ${count} 条记录`, 'success');
+                    logTechnical(`返回数据: ${JSON.stringify(data, null, 2)}`);
+                }
+                
+                updateStatus();
+            } catch (error) {
+                logError(`❌ 直接查询出错: ${error.message}`);
+            }
+        }
+        
+        // 重置认证
+        function resetAuth() {
+            logExecution('=== 🔄 重置认证 ===');
+            
+            try {
+                // 清除本地存储
+                localStorage.removeItem('supabase.auth.token');
+                sessionStorage.removeItem('isLoggedIn');
+                logTechnical('✅ 已清除本地存储的认证信息');
+                
+                // 重新加载页面
+                logExecution('🔄 重新加载页面以应用更改...');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } catch (error) {
+                logError(`❌ 重置认证出错: ${error.message}`);
+            }
+        }
+        
+        // 清空日志
+        function clearLogs() {
+            document.getElementById('executionLog').innerHTML = '';
+            document.getElementById('technicalLog').innerHTML = '';
+            executionLogs = [];
+            technicalLogs = [];
+            logExecution('🗑️ 日志已清空');
+        }
+        
+        // 复制日志
+        function copyLogs(type) {
+            const logs = type === 'execution' ? executionLogs : technicalLogs;
+            const text = logs.join('\n');
+            navigator.clipboard.writeText(text).then(() => {
+                logExecution(`📋 ${type === 'execution' ? '执行' : '技术'}日志已复制到剪贴板`);
+            });
+        }
+        
+        // 日志函数
+        function logExecution(message, type = 'info') {
+            const logElement = document.getElementById('executionLog');
+            const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
+            const className = type;
+            const logEntry = `[${timestamp}] ${message}`;
+            
+            executionLogs.push(logEntry);
+            logElement.innerHTML += `<div class="log-entry ${className}"><span class="timestamp">[${timestamp}]</span> ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        function logTechnical(message) {
+            const logElement = document.getElementById('technicalLog');
+            const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
+            const logEntry = `[${timestamp}] ${message}`;
+            
+            technicalLogs.push(logEntry);
+            logElement.innerHTML += `<div class="log-entry"><span class="timestamp">[${timestamp}]</span> ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        function logError(message) {
+            logExecution(message, 'error');
+            logTechnical(`ERROR: ${message}`);
+        }
+        
+        // 初始化
+        init();
+    </script>
+</body>
+</html>
