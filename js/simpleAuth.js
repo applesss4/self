@@ -32,39 +32,29 @@ function handleAuthStateChange(event, session) {
         // 用户登出，更新UI
         console.log('用户已登出，更新UI');
         updateAuthUI(false);
+        // 更新功能按钮状态
+        checkUserStatusAndShowFeaturesButton();
     } else if (event === 'SIGNED_IN') {
         // 用户登录，更新UI
         console.log('用户已登录，更新UI');
         updateAuthUI(true);
+        // 更新功能按钮状态
+        checkUserStatusAndShowFeaturesButton();
     }
 }
 
 // 更新认证UI
 function updateAuthUI(isAuthenticated) {
-    const featuresBtn = document.getElementById('featuresBtn');
     const loginBtn = document.getElementById('loginBtn');
     const authSection = document.getElementById('authSection');
     
     if (isAuthenticated) {
-        // 用户已认证，显示功能菜单和退出按钮，隐藏登录表单
-        if (featuresBtn) {
-            featuresBtn.style.display = 'block';
-        }
-        if (loginBtn) {
-            loginBtn.style.display = 'block';
-            loginBtn.textContent = '退出';
-        }
+        // 用户已认证，隐藏登录表单
         if (authSection) {
             authSection.style.display = 'none';
         }
     } else {
-        // 用户未认证，隐藏功能菜单和退出按钮，显示登录表单
-        if (featuresBtn) {
-            featuresBtn.style.display = 'none';
-        }
-        if (loginBtn) {
-            loginBtn.style.display = 'none';
-        }
+        // 用户未认证，显示登录表单
         if (authSection) {
             authSection.style.display = 'block';
         }
@@ -110,10 +100,15 @@ function bindAuthEvents() {
     }
     
     if (loginBtn) {
-        // 退出按钮事件
+        // 登录/退出按钮事件
         loginBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            handleLogout();
+            // 检查当前按钮文本
+            if (loginBtn.textContent === '退出') {
+                handleLogout();
+            } else {
+                // 如果是登录按钮，表单已经可见，不需要额外操作
+            }
         });
     }
     
@@ -164,6 +159,9 @@ async function handleAuth() {
             // 更新UI
             updateAuthUI(true);
             
+            // 更新功能按钮状态
+            checkUserStatusAndShowFeaturesButton();
+            
             // 显示成功提示
             showToast('成功进入发财人生管理系统', 'success');
         } else {
@@ -190,11 +188,53 @@ async function handleLogout() {
             
             // 更新UI
             updateAuthUI(false);
+            
+            // 更新功能按钮状态
+            checkUserStatusAndShowFeaturesButton();
         } else {
             showToast(`登出失败: ${result.error}`, 'error');
         }
     } catch (error) {
         showToast(`登出异常: ${error.message}`, 'error');
+    }
+}
+
+// 检查用户登录状态并更新功能按钮和菜单项
+function checkUserStatusAndShowFeaturesButton() {
+    try {
+        // 从sessionStorage获取登录状态
+        const loginStatus = sessionStorage.getItem('isLoggedIn');
+        const featuresBtn = document.getElementById('featuresBtn');
+        const loginBtn = document.getElementById('loginBtn');
+        
+        // 获取所有功能菜单项
+        const menuItems = document.querySelectorAll('.feature-menu-item');
+        
+        if (loginStatus === 'true') {
+            // 用户已登录，更新登录按钮为退出按钮
+            if (loginBtn) {
+                loginBtn.textContent = '退出';
+            }
+            
+            // 为所有菜单项添加登录样式类
+            menuItems.forEach(item => {
+                item.classList.remove('not-logged-in');
+                item.classList.add('logged-in');
+            });
+        } else {
+            // 用户未登录，更新登录按钮为登录按钮
+            if (loginBtn) {
+                loginBtn.textContent = '登录';
+            }
+            
+            // 为所有菜单项添加未登录样式类
+            menuItems.forEach(item => {
+                item.classList.remove('logged-in');
+                item.classList.add('not-logged-in');
+            });
+        }
+    } catch (error) {
+        console.error('检查用户状态时出错:', error);
     }
 }
 

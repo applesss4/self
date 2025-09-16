@@ -13,9 +13,9 @@
             <h1 class="logo">🏠 个人生活管家</h1>
             <div class="header-right">
                 <nav class="nav">
-                    <button class="nav-link" id="featuresBtn" style="display: none;">功能菜单</button>
+                    <button class="nav-link" id="featuresBtn">功能菜单</button>
                 </nav>
-                <button class="login-btn" id="loginBtn" style="display: none;">退出</button>
+                <button class="login-btn" id="loginBtn">登录</button>
             </div>
         </div>
     </header>
@@ -29,10 +29,10 @@
             </div>
             <div class="modal-body">
                 <div class="features-menu">
-                    <a href="/pages/tasks.html" class="feature-menu-item">📝 任务计划</a>
-                    <a href="/pages/schedule.html" class="feature-menu-item">📅 工作排班表</a>
-                    <a href="/pages/food.html" class="feature-menu-item">🛒 买菜</a>
-                    <a href="/pages/stats.html" class="feature-menu-item">📊 数据统计</a>
+                    <a href="/pages/tasks.html" class="feature-menu-item not-logged-in">📝 任务计划</a>
+                    <a href="/pages/schedule.html" class="feature-menu-item not-logged-in">📅 工作排班表</a>
+                    <a href="/pages/food.html" class="feature-menu-item not-logged-in">🛒 买菜</a>
+                    <a href="/pages/stats.html" class="feature-menu-item not-logged-in">📊 数据统计</a>
                 </div>
             </div>
         </div>
@@ -80,43 +80,11 @@
     <script type="module">
         // 添加功能菜单和退出按钮的交互逻辑
         document.addEventListener('DOMContentLoaded', function() {
-            // 功能菜单按钮事件
-            const featuresBtn = document.getElementById('featuresBtn');
-            const featuresModal = document.getElementById('featuresModal');
-            const closeFeaturesModal = document.getElementById('closeFeaturesModal');
+            // 初始化功能按钮状态
+            checkUserStatusAndShowFeaturesButton();
             
-            if (featuresBtn) {
-                featuresBtn.addEventListener('click', function() {
-                    if (featuresModal) {
-                        featuresModal.classList.add('active');
-                    }
-                });
-            }
-            
-            if (closeFeaturesModal) {
-                closeFeaturesModal.addEventListener('click', function() {
-                    if (featuresModal) {
-                        featuresModal.classList.remove('active');
-                    }
-                });
-            }
-            
-            if (featuresModal) {
-                featuresModal.addEventListener('click', function(e) {
-                    if (e.target.id === 'featuresModal') {
-                        featuresModal.classList.remove('active');
-                    }
-                });
-            }
-            
-            // ESC键关闭模态框
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    if (featuresModal) {
-                        featuresModal.classList.remove('active');
-                    }
-                }
-            });
+            // 绑定功能按钮事件
+            bindFeaturesButtonEvents();
             
             // 为功能菜单项添加登录检查
             const featureMenuItems = document.querySelectorAll('.feature-menu-item');
@@ -134,6 +102,97 @@
                 });
             });
         });
+        
+        // 绑定功能按钮事件
+        function bindFeaturesButtonEvents() {
+            // 功能按钮点击事件
+            const featuresBtn = document.getElementById('featuresBtn');
+            if (featuresBtn) {
+                featuresBtn.addEventListener('click', function() {
+                    openFeaturesModal();
+                });
+            }
+            
+            // 关闭功能菜单模态框
+            const closeFeaturesModal = document.getElementById('closeFeaturesModal');
+            if (closeFeaturesModal) {
+                closeFeaturesModal.addEventListener('click', function() {
+                    closeFeaturesModalFunc();
+                });
+            }
+            
+            // 点击模态框外部关闭
+            const featuresModal = document.getElementById('featuresModal');
+            if (featuresModal) {
+                featuresModal.addEventListener('click', (e) => {
+                    if (e.target.id === 'featuresModal') {
+                        closeFeaturesModalFunc();
+                    }
+                });
+            }
+            
+            // ESC键关闭模态框
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeFeaturesModalFunc();
+                }
+            });
+        }
+        
+        // 打开功能菜单模态框
+        function openFeaturesModal() {
+            const featuresModal = document.getElementById('featuresModal');
+            if (featuresModal) {
+                featuresModal.classList.add('active');
+            }
+        }
+        
+        // 关闭功能菜单模态框
+        function closeFeaturesModalFunc() {
+            const featuresModal = document.getElementById('featuresModal');
+            if (featuresModal) {
+                featuresModal.classList.remove('active');
+            }
+        }
+        
+        // 检查用户登录状态并更新功能按钮和菜单项
+        function checkUserStatusAndShowFeaturesButton() {
+            try {
+                // 从sessionStorage获取登录状态
+                const loginStatus = sessionStorage.getItem('isLoggedIn');
+                const featuresBtn = document.getElementById('featuresBtn');
+                const loginBtn = document.getElementById('loginBtn');
+                
+                // 获取所有功能菜单项
+                const menuItems = document.querySelectorAll('.feature-menu-item');
+                
+                if (loginStatus === 'true') {
+                    // 用户已登录，更新登录按钮为退出按钮
+                    if (loginBtn) {
+                        loginBtn.textContent = '退出';
+                    }
+                    
+                    // 为所有菜单项添加登录样式类
+                    menuItems.forEach(item => {
+                        item.classList.remove('not-logged-in');
+                        item.classList.add('logged-in');
+                    });
+                } else {
+                    // 用户未登录，更新登录按钮为登录按钮
+                    if (loginBtn) {
+                        loginBtn.textContent = '登录';
+                    }
+                    
+                    // 为所有菜单项添加未登录样式类
+                    menuItems.forEach(item => {
+                        item.classList.remove('logged-in');
+                        item.classList.add('not-logged-in');
+                    });
+                }
+            } catch (error) {
+                console.error('检查用户状态时出错:', error);
+            }
+        }
         
         // 显示提示消息函数
         function showToast(message, type) {
