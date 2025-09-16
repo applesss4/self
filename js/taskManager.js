@@ -8,9 +8,8 @@ class TaskManager {
         this.supabaseStorage = new SupabaseStorage();
         this.tasks = this.loadTasks();
         this.currentTaskId = null;
-        // 检查是否应该默认使用在线模式
         // 检查用户是否已认证来决定默认模式
-        this.isOnline = this.checkDefaultOnlineMode(); // 默认为离线模式，由各页面根据认证状态设置
+        this.isOnline = this.checkDefaultOnlineMode();
         this.errorCallbacks = [];
         this.realtimeSubscription = null;
         
@@ -32,14 +31,17 @@ class TaskManager {
             const sessionToken = localStorage.getItem('supabase.auth.token');
             if (sessionToken) {
                 // 如果有认证令牌，默认使用在线模式
+                console.log('TaskManager: 检测到认证令牌，使用在线模式');
                 return true;
             }
             
             // 默认使用离线模式
+            console.log('TaskManager: 未检测到认证令牌，使用离线模式');
             return false;
         } catch (error) {
             console.error('检查默认在线模式时出错:', error);
             // 出错时默认使用离线模式
+            console.log('TaskManager: 检查在线模式出错，使用离线模式');
             return false;
         }
     }
