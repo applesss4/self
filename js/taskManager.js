@@ -59,6 +59,7 @@ class TaskManager {
 
     // 设置在线模式
     setOnlineMode(isOnline) {
+        console.log('TaskManager: 设置在线模式为', isOnline);
         this.isOnline = isOnline;
     }
 
