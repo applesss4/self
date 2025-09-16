@@ -1,4 +1,4 @@
-// Supabase 认证服务
+// 增强版 Supabase 认证服务
 import supabase from './supabase.js';
 
 class SupabaseAuth {
@@ -6,6 +6,7 @@ class SupabaseAuth {
         this.user = null;
         this.session = null;
         this.authStateCallbacks = [];
+        this.initialized = false;
         // 初始化时尝试恢复会话
         this.init();
     }
@@ -18,9 +19,16 @@ class SupabaseAuth {
             if (!error && data?.session) {
                 this.session = data.session;
                 this.user = data.session.user;
+                
+                // 确保用户在users表中存在
+                if (this.user) {
+                    await this.ensureUserExists(this.user);
+                }
             }
+            this.initialized = true;
         } catch (error) {
             console.error('初始化会话失败:', error);
+            this.initialized = true;
         }
     }
 
@@ -37,6 +45,7 @@ class SupabaseAuth {
                 .single();
             
             if (fetchError && fetchError.code !== 'PGRST116') {
+                console.error('检查用户存在性时出错:', fetchError);
                 return false;
             }
             
@@ -46,18 +55,22 @@ class SupabaseAuth {
                     .from('users')
                     .insert({
                         id: user.id,
-                        email: user.email
+                        email: user.email,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
                     })
                     .select()
                     .single();
                 
                 if (insertError) {
+                    console.error('创建用户记录时出错:', insertError);
                     return false;
                 }
             }
             
             return true;
         } catch (error) {
+            console.error('确保用户存在时出错:', error);
             return false;
         }
     }
@@ -160,6 +173,11 @@ class SupabaseAuth {
     // 获取当前用户
     async getCurrentUser() {
         try {
+            // 等待初始化完成
+            if (!this.initialized) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
             const { data: { user }, error } = await supabase.auth.getUser();
             if (error) {
                 throw error;
@@ -182,6 +200,11 @@ class SupabaseAuth {
     // 获取当前会话
     async getCurrentSession() {
         try {
+            // 等待初始化完成
+            if (!this.initialized) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
             const { data, error } = await supabase.auth.getSession();
             if (error) {
                 throw error;
@@ -189,6 +212,11 @@ class SupabaseAuth {
             
             this.session = data.session;
             this.user = data.session?.user || null;
+            
+            // 确保用户在users表中存在
+            if (this.user) {
+                await this.ensureUserExists(this.user);
+            }
             
             return data.session;
         } catch (error) {
@@ -235,7 +263,11 @@ class SupabaseAuth {
     }
 
     // 检查用户是否已登录
-    isAuthenticated() {
+    async isAuthenticated() {
+        // 等待初始化完成
+        if (!this.initialized) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
         return !!this.user;
     }
     
@@ -248,6 +280,41 @@ class SupabaseAuth {
     // 验证密码强度
     isValidPassword(password) {
         return password.length >= 6;
+    }
+    
+    // 检查认证状态并返回详细信息
+    async checkAuthStatus() {
+        try {
+            // 等待初始化完成
+            if (!this.initialized) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            const { data: { user }, error } = await supabase.auth.getUser();
+            
+            if (error || !user) {
+                return { 
+                    isAuthenticated: false, 
+                    user: null, 
+                    error: error?.message || '用户未登录' 
+                };
+            }
+            
+            // 确保用户在users表中存在
+            await this.ensureUserExists(user);
+            
+            return { 
+                isAuthenticated: true, 
+                user: user, 
+                error: null 
+            };
+        } catch (error) {
+            return { 
+                isAuthenticated: false, 
+                user: null, 
+                error: error.message 
+            };
+        }
     }
 }
 

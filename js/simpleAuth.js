@@ -1,10 +1,10 @@
 // 简化版认证功能（已升级为Supabase认证）
-// 版本: 1.0.34
+// 版本: 1.0.35
 import supabase from './supabase.js';
 import SupabaseAuth from './supabaseAuth.js';
 import authGuard from './authGuard.js';
 
-let supabaseAuth = null;
+const supabaseAuth = new SupabaseAuth();
 
 // 等待DOM加载完成
 document.addEventListener('DOMContentLoaded', function() {
@@ -12,9 +12,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initAuth() {
-    // 初始化 Supabase 认证
-    supabaseAuth = new SupabaseAuth();
-    
     // 检查用户是否已经登录，如果已登录则重定向到任务页面
     checkAlreadyLoggedIn();
     
@@ -27,8 +24,10 @@ function initAuth() {
 // 检查用户是否已经登录
 async function checkAlreadyLoggedIn() {
     try {
-        const isAuthenticated = await authGuard.checkAuth();
-        if (isAuthenticated) {
+        // 检查用户认证状态
+        const authStatus = await supabaseAuth.checkAuthStatus();
+        if (authStatus.isAuthenticated) {
+            console.log('用户已认证:', authStatus.user);
             // 检查是否有重定向URL
             const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
             if (redirectUrl) {
@@ -40,6 +39,8 @@ async function checkAlreadyLoggedIn() {
                 // 默认重定向到任务计划页面
                 window.location.href = '/pages/tasks.html';
             }
+        } else {
+            console.log('用户未认证');
         }
     } catch (error) {
         console.error('检查登录状态时出错:', error);

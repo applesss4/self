@@ -7,6 +7,7 @@ import authGuard from './authGuard.js';  // 导入认证保护中间件
 // 菜品数据存储
 class FoodStorage {
     constructor() {
+        this.supabaseAuth = new SupabaseAuth();
         this.foods = [];
         this.cart = [];
         this.orders = [];
@@ -16,35 +17,28 @@ class FoodStorage {
     // 从数据库加载数据
     async loadFromDatabase() {
         try {
-            // 检查用户是否已认证
-            const isAuthenticated = await authGuard.checkAuth();
-            if (!isAuthenticated) {
+            // 检查用户认证状态
+            const authStatus = await this.supabaseAuth.checkAuthStatus();
+            if (!authStatus.isAuthenticated) {
                 console.log('用户未认证，无法从数据库加载数据');
                 this.foods = [];
                 this.orders = [];
                 return;
             }
             
-            // 检查用户是否已登录
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                console.log('用户未登录，无法从数据库加载数据');
-                this.foods = [];
-                this.orders = [];
-                return;
-            }
+            console.log('用户已认证:', authStatus.user);
 
             // 并行加载菜品和订单数据以提高性能
             const [foodsResult, ordersResult] = await Promise.allSettled([
                 supabase
                     .from('foods')
                     .select('id,user_id,name,category,price,unit,image,supermarkets,created_at')
-                    .eq('user_id', user.id)
+                    .eq('user_id', authStatus.user.id)
                     .order('created_at', { ascending: false }),
                 supabase
                     .from('orders')
                     .select('id,user_id,items,total,date,created_at')
-                    .eq('user_id', user.id)
+                    .eq('user_id', authStatus.user.id)
                     .order('created_at', { ascending: false })
             ]);
 
@@ -101,25 +95,25 @@ class FoodStorage {
 class StatsUI {
     constructor() {
         this.foodStorage = new FoodStorage();
+        this.supabaseAuth = new SupabaseAuth();
         this.init();
     }
 
     async init() {
-        // 检查用户是否已认证
-        const isAuthenticated = await authGuard.requireAuth();
-        if (!isAuthenticated) {
-            // 如果未认证，authGuard会自动重定向到登录页面
-            return;
-        }
+        console.log('统计页面初始化开始');
         
-        // 检查用户是否真的已登录
-        const currentUser = await authGuard.getCurrentUser();
-        if (!currentUser) {
-            // 如果认证模块显示用户未登录，清除会话存储并重定向到首页
+        // 检查用户认证状态
+        const authStatus = await this.supabaseAuth.checkAuthStatus();
+        if (!authStatus.isAuthenticated) {
+            console.log('用户未认证，重定向到登录页面');
+            // 清除认证信息
             authGuard.clearAuth();
+            // 重定向到登录页面
             window.location.href = '/';
             return;
         }
+        
+        console.log('用户已认证:', authStatus.user);
         
         // 确保认证模块已初始化
         await this.initAuth();
@@ -134,6 +128,8 @@ class StatsUI {
         
         // 为导航链接添加登录检查
         this.addLoginCheckToNavLinks();
+        
+        console.log('统计页面初始化完成');
     }
 
     // 初始化认证模块
@@ -189,6 +185,9 @@ class StatsUI {
     // 处理登出
     async handleLogout() {
         try {
+            // 使用增强的认证服务登出
+            await this.supabaseAuth.signOut();
+            
             // 清除认证信息
             authGuard.clearAuth();
             
@@ -201,7 +200,7 @@ class StatsUI {
             }, 1000);
         } catch (error) {
             console.error('登出时出错:', error);
-            this.showToast('登出失败，请重试', 'error');
+            this.showToast('登出失败: ' + error.message, 'error');
         }
     }
 
@@ -302,10 +301,10 @@ class StatsUI {
         
         // 为每个链接添加点击事件监听器
         navLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                // 检查用户是否已登录
-                const loginStatus = sessionStorage.getItem('isLoggedIn');
-                if (loginStatus !== 'true') {
+            link.addEventListener('click', async function(e) {
+                // 检查用户认证状态
+                const authStatus = await this.supabaseAuth.checkAuthStatus();
+                if (!authStatus.isAuthenticated) {
                     // 阻止默认跳转行为
                     e.preventDefault();
                     

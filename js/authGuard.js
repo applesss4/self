@@ -10,30 +10,9 @@ class AuthGuard {
     // 检查用户是否已认证
     async checkAuth() {
         try {
-            // 首先检查本地会话存储
-            const sessionToken = localStorage.getItem('supabase.auth.token');
-            if (!sessionToken) {
-                // 如果本地没有会话，检查Supabase会话
-                const { data, error } = await supabase.auth.getSession();
-                if (error || !data?.session) {
-                    return false;
-                }
-                // 保存会话到本地存储
-                if (data.session) {
-                    localStorage.setItem('supabase.auth.token', data.session.access_token);
-                }
-                return true;
-            }
-            
-            // 验证本地存储的令牌是否仍然有效
-            const { data: { user }, error } = await supabase.auth.getUser();
-            if (error || !user) {
-                // 令牌无效，清除本地存储
-                this.clearAuth();
-                return false;
-            }
-            
-            return true;
+            // 使用增强的认证服务检查认证状态
+            const authStatus = await this.supabaseAuth.checkAuthStatus();
+            return authStatus.isAuthenticated;
         } catch (error) {
             console.error('检查认证状态时出错:', error);
             // 出错时清除认证信息
@@ -44,8 +23,8 @@ class AuthGuard {
 
     // 要求用户必须认证才能访问
     async requireAuth(redirectUrl = '/') {
-        const isAuthenticated = await this.checkAuth();
-        if (!isAuthenticated) {
+        const authStatus = await this.supabaseAuth.checkAuthStatus();
+        if (!authStatus.isAuthenticated) {
             // 保存用户尝试访问的页面
             sessionStorage.setItem('redirectAfterLogin', window.location.href);
             // 重定向到登录页面
@@ -58,13 +37,13 @@ class AuthGuard {
     // 获取当前用户
     async getCurrentUser() {
         try {
-            const { data: { user }, error } = await supabase.auth.getUser();
-            if (error) {
-                // 如果获取用户出错，清除认证信息
+            const authStatus = await this.supabaseAuth.checkAuthStatus();
+            if (!authStatus.isAuthenticated) {
+                // 如果用户未认证，清除认证信息
                 this.clearAuth();
-                throw error;
+                return null;
             }
-            return user;
+            return authStatus.user;
         } catch (error) {
             console.error('获取当前用户时出错:', error);
             return null;

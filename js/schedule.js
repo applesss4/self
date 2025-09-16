@@ -1,5 +1,5 @@
 // 工作排班表主逻辑
-// 版本: 1.0.34
+// 版本: 1.0.35
 import TaskManager from './taskManager.js';
 import SupabaseAuth from './supabaseAuth.js';  // 导入 SupabaseAuth 类
 import authGuard from './authGuard.js';  // 导入认证保护中间件
@@ -85,7 +85,7 @@ function renderCalendar() {
 
 // 初始化任务管理器
 const taskManager = new TaskManager();
-let supabaseAuth = null;
+const supabaseAuth = new SupabaseAuth();
 let realtimeSubscription = null;
 
 // DOM 元素
@@ -199,6 +199,9 @@ function bindEventListeners() {
 // 处理登出
 async function handleLogout() {
     try {
+        // 使用增强的认证服务登出
+        await supabaseAuth.signOut();
+        
         // 清除认证信息
         authGuard.clearAuth();
         
@@ -217,21 +220,20 @@ async function handleLogout() {
 
 // 初始化应用
 async function init() {
-    // 检查用户是否已认证
-    const isAuthenticated = await authGuard.requireAuth();
-    if (!isAuthenticated) {
-        // 如果未认证，authGuard会自动重定向到登录页面
-        return;
-    }
+    console.log('排班页面初始化开始');
     
-    // 检查用户是否真的已登录
-    const currentUser = await authGuard.getCurrentUser();
-    if (!currentUser) {
-        // 如果认证模块显示用户未登录，清除会话存储并重定向到首页
+    // 检查用户认证状态
+    const authStatus = await supabaseAuth.checkAuthStatus();
+    if (!authStatus.isAuthenticated) {
+        console.log('用户未认证，重定向到登录页面');
+        // 清除认证信息
         authGuard.clearAuth();
+        // 重定向到登录页面
         window.location.href = '/';
         return;
     }
+    
+    console.log('用户已认证:', authStatus.user);
     
     // 启用在线模式
     taskManager.setOnlineMode(true);
@@ -259,6 +261,8 @@ async function init() {
     
     // 检查用户登录状态并更新功能按钮
     checkUserStatusAndShowFeaturesButton();
+    
+    console.log('排班页面初始化完成');
 }
 
 // 为导航链接添加登录检查
@@ -659,14 +663,20 @@ function updateTodayButton() {
 
 // 加载并显示任务
 async function loadAndDisplayTasks() {
+    console.log('开始加载排班数据...');
     try {
+        // 确保在线模式
+        taskManager.setOnlineMode(true);
+        
         state.tasks = await taskManager.loadTasks();
+        console.log('加载到的排班数据:', state.tasks);
         updateScheduleForSelectedDate();
         // 更新排班表显示
         updateScheduleDisplay();
+        console.log('排班数据加载和显示完成');
     } catch (error) {
-        console.error('加载任务失败:', error);
-        showToast('加载任务失败，请重试', 'error');
+        console.error('加载排班数据时出错:', error);
+        showToast('加载排班数据失败: ' + error.message, 'error');
     }
 }
 

@@ -8,27 +8,27 @@ import authGuard from './authGuard.js';  // 导入认证保护中间件
 class FoodUI {
     constructor() {
         this.foodStorage = new FoodStorage();
+        this.supabaseAuth = new SupabaseAuth();
         this.currentCategory = 'all';
         this.currentImage = ''; // 存储当前选择的图片
         // 注意：不要在这里调用init()，因为它可能是异步的
     }
 
     async init() {
-        // 检查用户是否已认证
-        const isAuthenticated = await authGuard.requireAuth();
-        if (!isAuthenticated) {
-            // 如果未认证，authGuard会自动重定向到登录页面
-            return;
-        }
+        console.log('买菜页面初始化开始');
         
-        // 检查用户是否真的已登录
-        const currentUser = await authGuard.getCurrentUser();
-        if (!currentUser) {
-            // 如果认证模块显示用户未登录，清除会话存储并重定向到首页
+        // 检查用户认证状态
+        const authStatus = await this.supabaseAuth.checkAuthStatus();
+        if (!authStatus.isAuthenticated) {
+            console.log('用户未认证，重定向到登录页面');
+            // 清除认证信息
             authGuard.clearAuth();
+            // 重定向到登录页面
             window.location.href = '/';
             return;
         }
+        
+        console.log('用户已认证:', authStatus.user);
         
         try {
             // 显示加载状态
@@ -81,6 +81,8 @@ class FoodUI {
                 this.renderOrders();
             }
         });
+        
+        console.log('买菜页面初始化完成');
     }
 
     // 为导航链接添加登录检查
@@ -94,7 +96,7 @@ class FoodUI {
         }
         
         // 获取所有导航链接（除了首页）
-        const navLinks = document.querySelectorAll('.nav-link:not([href="/"])');
+        const navLinks = document.querySelectorAll('.nav-link:not([href="/index.html"]):not([href="/test-login.html"]):not([href="/debug-auth.html"]):not([href="/"]):not([href=""])');
         
         // 为每个链接添加点击事件监听器
         navLinks.forEach(link => {
@@ -105,10 +107,10 @@ class FoodUI {
             // 重新获取引用并绑定事件
             const updatedLink = document.querySelector(`.nav-link[href="${newLink.getAttribute('href')}"]`);
             if (updatedLink) {
-                updatedLink.addEventListener('click', function(e) {
-                    // 检查用户是否已登录
-                    const loginStatus = sessionStorage.getItem('isLoggedIn');
-                    if (loginStatus !== 'true') {
+                updatedLink.addEventListener('click', async function(e) {
+                    // 检查用户认证状态
+                    const authStatus = await this.supabaseAuth.checkAuthStatus();
+                    if (!authStatus.isAuthenticated) {
                         // 阻止默认跳转行为
                         e.preventDefault();
                         
@@ -218,6 +220,9 @@ class FoodUI {
     // 处理登出
     async handleLogout() {
         try {
+            // 使用增强的认证服务登出
+            await this.supabaseAuth.signOut();
+            
             // 清除认证信息
             authGuard.clearAuth();
             
@@ -230,7 +235,7 @@ class FoodUI {
             }, 1000);
         } catch (error) {
             console.error('登出时出错:', error);
-            this.showToast('登出失败，请重试', 'error');
+            this.showToast('登出失败: ' + error.message, 'error');
         }
     }
 
