@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试修复</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .log {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .error {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+        .success {
+            background: #e8f5e9;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+        .warning {
+            background: #fff3e0;
+            border-color: #ff9800;
+            color: #ef6c00;
+        }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <h1>测试数据加载修复</h1>
+    
+    <div>
+        <button id="testLoad">测试任务加载</button>
+        <button id="clearLog">清空日志</button>
+    </div>
+    
+    <div id="log" class="log">点击"测试任务加载"按钮开始测试...</div>
+
+    <script type="module">
+        import TaskManager from './js/taskManager.js';
+        import SupabaseAuth from './js/supabaseAuth.js';
+        
+        const taskManager = new TaskManager();
+        const supabaseAuth = new SupabaseAuth();
+        
+        document.getElementById('testLoad').addEventListener('click', async () => {
+            log('开始测试任务加载...');
+            
+            try {
+                // 检查认证状态
+                log('1. 检查认证状态...');
+                const authStatus = await supabaseAuth.checkAuthStatus();
+                log(`   认证状态: ${authStatus.isAuthenticated ? '已认证' : '未认证'}`);
+                
+                if (!authStatus.isAuthenticated) {
+                    log('   用户未认证，无法加载任务', 'error');
+                    return;
+                }
+                
+                // 设置在线模式
+                log('2. 设置在线模式...');
+                taskManager.setOnlineMode(true);
+                log(`   在线模式: ${taskManager.isOnline}`);
+                
+                // 加载任务
+                log('3. 加载任务...');
+                const tasks = await taskManager.loadTasks();
+                log(`   加载任务数量: ${tasks.length}`, tasks.length > 0 ? 'success' : 'warning');
+                
+                if (tasks.length > 0) {
+                    log(`   前3个任务: ${JSON.stringify(tasks.slice(0, 3), null, 2)}`);
+                }
+                
+                log('测试完成!', 'success');
+            } catch (error) {
+                log(`测试出错: ${error.message}`, 'error');
+            }
+        });
+        
+        document.getElementById('clearLog').addEventListener('click', () => {
+            document.getElementById('log').innerHTML = '日志已清空';
+        });
+        
+        function log(message, type = '') {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
+            const className = type ? type : '';
+            logElement.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+    </script>
+</body>
+</html>

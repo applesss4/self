@@ -14,18 +14,24 @@ class SupabaseAuth {
     // 初始化，尝试恢复会话
     async init() {
         try {
+            console.log('SupabaseAuth: 开始初始化会话');
             // 获取当前会话
             const { data, error } = await supabase.auth.getSession();
+            console.log('SupabaseAuth: getSession结果:', data, error);
             if (!error && data?.session) {
                 this.session = data.session;
                 this.user = data.session.user;
+                console.log('SupabaseAuth: 恢复会话成功，用户:', this.user);
                 
                 // 确保用户在users表中存在
                 if (this.user) {
                     await this.ensureUserExists(this.user);
                 }
+            } else {
+                console.log('SupabaseAuth: 未找到有效会话或获取会话出错');
             }
             this.initialized = true;
+            console.log('SupabaseAuth: 初始化完成');
         } catch (error) {
             console.error('初始化会话失败:', error);
             this.initialized = true;

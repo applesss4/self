@@ -1,5 +1,5 @@
 // 工作任务主逻辑
-// 版本: 1.0.37
+// 版本: 1.0.38
 import TaskManager from './taskManager.js';
 import authGuard from './authGuard.js';
 import SupabaseAuth from './supabaseAuth.js';
@@ -167,7 +167,10 @@ async function init() {
     console.log('任务页面初始化开始');
     
     // 检查用户认证状态
+    console.log('开始检查用户认证状态');
     const authStatus = await supabaseAuth.checkAuthStatus();
+    console.log('认证状态检查结果:', authStatus);
+    
     if (!authStatus.isAuthenticated) {
         console.log('用户未认证，重定向到登录页面');
         // 清除认证信息
@@ -176,6 +179,7 @@ async function init() {
         window.location.href = '/';
         return;
     } else {
+        console.log('用户已认证，设置登录状态标记');
         // 用户已认证，设置登录状态标记
         sessionStorage.setItem('isLoggedIn', 'true');
     }
@@ -188,7 +192,7 @@ async function init() {
     // 绑定事件监听器
     bindEventListeners();
     
-    // 启用在线模式
+    // 启用在线模式（在认证检查之后）
     console.log('启用在线模式');
     taskManager.setOnlineMode(true);
     

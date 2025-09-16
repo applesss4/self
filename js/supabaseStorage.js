@@ -141,6 +141,7 @@ class SupabaseStorage {
             const { data: { user }, error: authError } = await supabase.auth.getUser();
             
             console.log('SupabaseStorage: 当前用户:', user);
+            console.log('SupabaseStorage: 认证错误:', authError);
             
             if (authError) {
                 console.error('SupabaseStorage: 获取用户时出错:', authError);
@@ -155,6 +156,8 @@ class SupabaseStorage {
             
             // 确保用户在users表中存在
             const userExists = await this.ensureUserExists(user);
+            console.log('SupabaseStorage: 用户存在性检查结果:', userExists);
+            
             if (!userExists) {
                 console.log('SupabaseStorage: 用户不存在于数据库中，返回空任务列表');
                 return { success: true, data: [] };

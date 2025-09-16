@@ -6,12 +6,12 @@ class TaskManager {
     constructor() {
         this.storage = new Storage();
         this.supabaseStorage = new SupabaseStorage();
-        // 检查用户是否已认证来决定默认模式
-        this.isOnline = this.checkDefaultOnlineMode();
+        // 不在构造函数中立即检查在线模式，避免时序问题
+        this.isOnline = false;
         // 不在构造函数中立即加载任务，避免时序问题
         this.tasks = [];
         this.currentTaskId = null;
-        console.log('TaskManager: 初始化开始，isOnline =', this.isOnline);
+        console.log('TaskManager: 初始化完成');
         this.errorCallbacks = [];
         this.realtimeSubscription = null;
         
@@ -29,9 +29,13 @@ class TaskManager {
     // 检查默认在线模式
     checkDefaultOnlineMode() {
         try {
+            console.log('TaskManager: 开始检查默认在线模式');
             // 检查本地存储中是否有认证令牌
             const sessionToken = localStorage.getItem('supabase.auth.token');
             const loginStatus = sessionStorage.getItem('isLoggedIn');
+            
+            console.log('TaskManager: sessionToken =', sessionToken);
+            console.log('TaskManager: loginStatus =', loginStatus);
             
             if (sessionToken || loginStatus === 'true') {
                 // 如果有认证令牌或登录状态标记，默认使用在线模式

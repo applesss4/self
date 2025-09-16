@@ -1,5 +1,5 @@
 // 简化版认证功能（已升级为Supabase认证）
-// 版本: 1.0.37
+// 版本: 1.0.38
 import supabase from './supabase.js';
 import SupabaseAuth from './supabaseAuth.js';
 import authGuard from './authGuard.js';
