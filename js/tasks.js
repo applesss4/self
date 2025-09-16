@@ -1,5 +1,5 @@
 // 工作任务主逻辑
-// 版本: 1.0.42
+// 版本: 1.0.43
 import TaskManager from './taskManager.js';
 import authGuard from './authGuard.js';
 import SupabaseAuth from './supabaseAuth.js';
@@ -167,10 +167,10 @@ async function init() {
     console.log('任务页面初始化开始');
     
     try {
-        // 确保TaskManager初始化完成
-        console.log('等待TaskManager初始化...');
-        await taskManager.init();
-        console.log('TaskManager初始化完成');
+        // 确保认证初始化完成
+        console.log('等待认证初始化...');
+        await supabaseAuth.init();
+        console.log('认证初始化完成');
         
         // 检查用户认证状态
         console.log('开始检查用户认证状态');
@@ -191,6 +191,11 @@ async function init() {
         }
         
         console.log('用户已认证:', authStatus.user);
+        
+        // 确保TaskManager初始化完成
+        console.log('等待TaskManager初始化...');
+        await taskManager.init();
+        console.log('TaskManager初始化完成');
         
         // 获取 DOM 元素
         getDOMElements();
@@ -401,6 +406,19 @@ async function loadAndDisplayTasks() {
         console.log('设置在线模式为true');
         taskManager.setOnlineMode(true);
         console.log('当前在线模式:', taskManager.isOnline);
+        
+        // 再次检查认证状态，确保用户已登录
+        console.log('再次检查用户认证状态');
+        const authStatus = await supabaseAuth.checkAuthStatus();
+        console.log('再次检查认证状态结果:', authStatus);
+        
+        if (!authStatus.isAuthenticated) {
+            console.log('用户未认证，无法加载任务数据');
+            state.tasks = [];
+            updateTasksForSelectedDate();
+            renderCalendar();
+            return;
+        }
         
         console.log('调用taskManager.loadTasks()');
         state.tasks = await taskManager.loadTasks();

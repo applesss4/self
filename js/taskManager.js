@@ -71,8 +71,12 @@ class TaskManager {
             console.log('TaskManager: sessionToken =', sessionToken);
             console.log('TaskManager: loginStatus =', loginStatus);
             
-            if (sessionToken || loginStatus === 'true') {
-                // 如果有认证令牌或登录状态标记，默认使用在线模式
+            // 检查SupabaseAuth实例中的用户状态
+            const isAuthenticated = this.supabaseAuth && this.supabaseAuth.user;
+            console.log('TaskManager: isAuthenticated =', isAuthenticated);
+            
+            if (sessionToken || loginStatus === 'true' || isAuthenticated) {
+                // 如果有认证令牌或登录状态标记或用户已认证，默认使用在线模式
                 console.log('TaskManager: 检测到认证状态，使用在线模式');
                 return true;
             }
@@ -103,6 +107,11 @@ class TaskManager {
     setOnlineMode(isOnline) {
         console.log('TaskManager: 设置在线模式为', isOnline);
         this.isOnline = isOnline;
+        // 当在线模式改变时，重新检查默认在线模式
+        if (isOnline) {
+            this.isOnline = this.checkDefaultOnlineMode();
+            console.log('TaskManager: 重新检查后在线模式为', this.isOnline);
+        }
     }
 
     // 生成唯一ID

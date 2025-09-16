@@ -1,5 +1,5 @@
 // 简化版认证功能（已升级为Supabase认证）
-// 版本: 1.0.42
+// 版本: 1.0.43
 import supabase from './supabase.js';
 import SupabaseAuth from './supabaseAuth.js';
 import authGuard from './authGuard.js';
@@ -21,11 +21,17 @@ function initAuth() {
     }, 100);
 }
 
-// 检查用户是否已经登录
+// 检查用户是否已经登录（修复版本）
 async function checkAlreadyLoggedIn() {
     try {
+        console.log('检查用户登录状态...');
+        // 等待认证初始化完成
+        await supabaseAuth.init();
+        
         // 检查用户认证状态
         const authStatus = await supabaseAuth.checkAuthStatus();
+        console.log('认证状态检查结果:', authStatus);
+        
         if (authStatus.isAuthenticated) {
             console.log('用户已认证:', authStatus.user);
             // 检查是否有重定向URL
@@ -78,7 +84,7 @@ function switchToRegister() {
     alert('请使用测试账户登录：123@123.com / 123');
 }
 
-// 处理认证（登录）
+// 处理认证（登录）（修复版本）
 async function handleAuth() {
     const email = document.getElementById('authEmail').value;
     const password = document.getElementById('authPassword').value;
@@ -91,13 +97,19 @@ async function handleAuth() {
     
     // 登录模式
     try {
+        console.log('尝试登录用户:', email);
         const result = await supabaseAuth.signIn(email, password);
+        console.log('登录结果:', result);
+        
         if (result.success) {
             // 登录成功，显示成功消息并跳转到任务计划页面
             showToast('登录成功！正在跳转...', 'success');
             
             // 保存登录状态标记
             sessionStorage.setItem('isLoggedIn', 'true');
+            
+            // 确保认证状态已正确设置
+            await supabaseAuth.init();
             
             // 检查是否有重定向URL
             const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
@@ -109,12 +121,9 @@ async function handleAuth() {
                     window.location.href = redirectUrl;
                 }, 2000);
             } else {
-                // 保存登录状态标记
-                sessionStorage.setItem('isLoggedIn', 'true');
-                            
                 // 显示成功提示
                 showToast('成功进入发财人生管理系统', 'success');
-                            
+                
                 // 3秒后跳转到任务计划页面
                 setTimeout(() => {
                     window.location.href = '/pages/tasks.html';

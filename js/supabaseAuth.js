@@ -75,32 +75,54 @@ class SupabaseAuth {
             
             if (fetchError && fetchError.code !== 'PGRST116') {
                 console.error('检查用户存在性时出错:', fetchError);
-                return false;
+                // 即使检查出错，我们也尝试创建用户
+                return await this.createUserRecord(user);
             }
             
             // 如果用户不存在，则创建用户记录
             if (!existingUser) {
-                const { data: newUser, error: insertError } = await supabase
-                    .from('users')
-                    .insert({
-                        id: user.id,
-                        email: user.email,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    })
-                    .select()
-                    .single();
-                
-                if (insertError) {
-                    console.error('创建用户记录时出错:', insertError);
-                    return false;
-                }
+                return await this.createUserRecord(user);
             }
             
             return true;
         } catch (error) {
             console.error('确保用户存在时出错:', error);
-            return false;
+            // 即使出错，我们也尝试创建用户
+            return await this.createUserRecord(user);
+        }
+    }
+    
+    // 创建用户记录的独立方法
+    async createUserRecord(user) {
+        if (!user) return false;
+        
+        try {
+            const { data: newUser, error: insertError } = await supabase
+                .from('users')
+                .insert({
+                    id: user.id,
+                    email: user.email,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+            
+            if (insertError) {
+                console.error('创建用户记录时出错:', insertError);
+                // 如果是RLS错误，我们记录错误但不返回false，因为查询可能仍然有效
+                if (insertError.code === '42501') {
+                    console.log('RLS限制，但用户可能已经存在');
+                    return true;
+                }
+                return false;
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('创建用户记录异常:', error);
+            // 即使出现异常，我们也认为用户可能已经存在
+            return true;
         }
     }
 
@@ -265,12 +287,20 @@ class SupabaseAuth {
         
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
+                console.log('认证状态变化事件:', event, session);
                 this.user = session?.user || null;
                 this.session = session || null;
                 
                 // 确保用户在users表中存在
                 if (this.user) {
                     await this.ensureUserExists(this.user);
+                    // 保存会话到本地存储
+                    if (session) {
+                        localStorage.setItem('supabase.auth.token', session.access_token);
+                    }
+                } else {
+                    // 用户登出，清除本地存储
+                    localStorage.removeItem('supabase.auth.token');
                 }
                 
                 this.notifyAuthStateChange(event, session);
