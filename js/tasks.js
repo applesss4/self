@@ -1,5 +1,5 @@
 // 工作任务主逻辑
-// 版本: 1.0.38
+// 版本: 1.0.39
 import TaskManager from './taskManager.js';
 import authGuard from './authGuard.js';
 import SupabaseAuth from './supabaseAuth.js';
@@ -18,9 +18,10 @@ function parseLocalDate(dateString) {
     return new Date(year, month - 1, day);
 }
 
-// 初始化任务管理器
+// 初始化任务管理器和认证服务（使用单例模式）
 const taskManager = new TaskManager();
-const supabaseAuth = new SupabaseAuth();
+const supabaseAuth = taskManager.supabaseAuth; // 从taskManager获取单例实例
+
 let realtimeSubscription = null;
 
 // DOM 元素

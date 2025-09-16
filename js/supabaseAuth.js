@@ -1,14 +1,26 @@
 // 增强版 Supabase 认证服务
 import supabase from './supabase.js';
 
+// 使用单例模式确保只有一个SupabaseAuth实例
+let instance = null;
+
 class SupabaseAuth {
     constructor() {
+        // 确保单例模式
+        if (instance) {
+            console.log('SupabaseAuth: 返回已存在的实例');
+            return instance;
+        }
+        
+        console.log('SupabaseAuth: 创建新实例');
+        instance = this;
         this.user = null;
         this.session = null;
         this.authStateCallbacks = [];
         this.initialized = false;
         // 初始化时尝试恢复会话
         this.init();
+        return this;
     }
 
     // 初始化，尝试恢复会话

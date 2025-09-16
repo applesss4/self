@@ -1,11 +1,14 @@
 // 任务管理模块
 import Storage from './storage.js';
 import SupabaseStorage from './supabaseStorage.js';
+import SupabaseAuth from './supabaseAuth.js';
 
 class TaskManager {
     constructor() {
         this.storage = new Storage();
         this.supabaseStorage = new SupabaseStorage();
+        // 使用单例模式的SupabaseAuth实例
+        this.supabaseAuth = new SupabaseAuth();
         // 不在构造函数中立即检查在线模式，避免时序问题
         this.isOnline = false;
         // 不在构造函数中立即加载任务，避免时序问题
