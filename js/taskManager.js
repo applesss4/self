@@ -110,20 +110,24 @@ class TaskManager {
         return Date.now().toString(36) + Math.random().toString(36).substr(2);
     }
 
-    // 加载所有任务（增强版本）
+    // 加载所有任务（增强调试版本）
     async loadTasks() {
         console.log('TaskManager: 开始加载任务，当前在线模式:', this.isOnline);
         
         // 确保TaskManager已初始化
         if (!this.initPromise) {
+            console.log('TaskManager: 初始化TaskManager');
             await this.init();
         }
+        console.log('TaskManager: 等待TaskManager初始化完成');
         await this.initPromise;
+        console.log('TaskManager: TaskManager初始化已完成');
         
         if (this.isOnline) {
             try {
                 console.log('TaskManager: 尝试从Supabase加载任务');
                 // 确保用户已认证
+                console.log('TaskManager: 检查认证状态');
                 const authStatus = await this.supabaseAuth.checkAuthStatus();
                 console.log('TaskManager: 当前认证状态:', authStatus);
                 
@@ -133,6 +137,7 @@ class TaskManager {
                     return [];
                 }
                 
+                console.log('TaskManager: 调用supabaseStorage.getAllTasks()');
                 const result = await this.supabaseStorage.getAllTasks();
                 console.log('TaskManager: Supabase返回结果:', result);
                 if (result.success) {
