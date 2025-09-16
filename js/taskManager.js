@@ -8,8 +8,10 @@ class TaskManager {
         this.supabaseStorage = new SupabaseStorage();
         this.tasks = this.loadTasks();
         this.currentTaskId = null;
+        console.log('TaskManager: 初始化开始');
         // 检查用户是否已认证来决定默认模式
         this.isOnline = this.checkDefaultOnlineMode();
+        console.log('TaskManager: 初始化完成，isOnline =', this.isOnline);
         this.errorCallbacks = [];
         this.realtimeSubscription = null;
         
