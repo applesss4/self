@@ -8,7 +8,9 @@ class TaskManager {
         this.supabaseStorage = new SupabaseStorage();
         this.tasks = this.loadTasks();
         this.currentTaskId = null;
-        this.isOnline = false;
+        // 检查是否应该默认使用在线模式
+        // 检查用户是否已认证来决定默认模式
+        this.isOnline = this.checkDefaultOnlineMode(); // 默认为离线模式，由各页面根据认证状态设置
         this.errorCallbacks = [];
         this.realtimeSubscription = null;
         
@@ -21,6 +23,25 @@ class TaskManager {
     // 添加错误回调
     onError(callback) {
         this.errorCallbacks.push(callback);
+    }
+
+    // 检查默认在线模式
+    checkDefaultOnlineMode() {
+        try {
+            // 检查本地存储中是否有认证令牌
+            const sessionToken = localStorage.getItem('supabase.auth.token');
+            if (sessionToken) {
+                // 如果有认证令牌，默认使用在线模式
+                return true;
+            }
+            
+            // 默认使用离线模式
+            return false;
+        } catch (error) {
+            console.error('检查默认在线模式时出错:', error);
+            // 出错时默认使用离线模式
+            return false;
+        }
     }
 
     // 通知错误
