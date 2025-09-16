@@ -380,10 +380,14 @@ async function loadAndDisplayTasks() {
     console.log('开始加载任务数据...');
     try {
         // 确保在线模式
+        console.log('设置在线模式为true');
         taskManager.setOnlineMode(true);
+        console.log('当前在线模式:', taskManager.isOnline);
         
+        console.log('调用taskManager.loadTasks()');
         state.tasks = await taskManager.loadTasks();
-        console.log('加载到的任务数据:', state.tasks);
+        console.log('loadTasks返回结果:', state.tasks);
+        console.log('任务数量:', state.tasks.length);
         updateTasksForSelectedDate();
         renderCalendar();
         // 更新今日任务显示
@@ -391,6 +395,7 @@ async function loadAndDisplayTasks() {
         console.log('任务数据加载和显示完成');
     } catch (error) {
         console.error('加载任务数据时出错:', error);
+        console.error('错误堆栈:', error.stack);
         showToast('加载任务数据失败: ' + error.message, 'error');
     }
 }

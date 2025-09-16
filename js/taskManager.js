@@ -90,6 +90,7 @@ class TaskManager {
                     return result.data;
                 } else {
                     console.log('TaskManager: Supabase加载失败，回退到本地存储');
+                    console.log('TaskManager: 错误信息:', result.error);
                     // 回退到本地存储
                     const tasks = this.storage.load(this.storage.keys.TASKS);
                     this.tasks = tasks || [];
@@ -98,6 +99,7 @@ class TaskManager {
                 }
             } catch (error) {
                 console.error('TaskManager: Supabase加载异常:', error);
+                console.error('TaskManager: 错误堆栈:', error.stack);
                 // 回退到本地存储
                 const tasks = this.storage.load(this.storage.keys.TASKS);
                 this.tasks = tasks || [];
