@@ -110,7 +110,7 @@ class TaskManager {
         return Date.now().toString(36) + Math.random().toString(36).substr(2);
     }
 
-    // 加载所有任务（增强调试版本）
+    // 加载所有任务（修复版本）
     async loadTasks() {
         console.log('TaskManager: 开始加载任务，当前在线模式:', this.isOnline);
         

@@ -134,28 +134,27 @@ class SupabaseStorage {
         }
     }
 
-    // 获取所有任务（增强调试版本）
+    // 获取所有任务（修复版本）
     async getAllTasks() {
         try {
             console.log('SupabaseStorage: 开始获取所有任务');
-            // 只获取当前用户的任务
-            console.log('SupabaseStorage: 调用supabase.auth.getUser()');
+            
+            // 获取当前用户
             const { data: { user }, error: authError } = await supabase.auth.getUser();
             
-            console.log('SupabaseStorage: getUser结果 - user:', user, 'error:', authError);
+            console.log('SupabaseStorage: 当前用户:', user);
+            console.log('SupabaseStorage: 认证错误:', authError);
             
             if (authError) {
                 console.error('SupabaseStorage: 获取用户时出错:', authError);
                 this.notifyError(authError.message, 'getAllTasks');
-                throw new Error(authError.message);
+                return { success: false, error: authError.message };
             }
             
             if (!user) {
                 console.log('SupabaseStorage: 用户未登录，返回空任务列表');
                 return { success: true, data: [] };
             }
-            
-            console.log('SupabaseStorage: 当前用户ID:', user.id);
             
             // 确保用户在users表中存在
             const userExists = await this.ensureUserExists(user);
@@ -166,21 +165,20 @@ class SupabaseStorage {
                 return { success: true, data: [] };
             }
             
-            console.log('SupabaseStorage: 构建查询条件');
-            let query = supabase
+            // 构建查询
+            console.log('SupabaseStorage: 构建查询，用户ID:', user.id);
+            const { data, error } = await supabase
                 .from(this.tableName)
                 .select('*')
                 .order('date', { ascending: true })
                 .eq('user_id', user.id);
 
-            console.log('SupabaseStorage: 执行查询，用户ID:', user.id);
-            const { data, error } = await query;
-            console.log('SupabaseStorage: 查询结果 - data:', data, 'error:', error);
+            console.log('SupabaseStorage: 查询结果:', data, '错误:', error);
 
             if (error) {
                 console.error('SupabaseStorage: 查询出错:', error);
                 this.notifyError(error.message, 'getAllTasks');
-                throw new Error(error.message);
+                return { success: false, error: error.message };
             }
 
             // 转换数据库字段名回驼峰命名法
@@ -191,11 +189,9 @@ class SupabaseStorage {
             }));
 
             console.log('SupabaseStorage: 转换后的数据:', convertedData);
-            console.log('SupabaseStorage: 成功返回任务数量:', convertedData.length);
             return { success: true, data: convertedData };
         } catch (error) {
             console.error('SupabaseStorage: 获取所有任务时出错:', error);
-            console.error('SupabaseStorage: 错误堆栈:', error.stack);
             this.notifyError(error.message, 'getAllTasks');
             return { success: false, error: error.message };
         }

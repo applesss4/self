@@ -1,5 +1,5 @@
 // 工作任务主逻辑
-// 版本: 1.0.40
+// 版本: 1.0.42
 import TaskManager from './taskManager.js';
 import authGuard from './authGuard.js';
 import SupabaseAuth from './supabaseAuth.js';
@@ -21,7 +21,6 @@ function parseLocalDate(dateString) {
 // 初始化任务管理器和认证服务（使用单例模式）
 const taskManager = new TaskManager();
 const supabaseAuth = taskManager.supabaseAuth; // 从taskManager获取单例实例
-
 let realtimeSubscription = null;
 
 // DOM 元素
@@ -163,7 +162,7 @@ async function handleLogout() {
     }
 }
 
-// 初始化应用（增强版本）
+// 初始化应用（修复版本）
 async function init() {
     console.log('任务页面初始化开始');
     
@@ -387,10 +386,17 @@ function updateTodayButton() {
     }
 }
 
-// 加载并显示任务
+// 加载并显示任务（修复版本）
 async function loadAndDisplayTasks() {
     console.log('开始加载任务数据...');
     try {
+        // 确保TaskManager已初始化
+        if (!taskManager.initPromise) {
+            console.log('初始化TaskManager');
+            await taskManager.init();
+        }
+        await taskManager.initPromise;
+        
         // 确保在线模式
         console.log('设置在线模式为true');
         taskManager.setOnlineMode(true);

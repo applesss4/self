@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据加载测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .log {
+            background: #333;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            height: 300px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+        .task-list {
+            margin: 20px 0;
+        }
+        .task-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px 0;
+            background: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 数据加载测试</h1>
+        
+        <div id="status" class="status info">
+            点击下方按钮开始测试数据加载
+        </div>
+        
+        <button id="testButton">开始测试</button>
+        <button id="reloadButton" disabled>重新加载</button>
+        
+        <div class="log" id="log">
+            等待测试开始...
+        </div>
+        
+        <div class="task-list" id="taskList">
+            <!-- 任务列表将在这里显示 -->
+        </div>
+    </div>
+
+    <script type="module">
+        import TaskManager from './js/taskManager.js';
+        import SupabaseAuth from './js/supabaseAuth.js';
+        
+        // 全局变量
+        let taskManager, supabaseAuth;
+        
+        // 初始化
+        function init() {
+            log('初始化测试工具...');
+            taskManager = new TaskManager();
+            supabaseAuth = taskManager.supabaseAuth;
+            log('✅ 测试工具初始化完成');
+        }
+        
+        // 测试数据加载
+        async function testDataLoading() {
+            const testButton = document.getElementById('testButton');
+            const reloadButton = document.getElementById('reloadButton');
+            const status = document.getElementById('status');
+            
+            try {
+                // 禁用按钮
+                testButton.disabled = true;
+                reloadButton.disabled = true;
+                status.className = 'status info';
+                status.textContent = '正在进行测试...';
+                
+                log('=== 开始数据加载测试 ===');
+                
+                // 1. 检查认证状态
+                log('1. 检查认证状态...');
+                const authStatus = await supabaseAuth.checkAuthStatus();
+                log(`   认证状态: ${authStatus.isAuthenticated ? '已认证' : '未认证'}`);
+                
+                if (!authStatus.isAuthenticated) {
+                    throw new Error('用户未认证');
+                }
+                
+                log(`   用户邮箱: ${authStatus.user.email}`);
+                
+                // 2. 初始化TaskManager
+                log('2. 初始化TaskManager...');
+                await taskManager.init();
+                log('   ✅ TaskManager初始化完成');
+                
+                // 3. 设置在线模式
+                log('3. 设置在线模式...');
+                taskManager.setOnlineMode(true);
+                log(`   在线模式: ${taskManager.isOnline}`);
+                
+                // 4. 加载任务
+                log('4. 加载任务数据...');
+                const tasks = await taskManager.loadTasks();
+                log(`   ✅ 成功加载 ${tasks.length} 个任务`);
+                
+                // 5. 显示任务
+                log('5. 显示任务列表...');
+                displayTasks(tasks);
+                
+                // 更新状态
+                status.className = 'status success';
+                status.textContent = `✅ 测试成功！已加载 ${tasks.length} 个任务`;
+                
+            } catch (error) {
+                log(`❌ 测试失败: ${error.message}`);
+                status.className = 'status error';
+                status.textContent = `❌ 测试失败: ${error.message}`;
+            } finally {
+                // 启用按钮
+                testButton.disabled = false;
+                reloadButton.disabled = false;
+            }
+        }
+        
+        // 重新加载
+        async function reload() {
+            document.getElementById('taskList').innerHTML = '';
+            await testDataLoading();
+        }
+        
+        // 显示任务
+        function displayTasks(tasks) {
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+            
+            if (tasks.length === 0) {
+                taskList.innerHTML = '<div class="task-item">暂无任务数据</div>';
+                return;
+            }
+            
+            tasks.slice(0, 10).forEach(task => {
+                const taskElement = document.createElement('div');
+                taskElement.className = 'task-item';
+                taskElement.innerHTML = `
+                    <strong>${task.title}</strong><br>
+                    <small>日期: ${task.date} | 分类: ${task.category} | 状态: ${task.status}</small>
+                `;
+                taskList.appendChild(taskElement);
+            });
+            
+            if (tasks.length > 10) {
+                const moreElement = document.createElement('div');
+                moreElement.className = 'task-item';
+                moreElement.innerHTML = `<em>还有 ${tasks.length - 10} 个任务未显示...</em>`;
+                taskList.appendChild(moreElement);
+            }
+        }
+        
+        // 日志函数
+        function log(message) {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
+            logElement.innerHTML += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        // 绑定事件
+        document.getElementById('testButton').addEventListener('click', testDataLoading);
+        document.getElementById('reloadButton').addEventListener('click', reload);
+        
+        // 初始化
+        init();
+    </script>
+</body>
+</html>
