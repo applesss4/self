@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>个人生活管家 - 登录</title>
+    <title>个人生活管家</title>
     <link rel="stylesheet" href="/css/main.css?v=1.0.38">
     <link rel="stylesheet" href="/css/components.css?v=1.0.38">
 </head>
@@ -11,8 +11,32 @@
     <header class="header">
         <div class="container">
             <h1 class="logo">🏠 个人生活管家</h1>
+            <div class="header-right">
+                <nav class="nav">
+                    <button class="nav-link" id="featuresBtn" style="display: none;">功能菜单</button>
+                </nav>
+                <button class="login-btn" id="loginBtn" style="display: none;">退出</button>
+            </div>
         </div>
     </header>
+
+    <!-- 功能菜单模态框 -->
+    <div class="modal" id="featuresModal">
+        <div class="modal-content" style="max-width: 300px;">
+            <div class="modal-header">
+                <h3 class="modal-title">功能菜单</h3>
+                <button class="modal-close" id="closeFeaturesModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="features-menu">
+                    <a href="/pages/tasks.html" class="feature-menu-item">📝 任务计划</a>
+                    <a href="/pages/schedule.html" class="feature-menu-item">📅 工作排班表</a>
+                    <a href="/pages/food.html" class="feature-menu-item">🛒 买菜</a>
+                    <a href="/pages/stats.html" class="feature-menu-item">📊 数据统计</a>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <main class="main">
         <section class="hero">
@@ -28,11 +52,11 @@
                     <form class="auth-form" id="authForm">
                         <div class="form-group">
                             <label for="authEmail">邮箱</label>
-                            <input type="email" id="authEmail" required autocomplete="username">
+                            <input type="email" id="authEmail" required autocomplete="username" value="123@123.com">
                         </div>
                         <div class="form-group">
                             <label for="authPassword">密码</label>
-                            <input type="password" id="authPassword" required autocomplete="current-password">
+                            <input type="password" id="authPassword" required autocomplete="current-password" value="123">
                         </div>
                         <div class="form-actions">
                             <button type="submit" class="btn-submit" id="submitAuth">登录</button>
@@ -53,5 +77,47 @@
     </footer>
 
     <script type="module" src="/js/simpleAuth.js?v=1.0.37"></script>
+    <script type="module">
+        // 添加功能菜单和退出按钮的交互逻辑
+        document.addEventListener('DOMContentLoaded', function() {
+            // 功能菜单按钮事件
+            const featuresBtn = document.getElementById('featuresBtn');
+            const featuresModal = document.getElementById('featuresModal');
+            const closeFeaturesModal = document.getElementById('closeFeaturesModal');
+            
+            if (featuresBtn) {
+                featuresBtn.addEventListener('click', function() {
+                    if (featuresModal) {
+                        featuresModal.classList.add('active');
+                    }
+                });
+            }
+            
+            if (closeFeaturesModal) {
+                closeFeaturesModal.addEventListener('click', function() {
+                    if (featuresModal) {
+                        featuresModal.classList.remove('active');
+                    }
+                });
+            }
+            
+            if (featuresModal) {
+                featuresModal.addEventListener('click', function(e) {
+                    if (e.target.id === 'featuresModal') {
+                        featuresModal.classList.remove('active');
+                    }
+                });
+            }
+            
+            // ESC键关闭模态框
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    if (featuresModal) {
+                        featuresModal.classList.remove('active');
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>

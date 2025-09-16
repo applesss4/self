@@ -12,13 +12,63 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initAuth() {
-    // 检查用户是否已经登录，如果已登录则重定向到任务页面
+    // 检查用户是否已经登录，如果已登录则更新UI
     checkAlreadyLoggedIn();
     
     // 延迟一点时间确保DOM完全加载
     setTimeout(() => {
         bindAuthEvents();
     }, 100);
+    
+    // 监听认证状态变化
+    supabaseAuth.onAuthStateChange(handleAuthStateChange);
+}
+
+// 处理认证状态变化
+function handleAuthStateChange(event, session) {
+    console.log('认证状态变化:', event, session);
+    
+    if (event === 'SIGNED_OUT') {
+        // 用户登出，更新UI
+        console.log('用户已登出，更新UI');
+        updateAuthUI(false);
+    } else if (event === 'SIGNED_IN') {
+        // 用户登录，更新UI
+        console.log('用户已登录，更新UI');
+        updateAuthUI(true);
+    }
+}
+
+// 更新认证UI
+function updateAuthUI(isAuthenticated) {
+    const featuresBtn = document.getElementById('featuresBtn');
+    const loginBtn = document.getElementById('loginBtn');
+    const authSection = document.getElementById('authSection');
+    
+    if (isAuthenticated) {
+        // 用户已认证，显示功能菜单和退出按钮，隐藏登录表单
+        if (featuresBtn) {
+            featuresBtn.style.display = 'block';
+        }
+        if (loginBtn) {
+            loginBtn.style.display = 'block';
+            loginBtn.textContent = '退出';
+        }
+        if (authSection) {
+            authSection.style.display = 'none';
+        }
+    } else {
+        // 用户未认证，隐藏功能菜单和退出按钮，显示登录表单
+        if (featuresBtn) {
+            featuresBtn.style.display = 'none';
+        }
+        if (loginBtn) {
+            loginBtn.style.display = 'none';
+        }
+        if (authSection) {
+            authSection.style.display = 'block';
+        }
+    }
 }
 
 // 检查用户是否已经登录（修复版本）
@@ -32,19 +82,11 @@ async function checkAlreadyLoggedIn() {
         const authStatus = await supabaseAuth.checkAuthStatus();
         console.log('认证状态检查结果:', authStatus);
         
+        // 更新UI
+        updateAuthUI(authStatus.isAuthenticated);
+        
         if (authStatus.isAuthenticated) {
             console.log('用户已认证:', authStatus.user);
-            // 检查是否有重定向URL
-            const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
-            if (redirectUrl) {
-                // 清除重定向URL
-                sessionStorage.removeItem('redirectAfterLogin');
-                // 重定向到用户原本想访问的页面
-                window.location.href = redirectUrl;
-            } else {
-                // 默认重定向到任务计划页面
-                window.location.href = '/pages/tasks.html';
-            }
         } else {
             console.log('用户未认证');
         }
@@ -56,6 +98,7 @@ async function checkAlreadyLoggedIn() {
 function bindAuthEvents() {
     // 获取必要的DOM元素
     const authForm = document.getElementById('authForm');
+    const loginBtn = document.getElementById('loginBtn');
     
     // 如果找到了必要的元素，绑定事件
     if (authForm) {
@@ -64,17 +107,27 @@ function bindAuthEvents() {
             e.preventDefault();
             handleAuth();
         });
-        
-        // 动态链接事件委托
-        document.addEventListener('click', function(e) {
-            if (e.target.id === 'switchToRegisterLink') {
-                e.preventDefault();
-                // 跳转到注册页面（如果有的话）或者显示注册表单
-                switchToRegister();
-            }
+    }
+    
+    if (loginBtn) {
+        // 退出按钮事件
+        loginBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            handleLogout();
         });
-    } else {
-        // 如果元素还没加载完成，稍后再试
+    }
+    
+    // 动态链接事件委托
+    document.addEventListener('click', function(e) {
+        if (e.target.id === 'switchToRegisterLink') {
+            e.preventDefault();
+            // 跳转到注册页面（如果有的话）或者显示注册表单
+            switchToRegister();
+        }
+    });
+    
+    // 如果元素还没加载完成，稍后再试
+    if (!authForm || !loginBtn) {
         setTimeout(bindAuthEvents, 500);
     }
 }
@@ -102,38 +155,46 @@ async function handleAuth() {
         console.log('登录结果:', result);
         
         if (result.success) {
-            // 登录成功，显示成功消息并跳转到任务计划页面
-            showToast('登录成功！正在跳转...', 'success');
+            // 登录成功，显示成功消息
+            showToast('登录成功！', 'success');
             
             // 保存登录状态标记
             sessionStorage.setItem('isLoggedIn', 'true');
             
-            // 确保认证状态已正确设置
-            await supabaseAuth.init();
+            // 更新UI
+            updateAuthUI(true);
             
-            // 检查是否有重定向URL
-            const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
-            if (redirectUrl) {
-                // 清除重定向URL
-                sessionStorage.removeItem('redirectAfterLogin');
-                // 2秒后跳转到用户原本想访问的页面
-                setTimeout(() => {
-                    window.location.href = redirectUrl;
-                }, 2000);
-            } else {
-                // 显示成功提示
-                showToast('成功进入发财人生管理系统', 'success');
-                
-                // 3秒后跳转到任务计划页面
-                setTimeout(() => {
-                    window.location.href = '/pages/tasks.html';
-                }, 3000);
-            }
+            // 显示成功提示
+            showToast('成功进入发财人生管理系统', 'success');
         } else {
             showToast(`登录失败: ${result.error}`, 'error');
         }
     } catch (error) {
         showToast(`登录异常: ${error.message}`, 'error');
+    }
+}
+
+// 处理登出
+async function handleLogout() {
+    try {
+        console.log('尝试登出');
+        const result = await supabaseAuth.signOut();
+        console.log('登出结果:', result);
+        
+        if (result.success) {
+            // 登出成功
+            showToast('登出成功', 'success');
+            
+            // 清除登录状态标记
+            sessionStorage.removeItem('isLoggedIn');
+            
+            // 更新UI
+            updateAuthUI(false);
+        } else {
+            showToast(`登出失败: ${result.error}`, 'error');
+        }
+    } catch (error) {
+        showToast(`登出异常: ${error.message}`, 'error');
     }
 }
 
