@@ -1,5 +1,5 @@
 // 主页面逻辑
-// 版本: 1.0.35
+// 版本: 1.0.36
 import SupabaseAuth from './supabaseAuth.js';
 
 let supabaseAuth = null;
@@ -8,51 +8,68 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 初始化 Supabase 认证
     supabaseAuth = new SupabaseAuth();
     
-    // 检查用户是否已登录
-    await checkUserStatus();
-    
-    // 绑定事件监听器
-    bindAuthEvents();
-    bindEventListeners();
-    
-    // 显示欢迎消息
-    showWelcomeMessage();
+    // 等待一小段时间让认证初始化完成
+    setTimeout(async () => {
+        // 检查用户是否已登录
+        await checkUserStatus();
+        
+        // 绑定事件监听器
+        bindAuthEvents();
+        bindEventListeners();
+        
+        // 显示欢迎消息
+        showWelcomeMessage();
+    }, 100);
 });
 
 // 检查用户登录状态
 async function checkUserStatus() {
     try {
+        console.log('开始检查用户状态');
+        
         // 先尝试获取当前会话
-        const session = await supabaseAuth.getCurrentSession();
+        let session = await supabaseAuth.getCurrentSession();
         let user = null;
+        
+        console.log('当前会话:', session);
         
         if (session?.user) {
             user = session.user;
         } else {
             // 如果会话中没有用户，尝试获取当前用户
             user = await supabaseAuth.getCurrentUser();
+            console.log('通过getUser获取用户:', user);
         }
         
         const featuresBtn = document.getElementById('featuresBtn');
+        console.log('用户状态:', user);
         
         if (user) {
             // 用户已登录，显示功能区域，隐藏登录框
             document.getElementById('authSection').style.display = 'none';
-            document.getElementById('featuresSection').style.display = 'grid';
+            if (document.getElementById('featuresSection')) {
+                document.getElementById('featuresSection').style.display = 'grid';
+            }
             if (featuresBtn) {
                 featuresBtn.style.display = 'block';
                 // 添加登录样式类
                 featuresBtn.classList.add('loggedIn');
             }
+            // 设置登录状态标记
+            sessionStorage.setItem('isLoggedIn', 'true');
         } else {
             // 用户未登录，显示登录框，隐藏功能区域
             document.getElementById('authSection').style.display = 'block';
-            document.getElementById('featuresSection').style.display = 'none';
+            if (document.getElementById('featuresSection')) {
+                document.getElementById('featuresSection').style.display = 'none';
+            }
             if (featuresBtn) {
                 featuresBtn.style.display = 'none';
                 // 移除登录样式类
                 featuresBtn.classList.remove('loggedIn');
             }
+            // 清除登录状态标记
+            sessionStorage.removeItem('isLoggedIn');
         }
     } catch (error) {
         console.error('检查用户状态时出错:', error);

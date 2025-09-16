@@ -6,6 +6,22 @@ class SupabaseAuth {
         this.user = null;
         this.session = null;
         this.authStateCallbacks = [];
+        // 初始化时尝试恢复会话
+        this.init();
+    }
+
+    // 初始化，尝试恢复会话
+    async init() {
+        try {
+            // 获取当前会话
+            const { data, error } = await supabase.auth.getSession();
+            if (!error && data?.session) {
+                this.session = data.session;
+                this.user = data.session.user;
+            }
+        } catch (error) {
+            console.error('初始化会话失败:', error);
+        }
     }
 
     // 确保用户在users表中存在
@@ -106,6 +122,12 @@ class SupabaseAuth {
 
             this.user = data.user;
             this.session = data.session;
+            
+            // 保存会话到本地存储
+            if (data.session) {
+                localStorage.setItem('supabase.auth.token', data.session.access_token);
+            }
+            
             this.notifyAuthStateChange('signed_in', data);
             return { success: true, data };
         } catch (error) {
@@ -124,6 +146,10 @@ class SupabaseAuth {
 
             this.user = null;
             this.session = null;
+            
+            // 清除本地存储的会话
+            localStorage.removeItem('supabase.auth.token');
+            
             this.notifyAuthStateChange('signed_out', null);
             return { success: true };
         } catch (error) {
@@ -148,16 +174,7 @@ class SupabaseAuth {
             
             return user;
         } catch (error) {
-            // 检查是否是会话丢失错误
-            if (error.name === 'AuthSessionMissingError') {
-                // 尝试从本地存储恢复会话
-                const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-                if (sessionData?.session && !sessionError) {
-                    this.session = sessionData.session;
-                    this.user = sessionData.session.user;
-                    return this.user;
-                }
-            }
+            console.error('获取当前用户失败:', error);
             return null;
         }
     }
@@ -175,6 +192,7 @@ class SupabaseAuth {
             
             return data.session;
         } catch (error) {
+            console.error('获取当前会话失败:', error);
             return null;
         }
     }
