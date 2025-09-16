@@ -31,14 +31,16 @@ class TaskManager {
         try {
             // 检查本地存储中是否有认证令牌
             const sessionToken = localStorage.getItem('supabase.auth.token');
-            if (sessionToken) {
-                // 如果有认证令牌，默认使用在线模式
-                console.log('TaskManager: 检测到认证令牌，使用在线模式');
+            const loginStatus = sessionStorage.getItem('isLoggedIn');
+            
+            if (sessionToken || loginStatus === 'true') {
+                // 如果有认证令牌或登录状态标记，默认使用在线模式
+                console.log('TaskManager: 检测到认证状态，使用在线模式');
                 return true;
             }
             
             // 默认使用离线模式
-            console.log('TaskManager: 未检测到认证令牌，使用离线模式');
+            console.log('TaskManager: 未检测到认证状态，使用离线模式');
             return false;
         } catch (error) {
             console.error('检查默认在线模式时出错:', error);

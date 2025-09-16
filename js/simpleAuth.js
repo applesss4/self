@@ -1,5 +1,5 @@
 // 简化版认证功能（已升级为Supabase认证）
-// 版本: 1.0.35
+// 版本: 1.0.37
 import supabase from './supabase.js';
 import SupabaseAuth from './supabaseAuth.js';
 import authGuard from './authGuard.js';
@@ -109,10 +109,16 @@ async function handleAuth() {
                     window.location.href = redirectUrl;
                 }, 2000);
             } else {
-                // 2秒后跳转到任务计划页面
+                // 保存登录状态标记
+                sessionStorage.setItem('isLoggedIn', 'true');
+                            
+                // 显示成功提示
+                showToast('成功进入发财人生管理系统', 'success');
+                            
+                // 3秒后跳转到任务计划页面
                 setTimeout(() => {
                     window.location.href = '/pages/tasks.html';
-                }, 2000);
+                }, 3000);
             }
         } else {
             showToast(`登录失败: ${result.error}`, 'error');

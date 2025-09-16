@@ -1,5 +1,5 @@
 // 菜品管理模块
-// 版本: 1.0.34
+// 版本: 1.0.37
 import SupabaseAuth from './supabaseAuth.js';
 import SupabaseFoodStorage from './supabaseFoodStorage.js';
 import authGuard from './authGuard.js';  // 导入认证保护中间件
@@ -26,6 +26,9 @@ class FoodUI {
             // 重定向到登录页面
             window.location.href = '/';
             return;
+        } else {
+            // 用户已认证，设置登录状态标记
+            sessionStorage.setItem('isLoggedIn', 'true');
         }
         
         console.log('用户已认证:', authStatus.user);
@@ -225,6 +228,9 @@ class FoodUI {
             
             // 清除认证信息
             authGuard.clearAuth();
+            
+            // 清除登录状态标记
+            sessionStorage.removeItem('isLoggedIn');
             
             // 显示登出消息
             this.showToast('正在登出...', 'info');

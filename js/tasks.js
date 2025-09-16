@@ -1,5 +1,5 @@
 // 工作任务主逻辑
-// 版本: 1.0.35
+// 版本: 1.0.37
 import TaskManager from './taskManager.js';
 import authGuard from './authGuard.js';
 import SupabaseAuth from './supabaseAuth.js';
@@ -146,6 +146,9 @@ async function handleLogout() {
         // 清除认证信息
         authGuard.clearAuth();
         
+        // 清除登录状态标记
+        sessionStorage.removeItem('isLoggedIn');
+        
         // 显示登出消息
         showToast('正在登出...', 'info');
         
@@ -172,6 +175,9 @@ async function init() {
         // 重定向到登录页面
         window.location.href = '/';
         return;
+    } else {
+        // 用户已认证，设置登录状态标记
+        sessionStorage.setItem('isLoggedIn', 'true');
     }
     
     console.log('用户已认证:', authStatus.user);

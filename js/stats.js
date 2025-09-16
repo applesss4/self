@@ -1,5 +1,5 @@
 // 数据统计模块
-// 版本: 1.0.34
+// 版本: 1.0.37
 import SupabaseAuth from './supabaseAuth.js';
 import supabase from './supabase.js';
 import authGuard from './authGuard.js';  // 导入认证保护中间件
@@ -11,7 +11,32 @@ class FoodStorage {
         this.foods = [];
         this.cart = [];
         this.orders = [];
-        this.isOnline = true; // 始终使用在线模式
+        // 检查用户是否已认证来决定默认模式
+        this.isOnline = this.checkDefaultOnlineMode();
+    }
+    
+    // 检查默认在线模式
+    checkDefaultOnlineMode() {
+        try {
+            // 检查本地存储中是否有认证令牌
+            const sessionToken = localStorage.getItem('supabase.auth.token');
+            const loginStatus = sessionStorage.getItem('isLoggedIn');
+            
+            if (sessionToken || loginStatus === 'true') {
+                // 如果有认证令牌或登录状态标记，默认使用在线模式
+                console.log('FoodStorage: 检测到认证状态，使用在线模式');
+                return true;
+            }
+            
+            // 默认使用离线模式
+            console.log('FoodStorage: 未检测到认证状态，使用离线模式');
+            return false;
+        } catch (error) {
+            console.error('检查默认在线模式时出错:', error);
+            // 出错时默认使用离线模式
+            console.log('FoodStorage: 检查在线模式出错，使用离线模式');
+            return false;
+        }
     }
 
     // 从数据库加载数据
@@ -24,6 +49,9 @@ class FoodStorage {
                 this.foods = [];
                 this.orders = [];
                 return;
+            } else {
+                // 用户已认证，设置登录状态标记
+                sessionStorage.setItem('isLoggedIn', 'true');
             }
             
             console.log('用户已认证:', authStatus.user);
@@ -111,6 +139,9 @@ class StatsUI {
             // 重定向到登录页面
             window.location.href = '/';
             return;
+        } else {
+            // 用户已认证，设置登录状态标记
+            sessionStorage.setItem('isLoggedIn', 'true');
         }
         
         console.log('用户已认证:', authStatus.user);
@@ -190,6 +221,9 @@ class StatsUI {
             
             // 清除认证信息
             authGuard.clearAuth();
+            
+            // 清除登录状态标记
+            sessionStorage.removeItem('isLoggedIn');
             
             // 显示登出消息
             this.showToast('正在登出...', 'info');

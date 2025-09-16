@@ -8,7 +8,8 @@ class SupabaseFoodStorage {
         this.foods = [];
         this.cart = [];
         this.orders = [];
-        this.isOnline = true; // 始终使用在线模式
+        // 检查用户是否已认证来决定默认模式
+        this.isOnline = this.checkDefaultOnlineMode();
         // 添加缓存时间戳
         this.cacheTimestamp = 0;
         this.cacheExpiry = 5 * 60 * 1000; // 5分钟缓存过期时间
@@ -16,6 +17,30 @@ class SupabaseFoodStorage {
         this.ordersSubscription = null;
         this.foodsSubscription = null;
         this.initialize();
+    }
+    
+    // 检查默认在线模式
+    checkDefaultOnlineMode() {
+        try {
+            // 检查本地存储中是否有认证令牌
+            const sessionToken = localStorage.getItem('supabase.auth.token');
+            const loginStatus = sessionStorage.getItem('isLoggedIn');
+            
+            if (sessionToken || loginStatus === 'true') {
+                // 如果有认证令牌或登录状态标记，默认使用在线模式
+                console.log('SupabaseFoodStorage: 检测到认证状态，使用在线模式');
+                return true;
+            }
+            
+            // 默认使用离线模式
+            console.log('SupabaseFoodStorage: 未检测到认证状态，使用离线模式');
+            return false;
+        } catch (error) {
+            console.error('检查默认在线模式时出错:', error);
+            // 出错时默认使用离线模式
+            console.log('SupabaseFoodStorage: 检查在线模式出错，使用离线模式');
+            return false;
+        }
     }
 
     // 初始化
@@ -30,14 +55,27 @@ class SupabaseFoodStorage {
                 // 订阅实时更新
                 await this.subscribeToRealtimeUpdates();
             } else {
-                // 即使没有用户也保持在线模式
-                this.isOnline = true;
-                console.log('用户未登录，但保持在线模式');
+                // 检查登录状态标记
+                const loginStatus = sessionStorage.getItem('isLoggedIn');
+                if (loginStatus === 'true') {
+                    this.isOnline = true;
+                    console.log('检测到登录状态标记，使用在线模式');
+                    // 从数据库加载数据
+                    await this.loadFromDatabase();
+                    // 订阅实时更新
+                    await this.subscribeToRealtimeUpdates();
+                } else {
+                    this.isOnline = false;
+                    console.log('用户未登录，使用离线模式');
+                    // 从本地存储加载数据
+                    this.loadFromLocalStorage();
+                }
             }
         } catch (error) {
             console.error('初始化存储失败:', error);
-            // 出错时仍然保持在线模式
-            this.isOnline = true;
+            // 出错时检查登录状态标记
+            const loginStatus = sessionStorage.getItem('isLoggedIn');
+            this.isOnline = (loginStatus === 'true');
         }
     }
 
