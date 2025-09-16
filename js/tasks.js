@@ -239,6 +239,10 @@ async function init() {
         console.log('检查用户登录状态并更新功能按钮');
         checkUserStatusAndShowFeaturesButton();
         
+        // 为功能菜单项添加登录检查
+        console.log('为功能菜单项添加登录检查');
+        addLoginCheckToFeatureMenuItems();
+        
         // 监听认证状态变化
         console.log('监听认证状态变化');
         supabaseAuth.onAuthStateChange(handleAuthStateChange);
@@ -958,6 +962,27 @@ function closeFeaturesModalFunc() {
     }
 }
 
+// 为功能菜单项添加登录检查
+function addLoginCheckToFeatureMenuItems() {
+    // 获取所有功能菜单项
+    const menuItems = document.querySelectorAll('.feature-menu-item');
+    
+    // 为每个菜单项添加点击事件监听器
+    menuItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            // 检查用户是否已登录
+            const loginStatus = sessionStorage.getItem('isLoggedIn');
+            if (loginStatus !== 'true') {
+                // 阻止默认跳转行为
+                e.preventDefault();
+                
+                // 显示提示消息
+                showToast('请先登录后再访问此功能', 'error');
+            }
+        });
+    });
+}
+
 // 检查用户登录状态并更新功能按钮和菜单项
 function checkUserStatusAndShowFeaturesButton() {
     try {
@@ -969,26 +994,26 @@ function checkUserStatusAndShowFeaturesButton() {
         const menuItems = document.querySelectorAll('.feature-menu-item');
         
         if (loginStatus === 'true') {
-            // 用户已登录，显示功能按钮并更新菜单项样式
+            // 用户已登录，确保功能按钮可见并更新菜单项样式
             if (featuresBtn) {
                 featuresBtn.style.display = 'block';
             }
             
             // 为所有菜单项添加登录样式类
             menuItems.forEach(item => {
-                item.classList.add('logged-in');
                 item.classList.remove('not-logged-in');
+                item.classList.add('logged-in');
             });
         } else {
-            // 用户未登录，仍然显示功能按钮但更新菜单项样式
+            // 用户未登录，确保功能按钮可见但更新菜单项样式为不可点击
             if (featuresBtn) {
                 featuresBtn.style.display = 'block';
             }
             
             // 为所有菜单项添加未登录样式类
             menuItems.forEach(item => {
-                item.classList.add('not-logged-in');
                 item.classList.remove('logged-in');
+                item.classList.add('not-logged-in');
             });
         }
     } catch (error) {
