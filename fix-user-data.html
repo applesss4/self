@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>修复用户数据</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .log {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .error {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+        .success {
+            background: #e8f5e9;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1976d2;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>修复用户数据</h1>
+    
+    <div>
+        <h2>用户信息</h2>
+        <input type="text" id="userId" placeholder="用户ID" value="3f1dd61c-4cfe-4282-9cb0-c3181f200f46">
+        <input type="email" id="userEmail" placeholder="用户邮箱" value="1@1.com">
+        <button onclick="fixUserData()">修复用户数据</button>
+        <button onclick="clearLogs()">清空日志</button>
+    </div>
+    
+    <div>
+        <h2>调试日志</h2>
+        <div id="logs"></div>
+    </div>
+
+    <script type="module">
+        import supabase from './js/supabase.js';
+        
+        // 重写console.log以捕获日志
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToLog('log', args.join(' '));
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToLog('error', args.join(' '));
+        };
+        
+        function addToLog(type, message) {
+            const logsContainer = document.getElementById('logs');
+            const logElement = document.createElement('div');
+            logElement.className = `log ${type}`;
+            logElement.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logsContainer.appendChild(logElement);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+        
+        async function fixUserData() {
+            try {
+                const userId = document.getElementById('userId').value;
+                const userEmail = document.getElementById('userEmail').value;
+                
+                if (!userId || !userEmail) {
+                    addToLog('error', '请填写用户ID和邮箱');
+                    return;
+                }
+                
+                addToLog('log', `开始修复用户数据: ID=${userId}, 邮箱=${userEmail}`);
+                
+                // 检查用户是否已存在
+                const { data: existingUser, error: fetchError } = await supabase
+                    .from('users')
+                    .select('id')
+                    .eq('id', userId)
+                    .single();
+                
+                if (fetchError && fetchError.code !== 'PGRST116') {
+                    addToLog('error', `检查用户存在性时出错: ${fetchError.message}`);
+                    return;
+                }
+                
+                if (existingUser) {
+                    addToLog('log', '用户已存在，无需创建');
+                    return;
+                }
+                
+                // 创建用户记录
+                const { data: newUser, error: insertError } = await supabase
+                    .from('users')
+                    .insert({
+                        id: userId,
+                        email: userEmail,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    })
+                    .select()
+                    .single();
+                
+                if (insertError) {
+                    addToLog('error', `创建用户记录时出错: ${insertError.message}`);
+                    return;
+                }
+                
+                addToLog('success', `用户数据修复成功: ${JSON.stringify(newUser, null, 2)}`);
+                
+                // 验证用户是否已正确添加
+                const { data: verifyUser, error: verifyError } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
+                
+                if (verifyError) {
+                    addToLog('error', `验证用户数据时出错: ${verifyError.message}`);
+                    return;
+                }
+                
+                addToLog('success', `用户数据验证成功: ${JSON.stringify(verifyUser, null, 2)}`);
+            } catch (error) {
+                addToLog('error', `修复用户数据异常: ${error.message}`);
+                console.error(error);
+            }
+        }
+        
+        // 页面加载时自动检查用户数据
+        window.addEventListener('DOMContentLoaded', async () => {
+            addToLog('log', '页面加载完成');
+        });
+    </script>
+</body>
+</html>

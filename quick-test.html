@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>快速测试</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">快速测试</h1>
+        
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">测试结果</h2>
+            <div id="test-results" class="space-y-4">
+                <p>正在测试...</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import SupabaseAuth from './js/supabaseAuth.js';
+        import SupabaseStorage from './js/supabaseStorage.js';
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            const resultsDiv = document.getElementById('test-results');
+            
+            try {
+                // 测试1: 检查认证
+                resultsDiv.innerHTML += '<p>1. 测试认证状态...</p>';
+                const supabaseAuth = new SupabaseAuth();
+                await supabaseAuth.init();
+                const authStatus = await supabaseAuth.checkAuthStatus();
+                
+                if (!authStatus.isAuthenticated) {
+                    resultsDiv.innerHTML += '<p class="text-red-600">未认证，请先登录</p>';
+                    return;
+                }
+                
+                resultsDiv.innerHTML += `<p class="text-green-600">认证成功: ${authStatus.user.email}</p>`;
+                
+                // 测试2: 检查Supabase连接
+                resultsDiv.innerHTML += '<p class="mt-4">2. 测试Supabase连接...</p>';
+                const storage = new SupabaseStorage();
+                const result = await storage.getAllTasks();
+                
+                if (result.success) {
+                    resultsDiv.innerHTML += `<p class="text-green-600">数据加载成功，任务数量: ${result.data.length}</p>`;
+                    if (result.data.length > 0) {
+                        resultsDiv.innerHTML += `
+                            <details class="mt-2">
+                                <summary class="cursor-pointer">查看前3个任务</summary>
+                                <pre class="bg-gray-100 p-2 mt-2 rounded text-sm overflow-auto">${JSON.stringify(result.data.slice(0, 3), null, 2)}</pre>
+                            </details>
+                        `;
+                    }
+                } else {
+                    resultsDiv.innerHTML += `<p class="text-red-600">数据加载失败: ${result.error}</p>`;
+                }
+                
+                // 测试3: 检查本地存储状态
+                resultsDiv.innerHTML += '<p class="mt-4">3. 检查本地存储状态...</p>';
+                const sessionToken = localStorage.getItem('supabase.auth.token');
+                const loginStatus = sessionStorage.getItem('isLoggedIn');
+                
+                resultsDiv.innerHTML += `
+                    <p>Session Token: ${sessionToken ? '存在' : '不存在'}</p>
+                    <p>Login Status: ${loginStatus}</p>
+                `;
+                
+            } catch (error) {
+                resultsDiv.innerHTML += `<p class="text-red-600">测试异常: ${error.message}</p>`;
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -7,11 +7,16 @@ class AuthGuard {
         this.supabaseAuth = new SupabaseAuth();
     }
 
-    // 检查用户是否已认证
+    // 检查用户是否已认证（修复版本）
     async checkAuth() {
         try {
+            console.log('AuthGuard: 检查认证状态...');
+            // 等待认证初始化完成
+            await this.supabaseAuth.init();
+            
             // 使用增强的认证服务检查认证状态
             const authStatus = await this.supabaseAuth.checkAuthStatus();
+            console.log('AuthGuard: 认证状态检查结果:', authStatus);
             return authStatus.isAuthenticated;
         } catch (error) {
             console.error('检查认证状态时出错:', error);
@@ -23,6 +28,9 @@ class AuthGuard {
 
     // 要求用户必须认证才能访问
     async requireAuth(redirectUrl = '/') {
+        // 等待认证初始化完成
+        await this.supabaseAuth.init();
+        
         const authStatus = await this.supabaseAuth.checkAuthStatus();
         if (!authStatus.isAuthenticated) {
             // 保存用户尝试访问的页面
@@ -37,6 +45,9 @@ class AuthGuard {
     // 获取当前用户
     async getCurrentUser() {
         try {
+            // 等待认证初始化完成
+            await this.supabaseAuth.init();
+            
             const authStatus = await this.supabaseAuth.checkAuthStatus();
             if (!authStatus.isAuthenticated) {
                 // 如果用户未认证，清除认证信息
@@ -88,6 +99,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!isLoginPage) {
         // 延迟检查以确保DOM完全加载
         setTimeout(async () => {
+            // 等待认证初始化完成
+            if (authGuard.supabaseAuth && typeof authGuard.supabaseAuth.init === 'function') {
+                await authGuard.supabaseAuth.init();
+            }
+            
             const isAuthenticated = await authGuard.checkAuth();
             if (!isAuthenticated) {
                 // 保存当前页面以便登录后返回

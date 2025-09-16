@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单修复工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .log {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .error {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+        .success {
+            background: #e8f5e9;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1976d2;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>简单修复工具</h1>
+    
+    <div>
+        <h2>用户信息</h2>
+        <input type="text" id="userId" placeholder="用户ID" value="3f1dd61c-4cfe-4282-9cb0-c3181f200f46">
+        <input type="email" id="userEmail" placeholder="用户邮箱" value="1@1.com">
+        <button onclick="fixUserData()">修复用户数据</button>
+        <button onclick="clearLogs()">清空日志</button>
+    </div>
+    
+    <div>
+        <h2>调试日志</h2>
+        <div id="logs"></div>
+    </div>
+
+    <script>
+        function addToLog(type, message) {
+            const logsContainer = document.getElementById('logs');
+            const logElement = document.createElement('div');
+            logElement.className = `log ${type}`;
+            logElement.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logsContainer.appendChild(logElement);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+        
+        async function fixUserData() {
+            try {
+                const userId = document.getElementById('userId').value;
+                const userEmail = document.getElementById('userEmail').value;
+                
+                if (!userId || !userEmail) {
+                    addToLog('error', '请填写用户ID和邮箱');
+                    return;
+                }
+                
+                addToLog('log', `开始修复用户数据: ID=${userId}, 邮箱=${userEmail}`);
+                addToLog('log', '注意：此工具需要在HTTP服务器环境下运行才能正常工作');
+                addToLog('log', '请使用以下curl命令手动修复数据：');
+                addToLog('log', `curl -X POST "https://ncgjyulrxlavejpgriju.supabase.co/rest/v1/users" \\n  -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jZ2p5dWxyeGxhdmVqcGdyaWp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc4MDc2MzIsImV4cCI6MjA3MzM4MzYzMn0.yM0nV0WUOO1UdUuRWCKjs4k3-W3FkflrpzK1cD3ULkk" \\n  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\n  -H "Content-Type: application/json" \\n  -d '{"id":"${userId}","email":"${userEmail}","created_at":"${new Date().toISOString()}","updated_at":"${new Date().toISOString()}"}'`);
+                
+                addToLog('success', '请复制上面的curl命令并在终端中执行来修复用户数据');
+            } catch (error) {
+                addToLog('error', `修复用户数据异常: ${error.message}`);
+                console.error(error);
+            }
+        }
+        
+        // 页面加载时显示提示
+        window.addEventListener('DOMContentLoaded', async () => {
+            addToLog('log', '页面加载完成');
+            addToLog('log', '注意：由于浏览器安全限制，此页面无法直接修复数据');
+            addToLog('log', '请使用提供的curl命令手动修复');
+        });
+    </script>
+</body>
+</html>

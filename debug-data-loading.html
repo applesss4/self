@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>测试数据加载</title>
+    <title>数据加载调试页面</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></script>
     <link rel="stylesheet" href="css/styles.css?v=1.0.37">
@@ -13,7 +13,7 @@
 </head>
 <body class="bg-gray-100">
     <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">测试数据加载</h1>
+        <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">数据加载调试页面</h1>
         
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
             <h2 class="text-xl font-semibold mb-4">调试信息</h2>
@@ -50,10 +50,7 @@
         </div>
     </div>
 
-    <script type="module">
-        import SupabaseAuth from './js/supabaseAuth.js';
-        import SupabaseStorage from './js/supabaseStorage.js';
-        
+    <script>
         // 页面加载完成后执行
         document.addEventListener('DOMContentLoaded', async function() {
             const debugInfo = document.getElementById('debug-info');
@@ -70,12 +67,8 @@
             try {
                 // 检查认证状态
                 console.log('开始检查认证状态...');
-                const supabaseAuth = new SupabaseAuth();
+                const supabaseAuth = SupabaseAuth.getInstance();
                 console.log('SupabaseAuth实例:', supabaseAuth);
-                
-                // 等待初始化
-                await supabaseAuth.init();
-                console.log('SupabaseAuth初始化完成');
                 
                 const currentUser = await supabaseAuth.getCurrentUser();
                 console.log('当前用户:', currentUser);
@@ -95,19 +88,19 @@
                         </button>
                     `;
                     document.getElementById('login-btn').addEventListener('click', () => {
-                        window.location.href = 'index.html';
+                        window.location.href = 'login.html';
                     });
                     return;
                 }
                 
                 // 绑定事件
-                document.getElementById('test-load-btn').addEventListener('click', () => testDataLoading(supabaseAuth));
+                document.getElementById('test-load-btn').addEventListener('click', testDataLoading);
                 document.getElementById('back-to-tasks').addEventListener('click', () => {
-                    window.location.href = 'pages/tasks.html';
+                    window.location.href = 'tasks.html';
                 });
                 document.getElementById('logout-btn').addEventListener('click', async () => {
                     await supabaseAuth.signOut();
-                    window.location.href = 'index.html';
+                    window.location.href = 'login.html';
                 });
                 
             } catch (error) {
@@ -119,7 +112,7 @@
         });
         
         // 测试数据加载
-        async function testDataLoading(supabaseAuth) {
+        async function testDataLoading() {
             const dataResults = document.getElementById('data-results');
             dataResults.innerHTML = '<p>正在测试数据加载...</p>';
             
@@ -129,22 +122,12 @@
                 const storage = new SupabaseStorage();
                 console.log('SupabaseStorage实例创建完成');
                 
-                // 检查认证状态
-                const currentUser = await supabaseAuth.getCurrentUser();
-                console.log('当前用户:', currentUser);
-                
-                if (!currentUser) {
-                    dataResults.innerHTML = '<p class="text-red-600">用户未认证，无法加载数据</p>';
-                    return;
-                }
-                
                 // 尝试获取所有任务
                 console.log('开始获取任务数据...');
-                const result = await storage.getAllTasks();
-                console.log('获取到的任务数据:', result);
+                const tasks = await storage.getAllTasks();
+                console.log('获取到的任务数据:', tasks);
                 
-                if (result.success) {
-                    const tasks = result.data;
+                if (tasks && Array.isArray(tasks)) {
                     dataResults.innerHTML = `
                         <p class="text-green-600"><strong>数据加载成功!</strong></p>
                         <p><strong>任务数量:</strong> ${tasks.length}</p>
@@ -155,14 +138,14 @@
                     `;
                 } else {
                     dataResults.innerHTML = `
-                        <p class="text-yellow-600"><strong>数据加载失败:</strong></p>
-                        <p>${result.error}</p>
+                        <p class="text-yellow-600"><strong>数据加载完成，但返回格式异常:</strong></p>
+                        <pre class="bg-gray-100 p-2 mt-2 rounded text-sm overflow-auto">${JSON.stringify(tasks, null, 2)}</pre>
                     `;
                 }
             } catch (error) {
                 console.error('数据加载测试失败:', error);
                 dataResults.innerHTML = `
-                    <p class="text-red-600"><strong>数据加载异常:</strong></p>
+                    <p class="text-red-600"><strong>数据加载失败:</strong></p>
                     <p>${error.message}</p>
                     <pre class="bg-gray-100 p-2 mt-2 rounded text-sm overflow-auto">${error.stack}</pre>
                 `;

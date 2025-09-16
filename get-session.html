@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>获取会话信息</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .log {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .error {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+        .success {
+            background: #e8f5e9;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1976d2;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>获取会话信息</h1>
+    
+    <div>
+        <h2>登录</h2>
+        <input type="email" id="email" placeholder="邮箱" value="123@123.com">
+        <input type="password" id="password" placeholder="密码" value="123">
+        <button onclick="login()">登录</button>
+        <button onclick="getSession()">获取会话</button>
+        <button onclick="clearLogs()">清空日志</button>
+    </div>
+    
+    <div>
+        <h2>会话信息</h2>
+        <div id="sessionInfo"></div>
+    </div>
+    
+    <div>
+        <h2>调试日志</h2>
+        <div id="logs"></div>
+    </div>
+
+    <script type="module">
+        import supabase from './js/supabase.js';
+        
+        function addToLog(type, message) {
+            const logsContainer = document.getElementById('logs');
+            const logElement = document.createElement('div');
+            logElement.className = `log ${type}`;
+            logElement.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logsContainer.appendChild(logElement);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+        
+        async function login() {
+            try {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                if (!email || !password) {
+                    addToLog('error', '请填写邮箱和密码');
+                    return;
+                }
+                
+                addToLog('log', `尝试登录: ${email}`);
+                
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+                
+                if (error) {
+                    addToLog('error', `登录失败: ${error.message}`);
+                    return;
+                }
+                
+                addToLog('success', '登录成功');
+                displaySession(data.session);
+            } catch (error) {
+                addToLog('error', `登录异常: ${error.message}`);
+            }
+        }
+        
+        async function getSession() {
+            try {
+                addToLog('log', '获取当前会话...');
+                
+                const { data, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    addToLog('error', `获取会话失败: ${error.message}`);
+                    return;
+                }
+                
+                if (!data.session) {
+                    addToLog('error', '没有活动会话');
+                    return;
+                }
+                
+                addToLog('success', '获取会话成功');
+                displaySession(data.session);
+            } catch (error) {
+                addToLog('error', `获取会话异常: ${error.message}`);
+            }
+        }
+        
+        function displaySession(session) {
+            const sessionInfo = document.getElementById('sessionInfo');
+            sessionInfo.innerHTML = `
+                <div>
+                    <h3>会话信息</h3>
+                    <p><strong>访问令牌:</strong> ${session.access_token}</p>
+                    <p><strong>刷新令牌:</strong> ${session.refresh_token}</p>
+                    <p><strong>用户ID:</strong> ${session.user.id}</p>
+                    <p><strong>用户邮箱:</strong> ${session.user.email}</p>
+                </div>
+            `;
+        }
+        
+        // 页面加载时自动获取会话
+        window.addEventListener('DOMContentLoaded', async () => {
+            addToLog('log', '页面加载完成');
+        });
+    </script>
+</body>
+</html>

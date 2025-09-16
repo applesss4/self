@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据加载问题诊断</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .log-entry {
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            border-bottom: 1px solid #eee;
+            padding: 4px 0;
+        }
+        .log-info { color: #0066cc; }
+        .log-warn { color: #ff9900; }
+        .log-error { color: #cc0000; }
+        .log-success { color: #009900; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">数据加载问题诊断</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">认证状态</h2>
+                <div id="auth-status" class="space-y-2">
+                    <p>检查中...</p>
+                </div>
+                <button id="check-auth-btn" class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    重新检查认证
+                </button>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">在线模式</h2>
+                <div id="online-mode" class="space-y-2">
+                    <p>检查中...</p>
+                </div>
+                <div class="mt-4">
+                    <button id="enable-online-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-2">
+                        启用在线模式
+                    </button>
+                    <button id="disable-online-btn" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">
+                        启用离线模式
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+            <h2 class="text-xl font-semibold mb-4">数据加载测试</h2>
+            <div class="flex flex-wrap gap-2 mb-4">
+                <button id="test-storage-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    测试SupabaseStorage
+                </button>
+                <button id="test-taskmanager-btn" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
+                    测试TaskManager
+                </button>
+                <button id="test-tasks-btn" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
+                    测试Tasks.js
+                </button>
+                <button id="clear-logs-btn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                    清除日志
+                </button>
+            </div>
+            <div id="test-results" class="space-y-2">
+                <p>等待测试...</p>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+            <h2 class="text-xl font-semibold mb-4">详细日志</h2>
+            <div id="detailed-logs" class="bg-black text-green-400 p-4 rounded font-mono text-sm h-64 overflow-y-auto">
+                <p>日志将在这里显示...</p>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+            <h2 class="text-xl font-semibold mb-4">操作</h2>
+            <div class="flex flex-wrap gap-2">
+                <button id="back-to-tasks" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                    返回任务页面
+                </button>
+                <button id="logout-btn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                    登出
+                </button>
+                <button id="reload-page" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">
+                    重新加载页面
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import SupabaseAuth from './js/supabaseAuth.js';
+        import SupabaseStorage from './js/supabaseStorage.js';
+        import TaskManager from './js/taskManager.js';
+        
+        // 全局变量
+        let supabaseAuth = null;
+        let supabaseStorage = null;
+        let taskManager = null;
+        let logs = [];
+        
+        // 日志函数
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            logs.push({ message: logEntry, type });
+            
+            // 更新详细日志显示
+            const logDiv = document.getElementById('detailed-logs');
+            const logElement = document.createElement('div');
+            logElement.className = `log-entry log-${type}`;
+            logElement.textContent = logEntry;
+            logDiv.appendChild(logElement);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            
+            // 限制日志数量
+            if (logs.length > 1000) {
+                logs = logs.slice(-500);
+                logDiv.innerHTML = '';
+                logs.forEach(log => {
+                    const elem = document.createElement('div');
+                    elem.className = `log-entry log-${log.type}`;
+                    elem.textContent = log.message;
+                    logDiv.appendChild(elem);
+                });
+            }
+        }
+        
+        // 更新认证状态显示
+        async function updateAuthStatus() {
+            const authStatusDiv = document.getElementById('auth-status');
+            try {
+                if (!supabaseAuth) {
+                    supabaseAuth = new SupabaseAuth();
+                    await supabaseAuth.init();
+                    log('创建并初始化SupabaseAuth实例', 'info');
+                }
+                
+                const authStatus = await supabaseAuth.checkAuthStatus();
+                log(`认证状态检查结果: ${JSON.stringify(authStatus)}`, 'info');
+                
+                if (authStatus.isAuthenticated) {
+                    authStatusDiv.innerHTML = `
+                        <p class="text-green-600"><strong>认证状态:</strong> 已登录</p>
+                        <p><strong>用户ID:</strong> ${authStatus.user.id}</p>
+                        <p><strong>用户邮箱:</strong> ${authStatus.user.email}</p>
+                        <p><strong>检查时间:</strong> ${new Date().toLocaleString()}</p>
+                    `;
+                } else {
+                    authStatusDiv.innerHTML = `
+                        <p class="text-red-600"><strong>认证状态:</strong> 未登录</p>
+                        <p><strong>错误信息:</strong> ${authStatus.error || '无'}</p>
+                    `;
+                }
+            } catch (error) {
+                log(`检查认证状态时出错: ${error.message}`, 'error');
+                authStatusDiv.innerHTML = `
+                    <p class="text-red-600"><strong>认证检查失败:</strong> ${error.message}</p>
+                `;
+            }
+        }
+        
+        // 更新在线模式显示
+        function updateOnlineMode() {
+            const onlineModeDiv = document.getElementById('online-mode');
+            if (taskManager) {
+                onlineModeDiv.innerHTML = `
+                    <p><strong>TaskManager在线模式:</strong> ${taskManager.isOnline ? '启用' : '禁用'}</p>
+                    <p><strong>检查时间:</strong> ${new Date().toLocaleString()}</p>
+                `;
+            } else {
+                onlineModeDiv.innerHTML = '<p>TaskManager未初始化</p>';
+            }
+        }
+        
+        // 测试SupabaseStorage
+        async function testSupabaseStorage() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<p>正在测试SupabaseStorage...</p>';
+            
+            try {
+                if (!supabaseStorage) {
+                    supabaseStorage = new SupabaseStorage();
+                    log('创建SupabaseStorage实例', 'info');
+                }
+                
+                log('开始调用supabaseStorage.getAllTasks()', 'info');
+                const result = await supabaseStorage.getAllTasks();
+                log(`SupabaseStorage返回结果: ${JSON.stringify(result)}`, result.success ? 'success' : 'error');
+                
+                if (result.success) {
+                    resultsDiv.innerHTML = `
+                        <p class="text-green-600"><strong>SupabaseStorage测试成功!</strong></p>
+                        <p><strong>任务数量:</strong> ${result.data.length}</p>
+                        <details class="mt-2">
+                            <summary class="cursor-pointer">查看详细数据</summary>
+                            <pre class="bg-gray-100 p-2 mt-2 rounded text-sm overflow-auto">${JSON.stringify(result.data, null, 2)}</pre>
+                        </details>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <p class="text-red-600"><strong>SupabaseStorage测试失败:</strong></p>
+                        <p>${result.error}</p>
+                    `;
+                }
+            } catch (error) {
+                log(`SupabaseStorage测试异常: ${error.message}`, 'error');
+                resultsDiv.innerHTML = `
+                    <p class="text-red-600"><strong>SupabaseStorage测试异常:</strong></p>
+                    <p>${error.message}</p>
+                    <pre class="bg-gray-100 p-2 mt-2 rounded text-sm overflow-auto">${error.stack}</pre>
+                `;
+            }
+        }
+        
+        // 测试TaskManager
+        async function testTaskManager() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<p>正在测试TaskManager...</p>';
+            
+            try {
+                if (!taskManager) {
+                    taskManager = new TaskManager();
+                    log('创建TaskManager实例', 'info');
+                }
+                
+                // 确保TaskManager初始化
+                if (!taskManager.initPromise) {
+                    log('初始化TaskManager', 'info');
+                    await taskManager.init();
+                }
+                await taskManager.initPromise;
+                log('TaskManager初始化完成', 'info');
+                
+                // 启用在线模式
+                taskManager.setOnlineMode(true);
+                log('启用在线模式', 'info');
+                
+                log('开始调用taskManager.loadTasks()', 'info');
+                const tasks = await taskManager.loadTasks();
+                log(`TaskManager返回任务数量: ${tasks.length}`, 'info');
+                
+                resultsDiv.innerHTML = `
+                    <p class="text-green-600"><strong>TaskManager测试完成!</strong></p>
+                    <p><strong>任务数量:</strong> ${tasks.length}</p>
+                    <p><strong>在线模式:</strong> ${taskManager.isOnline ? '启用' : '禁用'}</p>
+                    <details class="mt-2">
+                        <summary class="cursor-pointer">查看详细数据</summary>
+                        <pre class="bg-gray-100 p-2 mt-2 rounded text-sm overflow-auto">${JSON.stringify(tasks, null, 2)}</pre>
+                    </details>
+                `;
+                
+                updateOnlineMode();
+            } catch (error) {
+                log(`TaskManager测试异常: ${error.message}`, 'error');
+                resultsDiv.innerHTML = `
+                    <p class="text-red-600"><strong>TaskManager测试异常:</strong></p>
+                    <p>${error.message}</p>
+                    <pre class="bg-gray-100 p-2 mt-2 rounded text-sm overflow-auto">${error.stack}</pre>
+                `;
+            }
+        }
+        
+        // 测试Tasks.js逻辑
+        async function testTasksLogic() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<p>正在测试Tasks.js逻辑...</p>';
+            
+            try {
+                if (!taskManager) {
+                    taskManager = new TaskManager();
+                    log('创建TaskManager实例', 'info');
+                }
+                
+                // 确保TaskManager初始化
+                if (!taskManager.initPromise) {
+                    log('初始化TaskManager', 'info');
+                    await taskManager.init();
+                }
+                await taskManager.initPromise;
+                log('TaskManager初始化完成', 'info');
+                
+                // 启用在线模式
+                taskManager.setOnlineMode(true);
+                log('启用在线模式', 'info');
+                
+                log('开始调用taskManager.loadTasks()（模拟tasks.js）', 'info');
+                const tasks = await taskManager.loadTasks();
+                log(`tasks.js逻辑返回任务数量: ${tasks.length}`, 'info');
+                
+                resultsDiv.innerHTML = `
+                    <p class="text-green-600"><strong>Tasks.js逻辑测试完成!</strong></p>
+                    <p><strong>任务数量:</strong> ${tasks.length}</p>
+                    <p><strong>在线模式:</strong> ${taskManager.isOnline ? '启用' : '禁用'}</p>
+                    <details class="mt-2">
+                        <summary class="cursor-pointer">查看详细数据</summary>
+                        <pre class="bg-gray-100 p-2 mt-2 rounded text-sm overflow-auto">${JSON.stringify(tasks, null, 2)}</pre>
+                    </details>
+                `;
+                
+                updateOnlineMode();
+            } catch (error) {
+                log(`Tasks.js逻辑测试异常: ${error.message}`, 'error');
+                resultsDiv.innerHTML = `
+                    <p class="text-red-600"><strong>Tasks.js逻辑测试异常:</strong></p>
+                    <p>${error.message}</p>
+                    <pre class="bg-gray-100 p-2 mt-2 rounded text-sm overflow-auto">${error.stack}</pre>
+                `;
+            }
+        }
+        
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', async function() {
+            log('页面加载完成，开始初始化...', 'info');
+            
+            try {
+                // 初始化组件
+                supabaseAuth = new SupabaseAuth();
+                await supabaseAuth.init();
+                log('SupabaseAuth初始化完成', 'success');
+                
+                supabaseStorage = new SupabaseStorage();
+                log('SupabaseStorage创建完成', 'success');
+                
+                taskManager = new TaskManager();
+                log('TaskManager创建完成', 'success');
+                
+                // 更新显示
+                await updateAuthStatus();
+                updateOnlineMode();
+                
+                // 绑定事件
+                document.getElementById('check-auth-btn').addEventListener('click', updateAuthStatus);
+                document.getElementById('enable-online-btn').addEventListener('click', () => {
+                    if (taskManager) {
+                        taskManager.setOnlineMode(true);
+                        updateOnlineMode();
+                        log('手动启用在线模式', 'info');
+                    }
+                });
+                document.getElementById('disable-online-btn').addEventListener('click', () => {
+                    if (taskManager) {
+                        taskManager.setOnlineMode(false);
+                        updateOnlineMode();
+                        log('手动禁用在线模式', 'info');
+                    }
+                });
+                document.getElementById('test-storage-btn').addEventListener('click', testSupabaseStorage);
+                document.getElementById('test-taskmanager-btn').addEventListener('click', testTaskManager);
+                document.getElementById('test-tasks-btn').addEventListener('click', testTasksLogic);
+                document.getElementById('clear-logs-btn').addEventListener('click', () => {
+                    logs = [];
+                    document.getElementById('detailed-logs').innerHTML = '<p>日志已清除</p>';
+                    log('日志已清除', 'info');
+                });
+                document.getElementById('back-to-tasks').addEventListener('click', () => {
+                    window.location.href = 'pages/tasks.html';
+                });
+                document.getElementById('logout-btn').addEventListener('click', async () => {
+                    if (supabaseAuth) {
+                        await supabaseAuth.signOut();
+                        log('用户已登出', 'info');
+                    }
+                    window.location.href = 'index.html';
+                });
+                document.getElementById('reload-page').addEventListener('click', () => {
+                    window.location.reload();
+                });
+                
+                log('所有事件绑定完成', 'success');
+            } catch (error) {
+                log(`初始化时出错: ${error.message}`, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

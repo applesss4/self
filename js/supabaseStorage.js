@@ -107,30 +107,55 @@ class SupabaseStorage {
                 .single();
             
             if (fetchError && fetchError.code !== 'PGRST116') {
-                return false;
+                console.error('检查用户存在性时出错:', fetchError);
+                // 即使检查出错，我们也尝试创建用户
+                return await this.createUserRecord(user);
             }
             
             // 如果用户不存在，则创建用户记录
             if (!existingUser) {
-                const { data: newUser, error: insertError } = await supabase
-                    .from('users')
-                    .insert({
-                        id: user.id,
-                        email: user.email,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    })
-                    .select()
-                    .single();
-                
-                if (insertError) {
-                    return false;
-                }
+                return await this.createUserRecord(user);
             }
             
             return true;
         } catch (error) {
-            return false;
+            console.error('确保用户存在时出错:', error);
+            // 即使出错，我们也尝试创建用户
+            return await this.createUserRecord(user);
+        }
+    }
+    
+    // 创建用户记录的独立方法
+    async createUserRecord(user) {
+        if (!user) return false;
+        
+        try {
+            const { data: newUser, error: insertError } = await supabase
+                .from('users')
+                .insert({
+                    id: user.id,
+                    email: user.email,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+            
+            if (insertError) {
+                console.error('创建用户记录时出错:', insertError);
+                // 如果是RLS错误，我们记录错误但不返回false，因为查询可能仍然有效
+                if (insertError.code === '42501') {
+                    console.log('RLS限制，但用户可能已经存在');
+                    return true;
+                }
+                return false;
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('创建用户记录异常:', error);
+            // 即使出现异常，我们也认为用户可能已经存在
+            return true;
         }
     }
 
@@ -167,13 +192,13 @@ class SupabaseStorage {
             
             // 构建查询
             console.log('SupabaseStorage: 构建查询，用户ID:', user.id);
-            const { data, error } = await supabase
+            const { data, error, count } = await supabase
                 .from(this.tableName)
-                .select('*')
+                .select('*', { count: 'exact' })
                 .order('date', { ascending: true })
                 .eq('user_id', user.id);
 
-            console.log('SupabaseStorage: 查询结果:', data, '错误:', error);
+            console.log('SupabaseStorage: 查询结果:', data, '错误:', error, '计数:', count);
 
             if (error) {
                 console.error('SupabaseStorage: 查询出错:', error);

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登录测试</title>
+    <title>简单验证页面</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -51,33 +51,38 @@
     </style>
 </head>
 <body>
-    <h1>登录测试</h1>
-    
-    <div>
-        <h2>测试登录功能</h2>
-        <p>点击下面的按钮将直接跳转到首页进行登录测试：</p>
-        <button onclick="window.location.href='/'">前往首页登录</button>
-    </div>
-    
-    <div>
-        <h2>直接访问任务页面</h2>
-        <p>如果登录后无法自动跳转，您可以直接访问任务页面：</p>
-        <button onclick="window.location.href='/pages/tasks.html'">访问任务页面</button>
-    </div>
+    <h1>简单验证页面</h1>
     
     <div>
         <h2>测试说明</h2>
+        <p>请按照以下步骤测试您的应用：</p>
         <ol>
-            <li>点击"前往首页登录"按钮</li>
-            <li>在首页使用测试账号登录：
+            <li>打开首页并使用测试账号登录：
                 <ul>
                     <li>邮箱：123@123.com</li>
                     <li>密码：123</li>
                 </ul>
             </li>
-            <li>检查是否能正常跳转到任务页面</li>
-            <li>如果未自动跳转，点击"访问任务页面"按钮</li>
+            <li>登录成功后，检查是否能正常跳转到任务页面</li>
+            <li>在任务页面检查以下功能：
+                <ul>
+                    <li>任务列表是否正常显示</li>
+                    <li>是否能创建新任务</li>
+                    <li>是否能编辑和删除任务</li>
+                    <li>任务状态切换是否正常工作</li>
+                </ul>
+            </li>
         </ol>
+    </div>
+    
+    <div>
+        <h2>常见问题解决方法</h2>
+        <ul>
+            <li><strong>清除浏览器缓存：</strong>按Ctrl+Shift+Delete（Windows）或Cmd+Shift+Delete（Mac）清除缓存</li>
+            <li><strong>硬刷新页面：</strong>按Ctrl+F5（Windows）或Cmd+Shift+R（Mac）</li>
+            <li><strong>检查网络连接：</strong>确保网络连接正常</li>
+            <li><strong>禁用浏览器扩展：</strong>临时禁用可能干扰的浏览器扩展</li>
+        </ul>
     </div>
     
     <div>
@@ -89,6 +94,12 @@
             <li>查看是否有任何红色错误信息</li>
             <li>截图错误信息并提供给我们</li>
         </ol>
+    </div>
+    
+    <div>
+        <h2>直接访问任务页面</h2>
+        <p>如果登录后无法自动跳转，您可以直接访问任务页面：</p>
+        <button onclick="window.open('/pages/tasks.html', '_blank')">打开任务页面</button>
     </div>
 </body>
 </html>

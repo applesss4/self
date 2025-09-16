@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>详细调试页面</title>
+    <title>最终测试</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -51,16 +51,18 @@
     </style>
 </head>
 <body>
-    <h1>详细调试页面</h1>
+    <h1>最终测试</h1>
     
     <div>
-        <h2>测试功能</h2>
+        <h2>登录并测试</h2>
+        <input type="email" id="email" placeholder="邮箱" value="123@123.com">
+        <input type="password" id="password" placeholder="密码" value="123">
         <button onclick="runFullTest()">运行完整测试</button>
         <button onclick="clearLogs()">清空日志</button>
     </div>
     
     <div>
-        <h2>调试日志</h2>
+        <h2>测试结果</h2>
         <div id="logs"></div>
     </div>
 
@@ -72,20 +74,6 @@
         const supabaseAuth = new SupabaseAuth();
         const taskManager = new TaskManager();
         const supabaseStorage = new SupabaseStorage();
-        
-        // 重写console.log以捕获日志
-        const originalLog = console.log;
-        const originalError = console.error;
-        
-        console.log = function(...args) {
-            originalLog.apply(console, args);
-            addToLog('log', args.join(' '));
-        };
-        
-        console.error = function(...args) {
-            originalError.apply(console, args);
-            addToLog('error', args.join(' '));
-        };
         
         function addToLog(type, message) {
             const logsContainer = document.getElementById('logs');
@@ -104,8 +92,28 @@
             try {
                 addToLog('log', '=== 开始完整测试 ===');
                 
-                // 1. 检查认证状态
-                addToLog('log', '1. 检查认证状态...');
+                // 1. 登录
+                addToLog('log', '1. 登录...');
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                if (!email || !password) {
+                    addToLog('error', '请填写邮箱和密码');
+                    return;
+                }
+                
+                const loginResult = await supabaseAuth.signIn(email, password);
+                addToLog('log', `登录结果: ${JSON.stringify(loginResult)}`);
+                
+                if (!loginResult.success) {
+                    addToLog('error', `登录失败: ${loginResult.error}`);
+                    return;
+                }
+                
+                addToLog('success', '登录成功');
+                
+                // 2. 检查认证状态
+                addToLog('log', '2. 检查认证状态...');
                 await supabaseAuth.init();
                 const authStatus = await supabaseAuth.checkAuthStatus();
                 addToLog('log', `认证状态: ${JSON.stringify(authStatus, null, 2)}`);
@@ -117,18 +125,18 @@
                 
                 addToLog('success', '用户已认证');
                 
-                // 2. 初始化TaskManager
-                addToLog('log', '2. 初始化TaskManager...');
+                // 3. 初始化TaskManager
+                addToLog('log', '3. 初始化TaskManager...');
                 await taskManager.init();
                 addToLog('success', 'TaskManager初始化完成');
                 
-                // 3. 设置在线模式
-                addToLog('log', '3. 设置在线模式为true');
+                // 4. 设置在线模式
+                addToLog('log', '4. 设置在线模式为true');
                 taskManager.setOnlineMode(true);
                 addToLog('log', `当前在线模式: ${taskManager.isOnline}`);
                 
-                // 4. 直接调用SupabaseStorage.getAllTasks
-                addToLog('log', '4. 直接调用SupabaseStorage.getAllTasks...');
+                // 5. 直接调用SupabaseStorage.getAllTasks
+                addToLog('log', '5. 直接调用SupabaseStorage.getAllTasks...');
                 const directResult = await supabaseStorage.getAllTasks();
                 addToLog('log', `直接调用结果: ${JSON.stringify(directResult, null, 2)}`);
                 
@@ -138,8 +146,8 @@
                     addToLog('error', `直接调用失败: ${directResult.error}`);
                 }
                 
-                // 5. 通过TaskManager加载任务
-                addToLog('log', '5. 通过TaskManager.loadTasks加载任务...');
+                // 6. 通过TaskManager加载任务
+                addToLog('log', '6. 通过TaskManager.loadTasks加载任务...');
                 const tasks = await taskManager.loadTasks();
                 addToLog('log', `TaskManager加载结果: ${JSON.stringify(tasks, null, 2)}`);
                 addToLog('log', `加载到的任务数量: ${tasks.length}`);
@@ -147,14 +155,39 @@
                 if (tasks.length > 0) {
                     addToLog('success', '通过TaskManager加载任务成功');
                 } else {
-                    addToLog('log', '通过TaskManager没有加载到任务数据');
+                    addToLog('log', '通过TaskManager没有加载到任务数据（这可能是正常的，如果用户没有任务）');
                 }
                 
-                // 6. 检查任务管理器内部状态
-                addToLog('log', '6. 检查任务管理器内部状态...');
-                addToLog('log', `TaskManager.tasks数组长度: ${taskManager.tasks.length}`);
-                addToLog('log', `TaskManager.supabaseStorage是否存在: ${!!taskManager.supabaseStorage}`);
-                addToLog('log', `TaskManager.supabaseAuth是否存在: ${!!taskManager.supabaseAuth}`);
+                // 7. 创建测试任务
+                addToLog('log', '7. 创建测试任务...');
+                const today = new Date().toISOString().split('T')[0];
+                const taskData = {
+                    title: '测试任务 - ' + new Date().toLocaleTimeString(),
+                    date: today,
+                    category: 'life',
+                    time: '12:00',
+                    status: 'pending'
+                };
+                
+                const createResult = await supabaseStorage.createTask(taskData);
+                addToLog('log', `创建任务结果: ${JSON.stringify(createResult, null, 2)}`);
+                
+                if (createResult.success) {
+                    addToLog('success', `创建任务成功，任务ID: ${createResult.data.id}`);
+                } else {
+                    addToLog('error', `创建任务失败: ${createResult.error}`);
+                }
+                
+                // 8. 再次加载任务验证创建是否成功
+                addToLog('log', '8. 再次加载任务验证创建是否成功...');
+                const tasksAfterCreate = await taskManager.loadTasks();
+                addToLog('log', `再次加载任务数量: ${tasksAfterCreate.length}`);
+                
+                if (tasksAfterCreate.length > tasks.length) {
+                    addToLog('success', '任务创建和加载验证成功');
+                } else {
+                    addToLog('log', '任务数量没有增加（可能需要稍后验证）');
+                }
                 
                 addToLog('success', '=== 完整测试完成 ===');
             } catch (error) {
@@ -163,9 +196,9 @@
             }
         }
         
-        // 页面加载时自动运行测试
+        // 页面加载时显示提示
         window.addEventListener('DOMContentLoaded', async () => {
-            addToLog('log', '页面加载完成');
+            addToLog('log', '页面加载完成，请点击"运行完整测试"按钮开始测试');
         });
     </script>
 </body>

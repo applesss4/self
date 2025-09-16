@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SupabaseStorage调试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .log {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .error {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+        .success {
+            background: #e8f5e9;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1976d2;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>SupabaseStorage调试页面</h1>
+    
+    <div>
+        <h2>测试功能</h2>
+        <button onclick="checkAuth()">检查认证状态</button>
+        <button onclick="getAllTasks()">获取所有任务</button>
+        <button onclick="createTestTask()">创建测试任务</button>
+        <button onclick="clearLogs()">清空日志</button>
+    </div>
+    
+    <div>
+        <h2>调试日志</h2>
+        <div id="logs"></div>
+    </div>
+
+    <script type="module">
+        import SupabaseAuth from './js/supabaseAuth.js';
+        import SupabaseStorage from './js/supabaseStorage.js';
+        
+        const supabaseAuth = new SupabaseAuth();
+        const supabaseStorage = new SupabaseStorage();
+        
+        // 重写console.log以捕获日志
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToLog('log', args.join(' '));
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToLog('error', args.join(' '));
+        };
+        
+        function addToLog(type, message) {
+            const logsContainer = document.getElementById('logs');
+            const logElement = document.createElement('div');
+            logElement.className = `log ${type}`;
+            logElement.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logsContainer.appendChild(logElement);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+        
+        async function checkAuth() {
+            try {
+                addToLog('log', '检查认证状态...');
+                await supabaseAuth.init();
+                const authStatus = await supabaseAuth.checkAuthStatus();
+                addToLog('log', `认证状态: ${JSON.stringify(authStatus, null, 2)}`);
+                
+                if (authStatus.isAuthenticated) {
+                    addToLog('success', `用户已认证: ${authStatus.user.email}`);
+                } else {
+                    addToLog('error', '用户未认证');
+                }
+            } catch (error) {
+                addToLog('error', `检查认证状态异常: ${error.message}`);
+            }
+        }
+        
+        async function getAllTasks() {
+            try {
+                addToLog('log', '开始获取所有任务...');
+                
+                // 确保认证初始化完成
+                await supabaseAuth.init();
+                
+                // 检查认证状态
+                const authStatus = await supabaseAuth.checkAuthStatus();
+                addToLog('log', `认证状态: ${JSON.stringify(authStatus)}`);
+                
+                if (!authStatus.isAuthenticated) {
+                    addToLog('error', '用户未认证，无法获取任务');
+                    return;
+                }
+                
+                // 调用SupabaseStorage.getAllTasks方法
+                addToLog('log', '调用SupabaseStorage.getAllTasks()...');
+                const result = await supabaseStorage.getAllTasks();
+                addToLog('log', `获取任务结果: ${JSON.stringify(result, null, 2)}`);
+                
+                if (result.success) {
+                    addToLog('success', `获取任务成功，任务数量: ${result.data.length}`);
+                } else {
+                    addToLog('error', `获取任务失败: ${result.error}`);
+                }
+            } catch (error) {
+                addToLog('error', `获取任务异常: ${error.message}`);
+                console.error(error);
+            }
+        }
+        
+        async function createTestTask() {
+            try {
+                addToLog('log', '开始创建测试任务...');
+                
+                // 确保认证初始化完成
+                await supabaseAuth.init();
+                
+                // 检查认证状态
+                const authStatus = await supabaseAuth.checkAuthStatus();
+                addToLog('log', `认证状态: ${JSON.stringify(authStatus)}`);
+                
+                if (!authStatus.isAuthenticated) {
+                    addToLog('error', '用户未认证，无法创建任务');
+                    return;
+                }
+                
+                // 创建测试任务数据
+                const today = new Date();
+                const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD格式
+                
+                const taskData = {
+                    title: '测试任务 - ' + new Date().toLocaleTimeString(),
+                    date: todayStr,
+                    category: 'life',
+                    time: '12:00',
+                    status: 'pending'
+                };
+                
+                addToLog('log', `创建任务数据: ${JSON.stringify(taskData, null, 2)}`);
+                
+                // 调用SupabaseStorage.createTask方法
+                addToLog('log', '调用SupabaseStorage.createTask()...');
+                const result = await supabaseStorage.createTask(taskData);
+                addToLog('log', `创建任务结果: ${JSON.stringify(result, null, 2)}`);
+                
+                if (result.success) {
+                    addToLog('success', `创建任务成功，任务ID: ${result.data.id}`);
+                } else {
+                    addToLog('error', `创建任务失败: ${result.error}`);
+                }
+            } catch (error) {
+                addToLog('error', `创建任务异常: ${error.message}`);
+                console.error(error);
+            }
+        }
+        
+        // 页面加载时自动检查认证状态
+        window.addEventListener('DOMContentLoaded', async () => {
+            addToLog('log', '页面加载完成，检查认证状态...');
+            await checkAuth();
+        });
+    </script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>调试认证状态</title>
+    <title>认证调试页面</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,9 +14,10 @@
         .log {
             background: #f5f5f5;
             border: 1px solid #ddd;
-            padding: 10px;
+            padding: 15px;
             margin: 10px 0;
-            border-radius: 4px;
+            border-radius: 5px;
+            font-family: monospace;
             white-space: pre-wrap;
         }
         .error {
@@ -33,7 +34,7 @@
             background: #2196f3;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 10px 15px;
             border-radius: 4px;
             cursor: pointer;
             margin: 5px;
@@ -41,61 +42,194 @@
         button:hover {
             background: #1976d2;
         }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
-    <h1>调试认证状态</h1>
+    <h1>认证调试页面</h1>
     
     <div>
-        <button id="checkAuth">检查认证状态</button>
-        <button id="checkStorage">检查存储状态</button>
-        <button id="clearAuth">清除认证信息</button>
+        <h2>登录测试</h2>
+        <input type="email" id="email" placeholder="邮箱" value="123@123.com">
+        <input type="password" id="password" placeholder="密码" value="123">
+        <button onclick="login()">登录</button>
+        <button onclick="checkAuth()">检查认证状态</button>
+        <button onclick="loadTasks()">加载任务</button>
+        <button onclick="checkSupabaseConnection()">检查Supabase连接</button>
+        <button onclick="clearLogs()">清空日志</button>
     </div>
     
-    <div id="log" class="log">等待操作...</div>
+    <div>
+        <h2>调试日志</h2>
+        <div id="logs"></div>
+    </div>
 
     <script type="module">
-        import supabase from './js/supabase.js';
         import SupabaseAuth from './js/supabaseAuth.js';
+        import TaskManager from './js/taskManager.js';
+        import supabase from './js/supabase.js';
         
         const supabaseAuth = new SupabaseAuth();
+        const taskManager = new TaskManager();
         
-        document.getElementById('checkAuth').addEventListener('click', async () => {
-            log('开始检查认证状态...');
-            try {
-                const authStatus = await supabaseAuth.checkAuthStatus();
-                log(`认证状态: ${JSON.stringify(authStatus, null, 2)}`, 'success');
-                
-                const currentUser = await supabaseAuth.getCurrentUser();
-                log(`当前用户: ${JSON.stringify(currentUser, null, 2)}`, 'success');
-                
-                const session = await supabaseAuth.getCurrentSession();
-                log(`当前会话: ${JSON.stringify(session, null, 2)}`, 'success');
-            } catch (error) {
-                log(`检查认证状态出错: ${error.message}`, 'error');
-            }
-        });
+        // 重写console.log以捕获日志
+        const originalLog = console.log;
+        const originalError = console.error;
         
-        document.getElementById('checkStorage').addEventListener('click', () => {
-            log('检查存储状态...');
-            log(`localStorage.supabase.auth.token: ${localStorage.getItem('supabase.auth.token')}`);
-            log(`sessionStorage.isLoggedIn: ${sessionStorage.getItem('isLoggedIn')}`);
-        });
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToLog('log', args.join(' '));
+        };
         
-        document.getElementById('clearAuth').addEventListener('click', () => {
-            log('清除认证信息...');
-            localStorage.removeItem('supabase.auth.token');
-            sessionStorage.removeItem('isLoggedIn');
-            log('认证信息已清除', 'success');
-        });
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToLog('error', args.join(' '));
+        };
         
-        function log(message, type = '') {
-            const logElement = document.getElementById('log');
-            const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
-            const className = type ? type : '';
-            logElement.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
-            logElement.scrollTop = logElement.scrollHeight;
+        function addToLog(type, message) {
+            const logsContainer = document.getElementById('logs');
+            const logElement = document.createElement('div');
+            logElement.className = `log ${type}`;
+            logElement.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logsContainer.appendChild(logElement);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
         }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+        
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                addToLog('log', `尝试登录: ${email}`);
+                const result = await supabaseAuth.signIn(email, password);
+                addToLog('log', `登录结果: ${JSON.stringify(result)}`);
+                
+                if (result.success) {
+                    addToLog('success', '登录成功');
+                    // 设置登录状态标记
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                } else {
+                    addToLog('error', `登录失败: ${result.error}`);
+                }
+            } catch (error) {
+                addToLog('error', `登录异常: ${error.message}`);
+            }
+        }
+        
+        async function checkAuth() {
+            try {
+                addToLog('log', '检查认证状态...');
+                await supabaseAuth.init();
+                const authStatus = await supabaseAuth.checkAuthStatus();
+                addToLog('log', `认证状态: ${JSON.stringify(authStatus)}`);
+                
+                if (authStatus.isAuthenticated) {
+                    addToLog('success', `用户已认证: ${authStatus.user.email}`);
+                } else {
+                    addToLog('error', '用户未认证');
+                }
+            } catch (error) {
+                addToLog('error', `检查认证状态异常: ${error.message}`);
+            }
+        }
+        
+        async function checkSupabaseConnection() {
+            try {
+                addToLog('log', '检查Supabase连接...');
+                const health = await supabase.healthCheck();
+                addToLog('log', `连接状态: ${JSON.stringify(health)}`);
+                
+                if (health.healthy) {
+                    addToLog('success', 'Supabase连接正常');
+                } else {
+                    addToLog('error', `Supabase连接异常: ${health.error}`);
+                }
+            } catch (error) {
+                addToLog('error', `检查Supabase连接异常: ${error.message}`);
+            }
+        }
+        
+        async function loadTasks() {
+            try {
+                addToLog('log', '开始加载任务...');
+                
+                // 确保认证初始化完成
+                await supabaseAuth.init();
+                
+                // 检查认证状态
+                const authStatus = await supabaseAuth.checkAuthStatus();
+                addToLog('log', `认证状态: ${JSON.stringify(authStatus)}`);
+                
+                if (!authStatus.isAuthenticated) {
+                    addToLog('error', '用户未认证，无法加载任务');
+                    return;
+                }
+                
+                // 初始化TaskManager
+                addToLog('log', '初始化TaskManager...');
+                await taskManager.init();
+                addToLog('log', 'TaskManager初始化完成');
+                
+                // 设置在线模式
+                addToLog('log', `设置在线模式为true`);
+                taskManager.setOnlineMode(true);
+                addToLog('log', `当前在线模式: ${taskManager.isOnline}`);
+                
+                // 检查SupabaseStorage实例
+                addToLog('log', '检查SupabaseStorage实例...');
+                if (taskManager.supabaseStorage) {
+                    addToLog('log', 'SupabaseStorage实例存在');
+                } else {
+                    addToLog('error', 'SupabaseStorage实例不存在');
+                    return;
+                }
+                
+                // 直接调用SupabaseStorage.getAllTasks方法进行测试
+                addToLog('log', '直接调用SupabaseStorage.getAllTasks()进行测试...');
+                try {
+                    const directResult = await taskManager.supabaseStorage.getAllTasks();
+                    addToLog('log', `直接调用结果: ${JSON.stringify(directResult, null, 2)}`);
+                    
+                    if (directResult.success) {
+                        addToLog('success', `直接调用成功，任务数量: ${directResult.data.length}`);
+                    } else {
+                        addToLog('error', `直接调用失败: ${directResult.error}`);
+                    }
+                } catch (directError) {
+                    addToLog('error', `直接调用异常: ${directError.message}`);
+                }
+                
+                // 加载任务
+                addToLog('log', '调用taskManager.loadTasks()...');
+                const tasks = await taskManager.loadTasks();
+                addToLog('log', `loadTasks返回结果: ${JSON.stringify(tasks, null, 2)}`);
+                addToLog('log', `加载到的任务数量: ${tasks.length}`);
+                
+                if (tasks.length > 0) {
+                    addToLog('success', '任务加载成功');
+                } else {
+                    addToLog('log', '没有任务数据');
+                }
+            } catch (error) {
+                addToLog('error', `加载任务异常: ${error.message}`);
+                console.error(error);
+            }
+        }
+        
+        // 页面加载时自动检查认证状态
+        window.addEventListener('DOMContentLoaded', async () => {
+            addToLog('log', '页面加载完成，检查认证状态...');
+            await checkAuth();
+        });
     </script>
 </body>
 </html>
