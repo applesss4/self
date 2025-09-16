@@ -2,6 +2,7 @@
 // 版本: 1.0.34
 import SupabaseAuth from './supabaseAuth.js';
 import SupabaseFoodStorage from './supabaseFoodStorage.js';
+import authGuard from './authGuard.js';  // 导入认证保护中间件
 
 // 页面UI管理
 class FoodUI {
@@ -13,10 +14,18 @@ class FoodUI {
     }
 
     async init() {
-        // 检查是否从首页登录
-        const loginStatus = sessionStorage.getItem('isLoggedIn');
-        if (loginStatus !== 'true') {
-            // 用户未在首页登录，重定向到首页
+        // 检查用户是否已认证
+        const isAuthenticated = await authGuard.requireAuth();
+        if (!isAuthenticated) {
+            // 如果未认证，authGuard会自动重定向到登录页面
+            return;
+        }
+        
+        // 检查用户是否真的已登录
+        const currentUser = await authGuard.getCurrentUser();
+        if (!currentUser) {
+            // 如果认证模块显示用户未登录，清除会话存储并重定向到首页
+            authGuard.clearAuth();
             window.location.href = '/';
             return;
         }
@@ -191,6 +200,9 @@ class FoodUI {
         document.getElementById('checkoutBtn')?.addEventListener('click', async () => {
             await this.checkout();
         });
+        
+        // 登录按钮事件
+        document.getElementById('loginBtn')?.addEventListener('click', handleLogout);
 
         // ESC键关闭模态框
         document.addEventListener('keydown', (e) => {
@@ -201,6 +213,25 @@ class FoodUI {
                 this.closeOrder();
             }
         });
+    }
+
+    // 处理登出
+    async handleLogout() {
+        try {
+            // 清除认证信息
+            authGuard.clearAuth();
+            
+            // 显示登出消息
+            this.showToast('正在登出...', 'info');
+            
+            // 延迟跳转以显示消息
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1000);
+        } catch (error) {
+            console.error('登出时出错:', error);
+            this.showToast('登出失败，请重试', 'error');
+        }
     }
 
     // 绑定功能按钮事件

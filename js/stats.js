@@ -2,6 +2,7 @@
 // 版本: 1.0.34
 import SupabaseAuth from './supabaseAuth.js';
 import supabase from './supabase.js';
+import authGuard from './authGuard.js';  // 导入认证保护中间件
 
 // 菜品数据存储
 class FoodStorage {
@@ -15,11 +16,12 @@ class FoodStorage {
     // 从数据库加载数据
     async loadFromDatabase() {
         try {
-            // 检查是否从首页登录
-            const loginStatus = sessionStorage.getItem('isLoggedIn');
-            if (loginStatus !== 'true') {
-                // 用户未在首页登录，重定向到首页
-                window.location.href = '/';
+            // 检查用户是否已认证
+            const isAuthenticated = await authGuard.checkAuth();
+            if (!isAuthenticated) {
+                console.log('用户未认证，无法从数据库加载数据');
+                this.foods = [];
+                this.orders = [];
                 return;
             }
             
@@ -103,10 +105,18 @@ class StatsUI {
     }
 
     async init() {
-        // 检查是否从首页登录
-        const loginStatus = sessionStorage.getItem('isLoggedIn');
-        if (loginStatus !== 'true') {
-            // 用户未在首页登录，重定向到首页
+        // 检查用户是否已认证
+        const isAuthenticated = await authGuard.requireAuth();
+        if (!isAuthenticated) {
+            // 如果未认证，authGuard会自动重定向到登录页面
+            return;
+        }
+        
+        // 检查用户是否真的已登录
+        const currentUser = await authGuard.getCurrentUser();
+        if (!currentUser) {
+            // 如果认证模块显示用户未登录，清除会话存储并重定向到首页
+            authGuard.clearAuth();
             window.location.href = '/';
             return;
         }
@@ -137,12 +147,6 @@ class StatsUI {
         const loginBtn = document.getElementById('loginBtn');
         if (loginBtn) {
             console.log('数据统计页面找到登录按钮');
-            // 确保simpleAuth.js已加载并初始化
-            if (typeof window.supabaseAuth !== 'undefined') {
-                console.log('认证模块已加载');
-            } else {
-                console.log('等待认证模块加载');
-            }
         } else {
             console.log('数据统计页面未找到登录按钮');
         }
@@ -168,42 +172,36 @@ class StatsUI {
             }
         });
         
+        // 登录按钮事件
+        document.getElementById('loginBtn')?.addEventListener('click', handleLogout);
+        
         // 绑定登录按钮事件（作为后备方案）
         const loginBtn = document.getElementById('loginBtn');
         if (loginBtn) {
             loginBtn.addEventListener('click', (e) => {
                 console.log('数据统计页面登录按钮被点击');
-                // 尝试触发simpleAuth.js中的登录逻辑
-                if (window.supabaseAuth) {
-                    window.supabaseAuth.getCurrentUser().then(user => {
-                        if (user) {
-                            // 用户已登录，执行登出操作
-                            window.supabaseAuth.signOut().then(result => {
-                                if (result.success) {
-                                    // 清除登录状态标记
-                                    sessionStorage.removeItem('isLoggedIn');
-                                    
-                                    // 跳转到首页
-                                    window.location.href = '/';
-                                }
-                            });
-                        } else {
-                            // 用户未登录，打开登录模态框
-                            const authModal = document.getElementById('authModal');
-                            if (authModal) {
-                                authModal.classList.add('active');
-                            }
-                        }
-                    });
-                } else {
-                    console.log('认证模块未初始化');
-                    // 作为后备方案，直接显示登录模态框
-                    const authModal = document.getElementById('authModal');
-                    if (authModal) {
-                        authModal.classList.add('active');
-                    }
-                }
+                // 处理登出
+                this.handleLogout();
             });
+        }
+    }
+
+    // 处理登出
+    async handleLogout() {
+        try {
+            // 清除认证信息
+            authGuard.clearAuth();
+            
+            // 显示登出消息
+            this.showToast('正在登出...', 'info');
+            
+            // 延迟跳转以显示消息
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1000);
+        } catch (error) {
+            console.error('登出时出错:', error);
+            this.showToast('登出失败，请重试', 'error');
         }
     }
 
@@ -314,11 +312,8 @@ class StatsUI {
                     // 显示提示消息
                     this.showToast('请先登录后再访问此功能', 'error');
                     
-                    // 显示登录模态框
-                    const authModal = document.getElementById('authModal');
-                    if (authModal) {
-                        authModal.classList.add('active');
-                    }
+                    // 重定向到首页
+                    window.location.href = '/';
                 }
             }.bind(this));
         });
@@ -444,7 +439,7 @@ class StatsUI {
                 ${index > 0 ? `
                     <div class="weekly-change ${week.change >= 0 ? 'change-positive' : 'change-negative'}">
                         ${week.change >= 0 ? '↑' : '↓'} ${Math.abs(week.change).toFixed(0)}% 
-                        ${week.change >= 0 ? '增加' : 'uble'}
+                        ${week.change >= 0 ? '增加' : '减少'}
                     </div>
                 ` : ''}
             </div>

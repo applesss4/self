@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase数据测试</title>
+</head>
+<body>
+    <h1>Supabase数据测试</h1>
+    <button id="testBtn">测试数据查询</button>
+    <div id="result"></div>
+
+    <script type="module">
+        import supabase from './js/supabase.js';
+        
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>正在查询...</p>';
+            
+            try {
+                // 尝试获取当前用户
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                console.log('当前用户:', user);
+                
+                if (userError) {
+                    resultDiv.innerHTML = `<p>用户错误: ${userError.message}</p>`;
+                    return;
+                }
+                
+                if (!user) {
+                    resultDiv.innerHTML = '<p>用户未登录</p>';
+                    return;
+                }
+                
+                // 查询任务数据
+                const { data: tasks, error: tasksError } = await supabase
+                    .from('tasks')
+                    .select('*')
+                    .eq('user_id', user.id);
+                
+                if (tasksError) {
+                    resultDiv.innerHTML = `<p>任务查询错误: ${tasksError.message}</p>`;
+                    return;
+                }
+                
+                resultDiv.innerHTML = `
+                    <h2>查询结果</h2>
+                    <p>用户ID: ${user.id}</p>
+                    <p>任务数量: ${tasks.length}</p>
+                    <pre>${JSON.stringify(tasks, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<p>查询过程中出错: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

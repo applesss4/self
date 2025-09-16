@@ -136,15 +136,20 @@ class SupabaseStorage {
     // 获取所有任务
     async getAllTasks() {
         try {
+            console.log('SupabaseStorage: 开始获取所有任务');
             // 只获取当前用户的任务
             const { data: { user }, error: authError } = await supabase.auth.getUser();
             
+            console.log('SupabaseStorage: 当前用户:', user);
+            
             if (authError) {
+                console.error('SupabaseStorage: 获取用户时出错:', authError);
                 this.notifyError(authError.message, 'getAllTasks');
                 throw new Error(authError.message);
             }
             
             if (!user) {
+                console.log('SupabaseStorage: 用户未登录，返回空任务列表');
                 return { success: true, data: [] };
             }
             
@@ -157,9 +162,12 @@ class SupabaseStorage {
                 .order('date', { ascending: true })
                 .eq('user_id', user.id);
 
+            console.log('SupabaseStorage: 执行查询，用户ID:', user.id);
             const { data, error } = await query;
+            console.log('SupabaseStorage: 查询结果:', data, '错误:', error);
 
             if (error) {
+                console.error('SupabaseStorage: 查询出错:', error);
                 this.notifyError(error.message, 'getAllTasks');
                 throw new Error(error.message);
             }
@@ -171,8 +179,10 @@ class SupabaseStorage {
                 workEndTime: task.work_end_time
             }));
 
+            console.log('SupabaseStorage: 转换后的数据:', convertedData);
             return { success: true, data: convertedData };
         } catch (error) {
+            console.error('SupabaseStorage: 获取所有任务时出错:', error);
             this.notifyError(error.message, 'getAllTasks');
             return { success: false, error: error.message };
         }

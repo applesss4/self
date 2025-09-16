@@ -1,7 +1,8 @@
 // 工作任务主逻辑
 // 版本: 1.0.34
 import TaskManager from './taskManager.js';
-import SupabaseAuth from './supabaseAuth.js';  // 导入 SupabaseAuth 类
+import authGuard from './authGuard.js';
+import SupabaseAuth from './supabaseAuth.js';
 
 // 辅助函数：将Date对象格式化为本地日期字符串 (YYYY-MM-DD)
 function formatDateToLocal(date) {
@@ -118,52 +119,108 @@ function bindEventListeners() {
             normalTimeGroup.style.display = 'block';
         }
     });
+    
+    // 登录按钮事件
+    document.getElementById('loginBtn')?.addEventListener('click', handleLogout);
+    
+    // 功能菜单按钮事件
+    document.getElementById('featuresBtn')?.addEventListener('click', openFeaturesModal);
+    
+    // 关闭功能菜单模态框
+    document.getElementById('closeFeaturesModal')?.addEventListener('click', closeFeaturesModalFunc);
+    
+    // 点击功能菜单模态框外部关闭
+    document.getElementById('featuresModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'featuresModal') {
+            closeFeaturesModalFunc();
+        }
+    });
+}
+
+// 处理登出
+async function handleLogout() {
+    try {
+        // 清除认证信息
+        authGuard.clearAuth();
+        
+        // 显示登出消息
+        showToast('正在登出...', 'info');
+        
+        // 延迟跳转以显示消息
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 1000);
+    } catch (error) {
+        console.error('登出时出错:', error);
+        showToast('登出失败，请重试', 'error');
+    }
 }
 
 // 初始化应用
 async function init() {
+    console.log('任务页面初始化开始');
+    
+    // 检查用户是否已认证
+    const isAuthenticated = await authGuard.requireAuth();
+    if (!isAuthenticated) {
+        // 如果未认证，authGuard会自动重定向到登录页面
+        return;
+    }
+    
     // 获取 DOM 元素
     getDOMElements();
     
     // 绑定事件监听器
     bindEventListeners();
     
-    // 检查是否从首页登录
-    const loginStatus = sessionStorage.getItem('isLoggedIn');
-    if (loginStatus !== 'true') {
-        // 用户未在首页登录，重定向到首页
+    // 获取当前用户
+    console.log('检查当前用户状态');
+    const currentUser = await authGuard.getCurrentUser();
+    console.log('当前用户:', currentUser);
+    if (!currentUser) {
+        // 如果认证模块显示用户未登录，清除会话存储并重定向到首页
+        console.log('认证模块显示用户未登录，清除会话存储并重定向到首页');
+        authGuard.clearAuth();
         window.location.href = '/';
         return;
     }
     
-    // 初始化 Supabase 认证
-    supabaseAuth = new SupabaseAuth();
-    
     // 启用在线模式
+    console.log('启用在线模式');
     taskManager.setOnlineMode(true);
     // 订阅实时更新
+    console.log('订阅实时更新');
     subscribeToRealtimeUpdates();
     
     // 初始化日历
+    console.log('初始化日历');
     renderCalendar();
     
     // 加载并显示任务
+    console.log('加载并显示任务');
     await loadAndDisplayTasks();
     
     // 更新今日按钮状态
+    console.log('更新今日按钮状态');
     updateTodayButton();
     
     // 显示今日任务
+    console.log('显示今日任务');
     displayTodayTasks();
     
     // 为导航链接添加登录检查
+    console.log('为导航链接添加登录检查');
     addLoginCheckToNavLinks();
     
     // 绑定功能按钮事件
+    console.log('绑定功能按钮事件');
     bindFeaturesButtonEvents();
     
     // 检查用户登录状态并更新功能按钮
+    console.log('检查用户登录状态并更新功能按钮');
     checkUserStatusAndShowFeaturesButton();
+    
+    console.log('任务页面初始化完成');
 }
 
 // 为导航链接添加登录检查
@@ -312,11 +369,18 @@ function updateTodayButton() {
 
 // 加载并显示任务
 async function loadAndDisplayTasks() {
-    state.tasks = await taskManager.loadTasks();
-    updateTasksForSelectedDate();
-    renderCalendar();
-    // 更新今日任务显示
-    displayTodayTasks();
+    console.log('开始加载任务数据...');
+    try {
+        state.tasks = await taskManager.loadTasks();
+        console.log('加载到的任务数据:', state.tasks);
+        updateTasksForSelectedDate();
+        renderCalendar();
+        // 更新今日任务显示
+        displayTodayTasks();
+        console.log('任务数据加载和显示完成');
+    } catch (error) {
+        console.error('加载任务数据时出错:', error);
+    }
 }
 
 // 显示今日任务
@@ -385,7 +449,11 @@ async function displayTodayTasks() {
 
 // 更新选中日期的任务显示
 async function updateTasksForSelectedDate() {
-    if (!DOM.tasksList) return;
+    console.log('更新选中日期的任务显示，选中日期:', state.selectedDate);
+    if (!DOM.tasksList) {
+        console.error('任务列表DOM元素不存在');
+        return;
+    }
     
     // 获取选中日期的任务
     let tasks;
@@ -394,6 +462,8 @@ async function updateTasksForSelectedDate() {
     } else {
         tasks = taskManager.getTasksByDate(state.selectedDate);
     }
+    
+    console.log('获取到的日期任务:', tasks);
     
     // 对任务进行排序：
     // 1. 工作任务按上班时间排序
@@ -432,38 +502,30 @@ async function updateTasksForSelectedDate() {
         return 0;
     });
     
-    // 清空任务列表
+    // 更新任务列表显示
     DOM.tasksList.innerHTML = '';
     
-    // 更新页面标题中的日期
-    // 使用本地日期解析而不是直接创建Date对象
-    const selectedDateObj = parseLocalDate(state.selectedDate);
-    const dateStr = selectedDateObj.toLocaleDateString('zh-CN', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        weekday: 'long'
-    });
+    console.log('排序后的任务:', tasks);
     
-    document.querySelector('.tasks-date').textContent = dateStr;
-    
-    // 显示任务或空状态
     if (tasks.length === 0) {
-        DOM.tasksList.innerHTML = `
-            <div class="tasks-empty">
-                <p>这一天还没有任务</p>
-                <p>点击右上角的"+"按钮添加任务</p>
-            </div>
-        `;
+        DOM.tasksList.innerHTML = '<div class="tasks-empty">该日期暂无任务</div>';
+        console.log('该日期没有任务');
     } else {
         tasks.forEach(task => {
             const taskElement = createTaskElement(task);
             DOM.tasksList.appendChild(taskElement);
         });
+        console.log('已添加任务元素到列表');
     }
     
-    // 更新日历中每天的任务数量
-    updateCalendarTaskCounts();
+    // 更新选中日期显示
+    if (DOM.selectedDate) {
+        DOM.selectedDate.textContent = new Date(state.selectedDate).toLocaleDateString('zh-CN', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }
 }
 
 // 创建任务元素

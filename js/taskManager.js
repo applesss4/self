@@ -46,27 +46,37 @@ class TaskManager {
 
     // 加载所有任务
     async loadTasks() {
+        console.log('TaskManager: 开始加载任务，当前在线模式:', this.isOnline);
         if (this.isOnline) {
             try {
+                console.log('TaskManager: 尝试从Supabase加载任务');
                 const result = await this.supabaseStorage.getAllTasks();
+                console.log('TaskManager: Supabase返回结果:', result);
                 if (result.success) {
                     this.tasks = result.data;
+                    console.log('TaskManager: 成功加载任务数量:', this.tasks.length);
                     return result.data;
                 } else {
+                    console.log('TaskManager: Supabase加载失败，回退到本地存储');
                     // 回退到本地存储
                     const tasks = this.storage.load(this.storage.keys.TASKS);
                     this.tasks = tasks || [];
+                    console.log('TaskManager: 本地存储任务数量:', this.tasks.length);
                     return this.tasks;
                 }
             } catch (error) {
+                console.error('TaskManager: Supabase加载异常:', error);
                 // 回退到本地存储
                 const tasks = this.storage.load(this.storage.keys.TASKS);
                 this.tasks = tasks || [];
+                console.log('TaskManager: 异常回退后本地存储任务数量:', this.tasks.length);
                 return this.tasks;
             }
         } else {
+            console.log('TaskManager: 使用离线模式加载任务');
             const tasks = this.storage.load(this.storage.keys.TASKS);
             this.tasks = tasks || [];
+            console.log('TaskManager: 离线模式任务数量:', this.tasks.length);
             return this.tasks;
         }
     }

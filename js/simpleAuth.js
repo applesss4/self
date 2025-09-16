@@ -2,6 +2,7 @@
 // 版本: 1.0.34
 import supabase from './supabase.js';
 import SupabaseAuth from './supabaseAuth.js';
+import authGuard from './authGuard.js';
 
 let supabaseAuth = null;
 
@@ -14,10 +15,35 @@ function initAuth() {
     // 初始化 Supabase 认证
     supabaseAuth = new SupabaseAuth();
     
+    // 检查用户是否已经登录，如果已登录则重定向到任务页面
+    checkAlreadyLoggedIn();
+    
     // 延迟一点时间确保DOM完全加载
     setTimeout(() => {
         bindAuthEvents();
     }, 100);
+}
+
+// 检查用户是否已经登录
+async function checkAlreadyLoggedIn() {
+    try {
+        const isAuthenticated = await authGuard.checkAuth();
+        if (isAuthenticated) {
+            // 检查是否有重定向URL
+            const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+            if (redirectUrl) {
+                // 清除重定向URL
+                sessionStorage.removeItem('redirectAfterLogin');
+                // 重定向到用户原本想访问的页面
+                window.location.href = redirectUrl;
+            } else {
+                // 默认重定向到任务计划页面
+                window.location.href = '/pages/tasks.html';
+            }
+        }
+    } catch (error) {
+        console.error('检查登录状态时出错:', error);
+    }
 }
 
 function bindAuthEvents() {
@@ -72,10 +98,21 @@ async function handleAuth() {
             // 保存登录状态标记
             sessionStorage.setItem('isLoggedIn', 'true');
             
-            // 2秒后跳转到任务计划页面
-            setTimeout(() => {
-                window.location.href = '/pages/tasks.html';
-            }, 2000);
+            // 检查是否有重定向URL
+            const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+            if (redirectUrl) {
+                // 清除重定向URL
+                sessionStorage.removeItem('redirectAfterLogin');
+                // 2秒后跳转到用户原本想访问的页面
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 2000);
+            } else {
+                // 2秒后跳转到任务计划页面
+                setTimeout(() => {
+                    window.location.href = '/pages/tasks.html';
+                }, 2000);
+            }
         } else {
             showToast(`登录失败: ${result.error}`, 'error');
         }

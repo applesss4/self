@@ -2,6 +2,7 @@
 // 版本: 1.0.34
 import TaskManager from './taskManager.js';
 import SupabaseAuth from './supabaseAuth.js';  // 导入 SupabaseAuth 类
+import authGuard from './authGuard.js';  // 导入认证保护中间件
 
 // 辅助函数：将Date对象格式化为本地日期字符串 (YYYY-MM-DD)
 function formatDateToLocal(date) {
@@ -138,7 +139,7 @@ function bindEventListeners() {
         renderCalendar();
     });
     
-    // 本周按钮
+    // 今日按钮
     DOM.todayBtn?.addEventListener('click', () => {
         state.currentDate = new Date();
         state.selectedDate = formatDateToLocal(new Date());
@@ -177,20 +178,60 @@ function bindEventListeners() {
     
     // 导出图片按钮
     DOM.exportBtn?.addEventListener('click', exportScheduleAsImage);
+    
+    // 登录按钮事件
+    document.getElementById('loginBtn')?.addEventListener('click', handleLogout);
+    
+    // 功能菜单按钮事件
+    document.getElementById('featuresBtn')?.addEventListener('click', openFeaturesModal);
+    
+    // 关闭功能菜单模态框
+    document.getElementById('closeFeaturesModal')?.addEventListener('click', closeFeaturesModalFunc);
+    
+    // 点击功能菜单模态框外部关闭
+    document.getElementById('featuresModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'featuresModal') {
+            closeFeaturesModalFunc();
+        }
+    });
+}
+
+// 处理登出
+async function handleLogout() {
+    try {
+        // 清除认证信息
+        authGuard.clearAuth();
+        
+        // 显示登出消息
+        showToast('正在登出...', 'info');
+        
+        // 延迟跳转以显示消息
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 1000);
+    } catch (error) {
+        console.error('登出时出错:', error);
+        showToast('登出失败，请重试', 'error');
+    }
 }
 
 // 初始化应用
 async function init() {
-    // 检查是否从首页登录
-    const loginStatus = sessionStorage.getItem('isLoggedIn');
-    if (loginStatus !== 'true') {
-        // 用户未在首页登录，重定向到首页
-        window.location.href = '/';
+    // 检查用户是否已认证
+    const isAuthenticated = await authGuard.requireAuth();
+    if (!isAuthenticated) {
+        // 如果未认证，authGuard会自动重定向到登录页面
         return;
     }
     
-    // 初始化 Supabase 认证
-    supabaseAuth = new SupabaseAuth();
+    // 检查用户是否真的已登录
+    const currentUser = await authGuard.getCurrentUser();
+    if (!currentUser) {
+        // 如果认证模块显示用户未登录，清除会话存储并重定向到首页
+        authGuard.clearAuth();
+        window.location.href = '/';
+        return;
+    }
     
     // 启用在线模式
     taskManager.setOnlineMode(true);
