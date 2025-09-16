@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskManager 测试</title>
+</head>
+<body>
+    <h1>TaskManager 测试</h1>
+    <button id="testBtn">测试 TaskManager</button>
+    <button id="authCheckBtn">检查认证状态</button>
+    <div id="output"></div>
+
+    <script type="module">
+        import TaskManager from './js/taskManager.js';
+        import authGuard from './js/authGuard.js';
+
+        document.getElementById('authCheckBtn').addEventListener('click', async () => {
+            const output = document.getElementById('output');
+            output.innerHTML = '<p>开始检查认证状态...</p>';
+
+            try {
+                // 检查认证状态
+                const isAuthenticated = await authGuard.checkAuth();
+                output.innerHTML += `<p>认证状态: ${isAuthenticated}</p>`;
+                
+                // 检查本地存储中的令牌
+                const sessionToken = localStorage.getItem('supabase.auth.token');
+                output.innerHTML += `<p>本地存储中的令牌: ${sessionToken ? '存在' : '不存在'}</p>`;
+            } catch (error) {
+                output.innerHTML += `<p style="color: red;">错误: ${error.message}</p>`;
+                console.error(error);
+            }
+        });
+
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            const output = document.getElementById('output');
+            output.innerHTML = '<p>开始测试...</p>';
+
+            try {
+                // 检查认证状态
+                const isAuthenticated = await authGuard.checkAuth();
+                output.innerHTML += `<p>认证状态: ${isAuthenticated}</p>`;
+
+                // 创建 TaskManager 实例
+                const taskManager = new TaskManager();
+                output.innerHTML += `<p>TaskManager 实例创建完成</p>`;
+                output.innerHTML += `<p>TaskManager.isOnline 初始值: ${taskManager.isOnline}</p>`;
+
+                // 检查默认在线模式
+                const isOnline = taskManager.checkDefaultOnlineMode();
+                output.innerHTML += `<p>默认在线模式: ${isOnline}</p>`;
+
+                // 设置在线模式
+                taskManager.setOnlineMode(isOnline);
+                output.innerHTML += `<p>设置在线模式为: ${taskManager.isOnline}</p>`;
+
+                // 尝试加载任务
+                output.innerHTML += `<p>开始加载任务...</p>`;
+                const tasks = await taskManager.loadTasks();
+                output.innerHTML += `<p>加载任务完成，任务数量: ${tasks.length}</p>`;
+                if (tasks.length > 0) {
+                    output.innerHTML += `<pre>${JSON.stringify(tasks.slice(0, 3), null, 2)}</pre>`;
+                }
+            } catch (error) {
+                output.innerHTML += `<p style="color: red;">错误: ${error.message}</p>`;
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+</html>

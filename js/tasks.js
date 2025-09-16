@@ -185,9 +185,11 @@ async function init() {
         return;
     }
     
-    // 启用在线模式
-    console.log('启用在线模式');
-    taskManager.setOnlineMode(true);
+    // 检查并设置在线模式
+    console.log('检查并设置在线模式');
+    const isOnline = taskManager.checkDefaultOnlineMode();
+    taskManager.setOnlineMode(isOnline);
+    
     // 订阅实时更新
     console.log('订阅实时更新');
     subscribeToRealtimeUpdates();

@@ -154,7 +154,11 @@ class SupabaseStorage {
             }
             
             // 确保用户在users表中存在
-            await this.ensureUserExists(user);
+            const userExists = await this.ensureUserExists(user);
+            if (!userExists) {
+                console.log('SupabaseStorage: 用户不存在于数据库中，返回空任务列表');
+                return { success: true, data: [] };
+            }
             
             let query = supabase
                 .from(this.tableName)
